@@ -1,9 +1,9 @@
-require("dotenv").config();
 const User = require("../models/user.model");
 const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const House = require("../models/house.model");
+require('dotenv').config() 
 
 const saltRounds = 10
 const daysToSeconds = 1 * 60 * 60; //   days * hours *  minutes *  seconds

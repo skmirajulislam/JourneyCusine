@@ -31,11 +31,11 @@ Cloudinary service when the `image` state variable changes. */
       const imageFormData = new FormData();
       imageFormData.append("file", image);
       imageFormData.append("upload_preset", "house-hunter");
-      imageFormData.append("cloud_name", "dlhexsnxq");
+      imageFormData.append("cloud_name", "dc7c1v9e7");
 
       try {
         setIsImgUploading(true);
-        fetch("https://api.cloudinary.com/v1_1/dlhexsnxq/image/upload", {
+        fetch("https://api.cloudinary.com/v1_1/dc7c1v9e7/image/upload", {
           method: "POST",
           body: imageFormData,
         })

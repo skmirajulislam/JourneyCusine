@@ -15,8 +15,7 @@ const Map = ({ latAndLong, zoom }) => {
   const mapKey = latAndLong ? `${latAndLong[0]}-${latAndLong[1]}` : "default";
 
   const url = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
-  const attribution =
-    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+  const attribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 
   return (
     <MapContainer
@@ -28,7 +27,7 @@ const Map = ({ latAndLong, zoom }) => {
     >
       <TileLayer url={url} attribution={attribution} />
       <Marker
-        position={latAndLong.length !== 0 ? latAndLong : [24, 90]}
+        position={latAndLong.length !== 0 ? latAndLong : [23, 78]}
         icon={customIcon}
       >
         <Popup>

@@ -10,10 +10,8 @@ const ShowUserProfileData = () => {
     return userProfile && Object.keys(userProfile)?.includes(option.fieldName);
   });
 
-  const values =
-    userProfile &&
-    Object.entries(user?.profileDetails?.profile).map(([key, value]) => {
-      value.value;
+  const values = userProfile && Object.entries(user?.profileDetails?.profile).map(([key, value]) => {
+      return value.value;
       console.log(key);
     });
 

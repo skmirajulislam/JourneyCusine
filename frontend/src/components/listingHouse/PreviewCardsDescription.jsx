@@ -1,5 +1,6 @@
 import { GoChecklist, GoCalendar } from "react-icons/go";
-import { LuEdit2 } from "react-icons/lu";
+import { IoSettings } from "react-icons/io5"
+
 
 const PreviewCardsDescription = () => {
   return (
@@ -37,7 +38,7 @@ const PreviewCardsDescription = () => {
       </div>
       <div className=" flex flex-row justify-start gap-4">
         <div className=" w-10">
-          <LuEdit2 size={36} />
+           <IoSettings size={36}/>
         </div>
         <div className=" flex flex-col gap-1">
           <p className="text-base sm:text-lg font-medium text-[#222222]">
