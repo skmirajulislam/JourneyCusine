@@ -47,14 +47,6 @@ Live version : Not available right now. But deployed link is published very soon
  git clone https://github.com/skmirajulislam/JourneyCusine.git
 ```
 
-Inside Client Run this command
-```js
- npm i
-```
-```js
- npm run dev
-```
-
 **Change Diractory**
 ```
  cd JourneyCusine
