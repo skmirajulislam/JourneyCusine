@@ -47,13 +47,49 @@ Live version : Not available right now. But deployed link is published very soon
  git clone https://github.com/skmirajulislam/JourneyCusine.git
 ```
 
-Inside JourneyCusine
+Inside Client Run this command
 ```js
- npm install
+ npm i
 ```
 ```js
  npm run dev
 ```
+
+**Change Diractory**
+```
+ cd JourneyCusine
+```
+**List all files**
+```
+ ls
+```
+
+**Split the terminal into 2 part and perform this following command given below**
+
+```
+ cd Frontend
+```
+```
+ cd Backend
+```
+
+
+Inside Backend Run this command 
+```js
+ npm i
+```
+```js
+ npx nodemon api.js
+```
+
+Inside Frontend Run this command 
+```js
+ npm i
+```
+```js
+ npm run dev
+```
+
 
 
 ## contributors
@@ -64,14 +100,14 @@ Thank you, JC contributors, for your hard work, dedication, and for being an int
 
 Keep coding brilliantly!
 
-[Sk Mirajul islam]
-[Susshrita Jana]
-[Aishiki Mondal]
+1. Sk Mirajul islam - Project Leader & Full-Stack Developer Lead 
+2. Susshrita Jana - Frontend Developer 
+3. Soumye -  Work-Flow & Frontend Developer
+4. Aishiki Mondal - UI Developer
+5. Arnab Das - Quality Assurance & Frontend Developer Lead
+6. Sk Sahil - Customer Support & Frontent Developer
 
 ## License
 
 - [MIT](https://github.com/skmirajulislam/Majorproject.github.io/blob/master/LICENSE-MIT)
 - [Mozilla Public License 2.0](https://github.com/skmirajulislam/Majorproject.github.io/blob/master/LICENSE)
-
-
-
