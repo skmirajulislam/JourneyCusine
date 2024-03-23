@@ -1,11 +1,11 @@
 import axios from "axios";
 
-// export const API = "http://localhost:5000/";
-export const API = "https://fierce-life-jacket-frog.cyclic.cloud/";
+export const API = "http://localhost:5001/";
+// export const API = "https://fierce-life-jacket-frog.cyclic.cloud/";
 
 const api = axios.create({
-  // baseURL: "http://localhost:5000",
-  baseURL: "https://fierce-life-jacket-frog.cyclic.cloud/",
+  baseURL: "http://localhost:5001/",
+  // baseURL: "https://fierce-life-jacket-frog.cyclic.cloud/",
 });
 
 api.interceptors.request.use(
@@ -42,7 +42,7 @@ api.interceptors.response.use(
         const response = await axios.post(`${API}auth/refresh_token`, {
           refreshToken,
         });
-        // console.log(response);
+        console.log(response);
 
         const newAccessToken = response.data.accessToken;
 
@@ -56,7 +56,6 @@ api.interceptors.response.use(
         throw refreshError;
       }
     }
-
     return Promise.reject(error);
   }
 );

@@ -80,7 +80,7 @@ const Pricing = () => {
             placeholder="0"
             value={inputValue}
             onChange={handleInputChange}
-            className=" text-[#222222] text-4xl sm:text-6xl md:text-9xl font-semibold focus:outline-none placeholder:text-[#222222] max-w-[308px] mx-auto"
+            className="bg-gray-200 text-black rounded-lg p-3 text-4xl sm:text-6xl md:text-9xl font-semibold focus:outline-none placeholder-gray-200 max-w-[308px] mx-auto"
             onFocus={handleEdit}
             onBlur={handleEdit}
           />

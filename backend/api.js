@@ -7,6 +7,9 @@ const auth = require("./routes/auth")
 const house = require("./routes/house")
 const reservations = require("./routes/reservations")
 
+require('dotenv').config() 
+
+
 const app = express();
 
 // parse Data
@@ -20,17 +23,20 @@ app.use("/house", house);
 app.use("/reservations", reservations)
 
 
-const port = 5000;
-
 async function main() {
-    await mongoose.connect(`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.in81gjk.mongodb.net/motel-develpoment-db`)
+    await mongoose.connect(`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.tkzvadc.mongodb.net/motel-develpoment-db`)
     try {
-        app.listen(port, () => {
-            console.log(`Server is running on port ${port}`)
+        app.listen(process.env.PORT, () => {
+            console.log(`Server is running on port ${process.env.PORT}`)
         })
+        console.log('MongoDB connected By Mongo Client Sk Miraj!')
     } catch (err) {
         console.log(err)
     }
 }
+
+app.get('/',(req,res)=>{
+    res.send(` Hello Express is server Working on ${process.env.PORT}`);
+})
 
 main();

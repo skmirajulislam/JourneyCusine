@@ -1,7 +1,7 @@
-require("dotenv").config()
 const mongoose = require("mongoose");
 const House = require("../models/house.model");
 const reservationDB = require("../models/reservation.model");
+require('dotenv').config() 
 
 // stripe controller & payment process
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY)
