@@ -102,4 +102,11 @@ Keep coding brilliantly!
 ## License
 
 - [MIT](https://github.com/skmirajulislam/JourneyCusine/blob/master/MIT-LICENSE)
-- [Mozilla Public License 2.0](https://github.com/skmirajulislam/Majorproject.github.io/blob/master/LICENSE)
+- [Mozilla Public License 2.0](https://github.com/skmirajulislam/JourneyCusine/blob/master/MOZILA-FIREFOX-LICENSE)
+
+## Connect 
+For any query regarding this project, for industrial / private use and contribution connect through email given below. thanks for your time and consideration.
+skmirajulislam181@gmail.com
+
+
+
