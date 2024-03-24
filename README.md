@@ -101,5 +101,5 @@ Keep coding brilliantly!
 
 ## License
 
-- [MIT](https://github.com/skmirajulislam/Majorproject.github.io/blob/master/LICENSE-MIT)
+- [MIT](https://github.com/skmirajulislam/JourneyCusine/blob/master/MIT-LICENSE)
 - [Mozilla Public License 2.0](https://github.com/skmirajulislam/Majorproject.github.io/blob/master/LICENSE)
