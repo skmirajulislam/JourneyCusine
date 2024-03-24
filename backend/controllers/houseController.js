@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
-const User = require("../models/user.model");
-const House = require("../models/house.model");
+const User = require("../models/user.model.js");
+const House = require("../models/house.model.js");
 require('dotenv').config() 
 
 exports.saveHouseStructure = async (req, res) => {

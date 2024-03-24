@@ -1,13 +1,12 @@
-require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose")
 const cors = require("cors")
 
-const auth = require("./routes/auth")
-const house = require("./routes/house")
-const reservations = require("./routes/reservations")
+const auth = require("./routes/auth.js")
+const house = require("./routes/house.js")
+const reservations = require("./routes/reservations.js")
 
-require('dotenv').config() 
+require('dotenv').config();
 
 
 const app = express();

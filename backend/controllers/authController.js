@@ -1,8 +1,8 @@
-const User = require("../models/user.model");
+const User = require("../models/user.model.js");
 const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
-const House = require("../models/house.model");
+const House = require("../models/house.model.js");
 require('dotenv').config() 
 
 const saltRounds = 10
