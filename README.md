@@ -39,6 +39,23 @@ its A hotel booking management platform for the travellers. I led end to end des
 
 Live version : https://66003ca6beabdce9539ee4bf--enchanting-starburst-f02eaf.netlify.app
 
+## Images
+<div style="display: flex; align-items: center;">
+    <div style="flex: 1; padding: 5px;">
+        <img src="https://raw.githubusercontent.com/skmirajulislam/JourneyCusine/master/img1.png" alt="Image 1" style="width: 800px; height: 500px;">
+    </div>
+    <div style="flex: 1; padding: 5px;">
+        <img src="https://raw.githubusercontent.com/skmirajulislam/JourneyCusine/master/img2.png" alt="Image 2" style="width: 800px; height: 500px;">
+    </div>
+    <div style="flex: 1; padding: 5px;">
+        <img src="https://raw.githubusercontent.com/skmirajulislam/JourneyCusine/master/img3.png" alt="Image 3" style="width: 800px; height: 500px;">
+    </div>
+    <div style="flex: 1; padding: 5px;">
+        <img src="https://raw.githubusercontent.com/skmirajulislam/JourneyCusine/master/img4.png" alt="Image 4" style="width: 800px; height: 500px;">
+    </div>
+</div>
+
+
 
 ## Usage
 
