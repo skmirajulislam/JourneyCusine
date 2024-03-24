@@ -37,7 +37,7 @@ its A hotel booking management platform for the travellers. I led end to end des
 **Dependencies:** React icons, React elastic carousel, Leaflet Maps, Country-state-city, React-hot-toast, React-spinners, Recharts
 
 
-Live version : Not available right now. But deployed link is published very soon.
+Live version : https://66003ca6beabdce9539ee4bf--enchanting-starburst-f02eaf.netlify.app
 
 
 ## Usage
