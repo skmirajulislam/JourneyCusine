@@ -1,11 +1,7 @@
 /* eslint-disable react/prop-types */
 import { useState } from "react";
 import { useDateFormatting } from "../../hooks/useDateFormatting";
-import {
-  PaymentElement,
-  useElements,
-  useStripe,
-} from "@stripe/react-stripe-js";
+import { PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { PulseLoader } from "react-spinners";
 import { useSelector } from "react-redux";
 import { toast } from "react-hot-toast";
@@ -22,6 +18,9 @@ const Payment = ({ searchParamsObj }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [message, setMessage] = useState("");
   //   geting the checkin and checkout dates
+
+  console.log(message)
+  
   const dateObj = {
     checkin: searchParamsObj?.checkin,
     checkout: searchParamsObj?.checkout,
@@ -56,13 +55,14 @@ const Payment = ({ searchParamsObj }) => {
 
     const { error } = await stripe.confirmPayment({
       elements,
-      confirmParams: {
+      confirmParams: { 
         return_url: `${window.location.origin}/payment-confirmed?guestNumber=${guestNumber}&checkIn=${checkin}&checkOut=${checkout}&listingId=${listingData?._id}&authorId=${listingData?.author}&nightStaying=${nightStaying}&orderId=${orderId}`,
       },
     });
 
     if (error) {
       setMessage(error.message);
+      console.log(error)
       toast.error("Payment failed. Try again!");
     }
 

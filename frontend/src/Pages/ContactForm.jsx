@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import emailjs from '@emailjs/browser';
+import './Contactform.css';
 
 export const ContactUs = () => {
     const form = useRef();
@@ -11,8 +12,6 @@ export const ContactUs = () => {
 
         // Get client's email address and name from the form
         const clientName = form.current['user_name'].value;
-
-    
 
         // Send email to the admin
         emailjs
@@ -30,19 +29,32 @@ export const ContactUs = () => {
             });
     };
 
-
     return (
-        <form ref={form} onSubmit={sendEmail}>
-            <label>Name</label>
-            <input type="text" name="user_name" required />
-            <label>Email</label>
-            <input type="email" name="user_email" required />
-            <label>Message</label>
-            <textarea name="message" required />
-            <input type="submit" value="Send" />
-            {sentSuccessfully && <p className="success-message">Email sent successfully!</p>}
-            {errorOccurred && <p className="error-message">An error occurred. Please try again later.</p>}
-        </form>
+        <div id="contacts">
+            <div className="container">
+                <div className="row">
+                    <div className="contact-left">
+                        <h1 className="sub-title">Contact Us</h1>
+                        <p>skmirajulislam181@gmail.com</p>
+                    </div>
+                    <div className="contact-right">
+                        <form ref={form} onSubmit={sendEmail}>
+                            <input type="text" name="user_name" placeholder="Your name" required />
+                            <input type="email" name="user_email" placeholder="Your Email" required />
+                            <textarea name="message" rows="6" placeholder="Your Message" required />
+                            <button type="submit" className="btn btn2">Submit</button>
+                        </form>
+                        <div id="msg">
+                            {sentSuccessfully && <p className="success-message">Email sent successfully!</p>}
+                            {errorOccurred && <p className="error-message">An error occurred. Please try again later.</p>}
+                        </div>
+                        <div id="loading" className="loading-overlay">
+                            <div className="loading-spinner"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     );
 };
 

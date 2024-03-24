@@ -51,6 +51,8 @@ const Book = () => {
     }).then(async (r) => {
       const { clientSecret } = await r.json();
       setClientSecret(clientSecret);
+    }).catch((err)=>{
+      alert(err)
     });
   }, []);
 

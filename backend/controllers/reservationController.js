@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const House = require("../models/house.model");
 const reservationDB = require("../models/reservation.model");
-require('dotenv').config() 
+require('dotenv').config()
 
 // stripe controller & payment process
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY)
@@ -13,14 +13,27 @@ exports.getStripePublishableKey = async (req, res) => {
 }
 
 exports.createPaymentIntent = async (req, res) => {
+
     try {
-        console.log("hit, payment")
+        console.log("hit, payment");
         const payload = req.body;
-        console.log(payload)
+        console.log(payload);
+
         const paymentIntent = await stripe.paymentIntents.create({
-            currency: "USD",
-            amount: 1999,
-            automatic_payment_methods: { enabled: true },
+            description: 'Software development services',
+            shipping: {
+                name: 'Sk Mirajul Islam',
+                address: {
+                    line1: '510 Townsend St',
+                    postal_code: '98140',
+                    city: 'San Francisco',
+                    state: 'CA',
+                    country: 'US',
+                },
+            },
+            amount: 1099,
+            currency: 'usd',
+            payment_method_types: ['card'],
         });
 
         // Send publishable key and PaymentIntent details to client
