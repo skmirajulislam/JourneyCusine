@@ -11,9 +11,9 @@ const ShowUserProfileData = () => {
   });
 
   const values = userProfile && Object.entries(user?.profileDetails?.profile).map(([key, value]) => {
-      return value.value;
-      console.log(key);
-    });
+    console.log(key)
+    return value.value;
+  });
 
   return (
     <section className=" flex flex-col">

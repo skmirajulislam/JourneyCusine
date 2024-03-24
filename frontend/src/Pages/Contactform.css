@@ -1,0 +1,86 @@
+#contacts {
+  background-size: cover;
+  background-position: center;
+  padding: 20px; /* Add padding for better spacing */
+}
+
+.container {
+  max-width: 1200px; /* Adjust maximum width as needed */
+  margin: 0 auto; /* Center the content */
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap; /* Allow wrapping for responsiveness */
+}
+
+.contact-left {
+  flex: 0 0 100%; /* Full width on small screens, auto on larger screens */
+  margin-bottom: 20px; /* Add margin for spacing */
+}
+
+.contact-right {
+  flex: 0 0 100%; /* Full width on small screens, auto on larger screens */
+}
+
+.contact-left p {
+  margin-top: 20px; /* Reduce margin for better spacing */
+}
+
+.social-icon {
+  margin-top: 20px; /* Reduce margin for better spacing */
+}
+
+.social-icon a {
+  text-decoration: none;
+  font-size: 24px; /* Reduce icon size for better fit */
+  margin-right: 10px; /* Reduce margin for better spacing */
+  color: #fff;
+  transition: transform 0.5s;
+}
+
+.social-icon a:hover {
+  color: #ff004f;
+  transform: translateY(-3px); /* Reduce transformation for better hover effect */
+}
+
+.contact-right form {
+  width: 100%;
+}
+
+form input,
+form textarea {
+  width: calc(100% - 30px); /* Adjust width to accommodate padding */
+  border: 0;
+  outline: none;
+  background: #262626;
+  padding: 15px;
+  margin: 10px 0; /* Adjust margin for better spacing */
+  color: #fff;
+  font-size: 16px; /* Reduce font size for better fit */
+  border-radius: 6px;
+}
+
+form .btn2 {
+  padding: 12px 40px; /* Adjust padding for better fit */
+  font-size: 16px; /* Reduce font size for better fit */
+  margin-top: 20px;
+  cursor: pointer;
+  transition: 1s;
+}
+
+form .btn2:hover{
+  color: #ff004f;
+}
+
+.contact-left p{
+  
+  color: #ff004f;
+}
+
+.contact-left .sub-title{
+  font-size: 30px;
+  font-weight: 900;
+}
+
+
