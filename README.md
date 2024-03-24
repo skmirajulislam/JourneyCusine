@@ -58,23 +58,15 @@ Live version : https://66003ca6beabdce9539ee4bf--enchanting-starburst-f02eaf.net
 
 **Split the terminal into 2 part and perform this following command given below**
 
+## Importent
+Before performing this command, make sure if you want to connect your own database you can use your own environment and if you wanna use our backend server, then use this given URL
+If you connected through our backend URL, then don't need to perform extra command for backend directory given below.
+
+
+for Frontend directory Run this command :
 ```
  cd Frontend
 ```
-```
- cd Backend
-```
-
-
-Inside Backend Run this command 
-```js
- npm i
-```
-```js
- npx nodemon api.js
-```
-
-Inside Frontend Run this command 
 ```js
  npm i
 ```
@@ -82,6 +74,17 @@ Inside Frontend Run this command
  npm run dev
 ```
 
+
+for Backend directory Run this command :
+```
+ cd Backend
+```
+```js
+ npm i
+```
+```js
+ npx nodemon api.js
+```
 
 
 ## contributors
