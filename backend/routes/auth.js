@@ -1,6 +1,6 @@
 const express = require("express");
-const { signUp, checkEmail, logIn, refreshToken, postUser, logOut, getUserDetails, userProfileDetails, userProfileAbout, uploadProfileImage, userToHost, addWishlist } = require("../controllers/authController");
-const { verifyJwtToken } = require("../middleware/jwt");
+const { signUp, checkEmail, logIn, refreshToken, postUser, logOut, getUserDetails, userProfileDetails, userProfileAbout, uploadProfileImage, userToHost, addWishlist } = require("../controllers/authController.js");
+const { verifyJwtToken } = require("../middleware/jwt.js");
 const router = express.Router();
 
 router.use(express.json())

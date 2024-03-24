@@ -1,6 +1,6 @@
 const express = require("express");
-const { verifyJwtToken } = require("../middleware/jwt");
-const { getStripePublishableKey, createPaymentIntent, newReservation, getAllReservations, getAuthorsReservations } = require("../controllers/reservationController");
+const { verifyJwtToken } = require("../middleware/jwt.js");
+const { getStripePublishableKey, createPaymentIntent, newReservation, getAllReservations, getAuthorsReservations } = require("../controllers/reservationController.js");
 const router = express.Router();
 
 router.use(express.json())

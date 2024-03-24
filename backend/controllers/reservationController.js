@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
-const House = require("../models/house.model");
-const reservationDB = require("../models/reservation.model");
+const House = require("../models/house.model.js");
+const reservationDB = require("../models/reservation.model.js");
 require('dotenv').config()
 
 // stripe controller & payment process
