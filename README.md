@@ -37,11 +37,11 @@ its A hotel booking management platform for the travellers. I led end to end des
 **Dependencies:** React icons, React elastic carousel, Leaflet Maps, Country-state-city, React-hot-toast, React-spinners, Recharts
 
 ### Testing performed by { Arnab Das , Sk sahil }
-1. Netlify Live Test version : https://66003ca6beabdce9539ee4bf--enchanting-starburst-f02eaf.netlify.app
+1. Netlify Cloud Live Test version : https://journeycusine.netlify.app
 ### Final Deployed Version by { Sk Mirajul Islam }
-3. Vercel Cloud Live final version: https://journey-cusine.vercel.app/
-
-
+2. Vercel Cloud Live final version: https://journey-cusine.vercel.app/
+### Backend API is Hosted by { Sk Mirajul Islam }
+3. AWS - Railway Cloud https://railway.app { its an paid Cloud, you can deploy here your node API}
 
 ## Images
 <div style="display: flex; align-items: center;">
