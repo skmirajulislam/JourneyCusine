@@ -41,7 +41,7 @@ its A hotel booking management platform for the travellers. I led end to end des
 ### Final Deployed Version by { Sk Mirajul Islam }
 2. Vercel Cloud Live final version: https://journey-cusine.vercel.app/
 ### Backend API is Hosted by { Sk Mirajul Islam }
-3. AWS - Railway Cloud https://railway.app { its an paid Cloud, you can deploy here your node API}
+3. AWS - Railway Cloud https://railway.app { its an paid Cloud, you can deploy here your nodejs | expressjs API}
 
 ## Images
 <div style="display: flex; align-items: center;">
