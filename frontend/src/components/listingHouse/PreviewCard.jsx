@@ -56,38 +56,38 @@ const PreviewCard = () => {
               <img
                 src={currentHouseData?.photos[0]}
                 alt="Houses"
-                className=" max-w-md rounded-xl object-cover"
+                className=" max-w-md rounded-xl object-cover ml-4"
               />
             </div>
             <div className=" flex flex-col gap-3">
-              <h6 className=" text-3xl text-[#222222] font-semibold">
+              <h6 className="text-white text-3xl text-[#222222] font-semibold">
                 {currentHouseData?.title}
               </h6>
-              <p className=" text-xl font-medium text-[#222222] mt-3">
+              <p className="text-white text-xl font-medium text-[#222222] mt-3">
                 Entire rental unit is hosted.
               </p>
-              <p className="text-base text-[#222222]">
+              <p className=" text-white text-base text-[#222222]">
                 {currentHouseData?.floorPlan?.guests} guests ·{" "}
                 {currentHouseData?.floorPlan?.bedrooms} bedrooms ·{" "}
                 {currentHouseData?.floorPlan?.beds} bed ·{" "}
                 {currentHouseData?.floorPlan?.bathroomsNumber} bath
               </p>
               <hr className=" h-[1px] bg-[#dddddd] my-5" />
-              <p className=" text-base text-[#222222]">
+              <p className="text-white text-base text-[#222222]">
                 Surround yourself with style in this standout space.
               </p>
               <hr className=" h-[1px] bg-[#dddddd] my-5" />
-              <p className=" text-base text-[#222222] font-medium mb-5">
+              <p className="text-white text-base text-[#222222] font-medium mb-5">
                 Location
               </p>
-              <p>
+              <p className="text-white">
                 {currentHouseData?.location?.addressLineOne
                   ? currentHouseData?.location?.addressLineOne
                   : currentHouseData?.location?.addressLineTwo
                   ? currentHouseData?.location?.addressLineTwo
                   : currentHouseData?.location?.country?.name}
               </p>
-              <p className=" text-xs text-[#222222] opacity-60">
+              <p className="text-white text-xs text-[#222222] opacity-60">
                 We’ll only share your address with guests who are booked as
                 outlined in our privacy policy.
               </p>

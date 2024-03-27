@@ -53,6 +53,7 @@ const AuthenticationPopUp = ({ popup, setPopup }) => {
                 ? "h-[80vh]"
                 : "h-[80vh] popup__container"
             } w-[45vw] bg-[#ffffff] shadow-2xl rounded-xl overflow-hidden`}
+            style={{height:'65vh', width: '40vh', left:'calc(50% - (20vh) + 5px)'}}
           >
             {/* pop-up navbar */}
             <div className=" flex items-center w-full py-4 border-b-[1px] px-8 sticky top-0 bg-[#ffffff]">

@@ -24,6 +24,24 @@ const EditProfile = () => {
     console.log(e.target.files[0]);
   };
 
+
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 600);
+    };
+
+    // Initial check
+    handleResize();
+
+    // Event listener for resize
+    window.addEventListener('resize', handleResize);
+
+    // Cleanup
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   /* The `useEffect` hook in the provided code is responsible for uploading an image file to the
 Cloudinary service when the `image` state variable changes. */
   useEffect(() => {
@@ -110,14 +128,15 @@ database when the `image` state variable changes. */
   return (
     <div>
       <main className=" max-w-[1200px] mx-auto xl:px-10 py-12 flex min-h-[80vh] relative">
-        <section className=" flex flex-row gap-16 items-start flex-auto">
+        <section className={`flex flex-row gap-16 items-start flex-auto${isMobile ? ' flex-column' : ''}`} style={isMobile && window.innerWidth <= 600 ? { display: 'flex', flexDirection: 'column', padding: '30px' } : null}>
           {user?.profileImg ? (
             <div className="relative md:w-[320px]">
               <figure>
                 <img
                   src={user?.profileImg}
                   alt="User image"
-                  className=" max-w-xs rounded-full border-[1px]"
+                  className={`max-w-xs rounded-full border-[1px] ${isMobile ? 'mobile-style' : 'desktop-style'}`}
+                  style={isMobile && window.innerWidth <= 600 ? { marginRight: 'auto', marginLeft: 'auto', display: 'block', width: '50%' } : null}
                 />
               </figure>
               <div className=" flex justify-center items-center relative">
