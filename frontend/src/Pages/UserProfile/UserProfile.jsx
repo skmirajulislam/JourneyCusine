@@ -24,12 +24,21 @@ const UserProfile = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-
+  const [hasReloaded, setHasReloaded] = useState(false);
+  useEffect(() => {
+    const hasReloadedFromStorage = localStorage.getItem('hasReloaded');
+    if (!hasReloaded && hasReloadedFromStorage !== 'true') {
+      // Reload the page only once
+      window.location.reload();
+      setHasReloaded(true);
+      localStorage.setItem('hasReloaded', 'true');
+    }
+  }, [hasReloaded]);
 
   return (
     <main className=" max-w-[1200px] mx-auto xl:px-10 py-12 flex min-h-[80vh] relative">
       <div className=" flex flex-auto">
-      <section className={isMobile ? 'flex flex-column gap-16 items-start flex-auto' : 'flex flex-row gap-16 items-start flex-auto'} style={isMobile && window.innerWidth <= 600 ? { display: 'flex', flexDirection: 'column', marginLeft: '30px', padding: '30px'} : null}>
+      <section className={isMobile ? 'flex flex-column gap-16 items-start flex-auto' : 'flex flex-row gap-16 items-start flex-auto'} style={isMobile && window.innerWidth <= 600 ? { display: 'flex', flexDirection: 'column', padding: '30px'} : null}>
         {user?.profileImg ? (
           <>
             <div className="w-[350px] flex flex-col profile__container">

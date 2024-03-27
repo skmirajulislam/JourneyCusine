@@ -70,15 +70,35 @@ const UserProfilePopup = ({ showPopup, setShowPopup, popupData }) => {
       document.removeEventListener("mousedown", handleOutsideClick);
     };
   }, [setShowPopup]);
+
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 600);
+    };
+
+    // Initial check
+    handleResize();
+
+    // Event listener for resize
+    window.addEventListener('resize', handleResize);
+
+    // Cleanup
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+
   return (
     <>
       {!showPopup ? null : (
         <div className=" absolute inset-0 w-full bg-[#0000005c] popup__overlay z-[100]">
           <div
             ref={popUpRef}
-            className="absolute left-[27.5%] right-[27.5%] top-[12%] h-[65vh] profile__popup__container w-[45vw] bg-[#ffffff] shadow-2xl rounded-xl overflow-hidden"
+            className={`absolute left-[27.5%] right-[27.5%] top-[12%] h-[65vh] profile__popup__container w-[45vw] bg-[#ffffff] shadow-2xl rounded-xl overflow-hidden ${isMobile ? 'flex flex-col' : ''}`}
+            style={isMobile && window.innerWidth <= 600 ? { width:'55%', height:'70vh'} : null}
           >
-            <form onSubmit={handleSubmit(handleProfileValue)}>
+            <form onSubmit={handleSubmit(handleProfileValue)} >
               <div className=" flex flex-row justify-between items-center py-3 px-5 mb-2">
                 <img
                   src={closeIcon}
