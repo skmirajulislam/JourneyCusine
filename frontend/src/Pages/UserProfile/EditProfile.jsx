@@ -140,7 +140,7 @@ database when the `image` state variable changes. */
   return (
     <div>
       <main className=" max-w-[1200px] mx-auto xl:px-10 py-12 flex min-h-[80vh] relative">
-        <section className={`flex flex-row gap-16 items-start flex-auto${isMobile ? ' flex-column' : ''}`} style={isMobile && window.innerWidth <= 600 ? { display: 'flex', flexDirection: 'column', padding: '30px' } : null}>
+        <section className={`flex flex-row gap-16 items-start flex-auto${isMobile ? ' flex-column' : ''}`} style={isMobile && window.innerWidth <= 600 ? { display: 'flex', flexDirection: 'column', padding: '50px' } : null}>
           {user?.profileImg ? (
             <div className="relative md:w-[320px]">
               <figure>
