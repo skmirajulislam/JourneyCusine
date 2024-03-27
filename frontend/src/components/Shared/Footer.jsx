@@ -42,7 +42,7 @@ const Footer = () => {
       <hr className="bg-[#f7f7f7] mt-10 mb-6" />
       <section className=" flex flex-row flex-wrap justify-between gap-10 px-10 max-w-screen-2xl mx-auto">
         <div className=" flex flex-row flex-wrap items-center">
-          <p>© 2023 Journey Cusine, Inc.</p>
+          <p>© 2024 Journey Cuisine, Inc.</p>
           <span className=" p-3">·</span>
           <p>Terms</p>
           <span className=" p-3">·</span>
