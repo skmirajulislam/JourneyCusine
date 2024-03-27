@@ -24,6 +24,16 @@ const EditProfile = () => {
     console.log(e.target.files[0]);
   };
 
+  const [hasReloaded, setHasReloaded] = useState(true);
+  useEffect(() => {
+    const hasReloadedFromStorage = localStorage.getItem('hasReloaded');
+    if (hasReloaded && hasReloadedFromStorage == 'true') {
+      // Reload the page only once
+      window.location.reload();
+      setHasReloaded(false);
+      localStorage.setItem('hasReloaded', 'false');
+    }
+  }, [hasReloaded]);
 
   const [isMobile, setIsMobile] = useState(false);
 
@@ -124,6 +134,8 @@ database when the `image` state variable changes. */
     }
     uploadImg();
   }, [profileImageLink, user?._id]);
+
+  
 
   return (
     <div>
