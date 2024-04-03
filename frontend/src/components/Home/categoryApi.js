@@ -39,9 +39,4 @@ export const categoryApi = [
     { id: 12, name: "Tent", svg: PiTent },
     { id: 13, name: "Tower", svg: GiControlTower },
     { id: 14, name: "Hotel", svg: LiaHotelSolid },
-    { id: 15, name: "Pool", svg: MdOutlinePool },
-    { id: 16, name: "Grill", svg: MdOutlineOutdoorGrill },
-    { id: 17, name: "Campfire", svg: PiCampfireLight },
-    { id: 19, name: "Tennis court", svg: GiTennisCourt },
-    { id: 20, name: "Ski in/ Ski out", svg: GiSkier },
 ]
