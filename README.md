@@ -27,15 +27,15 @@ its A hotel booking management platform for the travellers. I led end to end des
 
 
 ## 🖥️ Tech Stack :
+```
+Frontend: React, TailwindCSS, Tanstack query, Vite.
 
-**Frontend:** React, Redux, TailwindCSS, Tanstack query, Axios, React-hook-form, Vite
+Backend: Node, Express, JWT, AWS. 
 
-**Backend:** Node, Express, JWT
+Database: MongoDB Atlas.
 
-**Database:** MongoDB
-
-**Dependencies:** React icons, React elastic carousel, Leaflet Maps, Country-state-city, React-hot-toast, React-spinners, Recharts
-
+Dependencies: React icons, React elastic carousel, Leaflet Maps, Country-state-city, React-hot-toast, React-spinners, Recharts.
+```
 ### Testing performed by { Arnab Das , Sk sahil }
 1. Netlify Cloud Live Test version : https://journeycusine.netlify.app
 ### Final Deployed Version by { Sk Mirajul Islam }
