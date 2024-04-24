@@ -39,8 +39,8 @@ export const ContactUs = () => {
                     </div>
                     <div className="contact-right">
                         <form ref={form} onSubmit={sendEmail}>
-                            <input type="text" name="user_name" placeholder="Your Email" required />
-                            <input type="email" name="user_email" placeholder="Your Name" required />
+                            <input type="email" name="user_name" placeholder="Your Email" required />
+                            <input type="text" name="user_email" placeholder="Your Name" required />
                             <textarea name="message" rows="6" placeholder="Your Message" required />
                             <button type="submit" className="btn btn2">Submit</button>
                         </form>
