@@ -116,12 +116,12 @@ Thank you, JC contributors, for your hard work, dedication, and for being an int
 
 Keep coding brilliantly!
 
-1. Sk Mirajul islam - Project Leader & Full-Stack and backend Developer Lead 
-2. Susshrita Jana - Frontend Developer 
-3. Soumye -  Work-Flow & Frontend Developer
-4. Aishiki Mondal - UI Developer
-5. Arnab Das - Quality Assurance & Frontend Developer Lead
-6. Sk Sahil - Custom Support & Frontent Developer
+1. **Sk Mirajul islam** - Project Leader & Full-Stack and backend Developer Lead 
+2. **Susshrita Jana** - Frontend Developer 
+3. **Soumye** -  Work-Flow & Frontend Developer
+4. **Aishiki Mondal** - UI Developer
+5. **Arnab Das** - Quality Assurance & Frontend Developer Lead
+6. **Sk Sahil** - Custom Support & Frontent Developer
 
 ## License
 
