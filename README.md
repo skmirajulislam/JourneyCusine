@@ -80,7 +80,7 @@ Dependencies: React icons, React elastic carousel, Leaflet Maps, Country-state-c
 **Split the terminal into 2 part and perform this following command given below**
 
 ## Importent
-Before performing this command, make sure if you want to connect your own database you can use your own environment and if you wanna use our backend server, then use this given URL
+Before performing this command, make sure if you want to connect your own database you can use your own environment and if you wanna use our backend server, then use this given URL https://backend-api-jc-production.up.railway.app/. 
 If you connected through our backend URL, then don't need to perform extra command for backend directory given below.
 
 
