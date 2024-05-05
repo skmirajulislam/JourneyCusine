@@ -121,7 +121,7 @@ Keep coding brilliantly!
 3. **Soumye** -  Work-Flow & Frontend Developer
 4. **Aishiki Mondal** - UI Developer
 5. **Arnab Das** - Quality Assurance & Frontend Developer Lead
-6. **Sk Sahil** - Custom Support & Frontent Developer
+6. **Sk Sahil** - Custom Support & Frontend Developer
 
 ## License
 
