@@ -106,7 +106,7 @@ const CreateUserPopup = ({
   };
 
   return (
-    <div className="flex flex-col gap-4 py-6">
+    <div className="overflow-y-auto max-h-[300px]">
       <form
         onSubmit={handleSubmit(handleCreateUser)}
         className="px-8 flex flex-col gap-6"

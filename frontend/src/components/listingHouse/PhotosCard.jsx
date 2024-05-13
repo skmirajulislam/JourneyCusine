@@ -50,13 +50,13 @@ const PhotosCard = () => {
         const imageFormData = new FormData();
         imageFormData.append("file", inputImage);
         imageFormData.append("upload_preset", "house-hunter");
-        imageFormData.append("cloud_name", "dlhexsnxq");
+        imageFormData.append("cloud_name", "dc7c1v9e7");
 
         // saving to cloudinary
         setIsImgUploading(true);
         try {
           await fetch(
-            "https://api.cloudinary.com/v1_1/dlhexsnxq/image/upload",
+            "https://api.cloudinary.com/v1_1/dc7c1v9e7/image/upload",
             {
               method: "POST",
               body: imageFormData,
