@@ -20,7 +20,7 @@ exports.createPaymentIntent = async (req, res) => {
         console.log(payload);
 
         const paymentIntent = await stripe.paymentIntents.create({
-            description: 'Software development services',
+            description: 'Journey Cuisine Holel APP',
             shipping: {
                 name: 'Sk Mirajul Islam',
                 address: {
