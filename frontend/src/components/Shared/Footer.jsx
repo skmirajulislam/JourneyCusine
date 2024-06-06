@@ -93,7 +93,7 @@ const Footer = () => {
           <a href="https://www.facebook.com">
             <img src={facebookIcon} alt="Facebook" className=" w-6" />
           </a>
-          <a href="https://www.linkedin.com/in/sk-mirajul-islam-876438261/overlay/contact-info/">
+          <a href="https://www.linkedin.com/in/sk-mirajul-islam-876438261/">
             <img src={linkedinIcon} alt="Linkedin" className=" w-6" />
           </a>
         </div>
