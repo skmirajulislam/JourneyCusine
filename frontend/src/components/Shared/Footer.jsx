@@ -6,14 +6,30 @@ const Footer = () => {
     <footer className=" py-12 bg-[#f7f7f7] border-t border-[#dddddd] text-sm text-[#222222] relative bottom-0 z-[20]">
       <section className=" grid grid-cols-2 md:grid-cols-4 gap-8 justify-between max-w-screen-2xl mx-auto px-10">
         <div className="flex flex-col gap-4 opacity-80">
-          <h6 className="font-semibold">Support</h6>
-          <p>Help Center</p>
-          <p>Get help with a safety issue</p>
-          <p>MotelCover</p>
-          <p>Supporting people with disabilities</p>
-          <p>Cancelation options</p>
-          <p>Our Covid-19 response</p>
-          <p>Report a neighborhood concern</p>
+           <a href="https://journey-support.vercel.app">
+            <h6 className="font-semibold">Support</h6>
+          </a> 
+          <a href="https://journey-support.vercel.app">
+            <p>Help Center</p>
+          </a>
+          <a href="https://journey-support.vercel.app">
+            <p>Get help with a safety issue</p>
+          </a>
+          <a href="https://journey-support.vercel.app">
+            <p>MotelCover</p>
+          </a>
+          <a href="https://journey-support.vercel.app">
+            <p>Supporting people with disabilities</p>
+          </a>
+          <a href="https://journey-support.vercel.app">
+            <p>Cancelation options</p>
+          </a>
+          <a href="https://covid19-sg.netlify.app">
+            <p>Our Covid-19 response</p>
+          </a>
+          <a href="https://journey-support.vercel.app">
+            <p>Report a neighborhood concern</p>
+          </a>
         </div>
         <div className="flex flex-col gap-4 opacity-80">
           <h6 className="font-semibold">Community</h6>
