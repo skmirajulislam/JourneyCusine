@@ -33,8 +33,12 @@ const Footer = () => {
         </div>
         <div className="flex flex-col gap-4 opacity-80">
           <h6 className="font-semibold">Community</h6>
+          <a href="https://journey-support.vercel.app">
           <p>Motel.org: Disaster relief housing</p>
+          </a>
+          <a href="https://journey-support.vercel.app">
           <p>Combating discrimination</p>
+            </a>
         </div>
         <div className="flex flex-col gap-4 opacity-80">
           <h6 className="font-semibold">Hosting</h6>
