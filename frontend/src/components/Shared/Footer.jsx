@@ -38,21 +38,43 @@ const Footer = () => {
         </div>
         <div className="flex flex-col gap-4 opacity-80">
           <h6 className="font-semibold">Hosting</h6>
-          <p>Motel your home</p>
-          <p>MotelCover for Hosts</p>
-          <p>Explore hosting resources</p>
-          <p>Visit our community forum</p>
-          <p>How to host responsibly</p>
-          <p>Motel friendly apartments</p>
+          <a href="https://journey-cusine-git-master-skmirajulislams-projects.vercel.app/host/homes">
+    <p>Motel your home</p>
+</a>
+<a href="https://journey-cusine-git-master-skmirajulislams-projects.vercel.app/host/homes">
+    <p>MotelCover for Hosts</p>
+</a>
+<a href="https://journey-cusine-git-master-skmirajulislams-projects.vercel.app/host/homes">
+    <p>Explore hosting resources</p>
+</a>
+<a href="https://journey-cusine-git-master-skmirajulislams-projects.vercel.app/host/homes">
+    <p>Visit our community forum</p>
+</a>
+<a href="https://journey-cusine-git-master-skmirajulislams-projects.vercel.app/host/homes">
+    <p>How to host responsibly</p>
+</a>
+<a href="https://journey-cusine-git-master-skmirajulislams-projects.vercel.app/host/homes">
+    <p>Motel friendly apartments</p>
+</a>
         </div>
         <div className="flex flex-col gap-4 opacity-80">
           <h6 className="font-semibold">Motel</h6>
           <p>Newsroom</p>
-          <p>MotelCover for Hosts</p>
-          <p>Explore hosting resources</p>
-          <p>Visit our community forum</p>
-          <p>How to host responsibly</p>
-          <p>Motel friendly apartments</p>
+          <a href="https://journey-cusine-git-master-skmirajulislams-projects.vercel.app/host/homes">
+    <p>MotelCover for Hosts</p>
+</a>
+<a href="https://journey-cusine-git-master-skmirajulislams-projects.vercel.app/host/homes">
+    <p>Explore hosting resources</p>
+</a>
+<a href="https://journey-cusine-git-master-skmirajulislams-projects.vercel.app/host/homes">
+    <p>Visit our community forum</p>
+</a>
+<a href="https://journey-cusine-git-master-skmirajulislams-projects.vercel.app/host/homes">
+    <p>How to host responsibly</p>
+</a>
+<a href="https://journey-cusine-git-master-skmirajulislams-projects.vercel.app/host/homes">
+    <p>Motel friendly apartments</p>
+</a>
         </div>
       </section>
       <hr className="bg-[#f7f7f7] mt-10 mb-6" />
@@ -68,8 +90,12 @@ const Footer = () => {
         </div>
         <div className=" flex flex-row gap-5 min-w-[120px] items-center">
           <p>English (US)</p>
-          <img src={facebookIcon} alt="Facebook" className=" w-6" />
-          <img src={linkedinIcon} alt="Linkedin" className=" w-6" />
+          <a href="https://www.facebook.com">
+            <img src={facebookIcon} alt="Facebook" className=" w-6" />
+          </a>
+          <a href="https://www.linkedin.com/in/sk-mirajul-islam-876438261/overlay/contact-info/">
+            <img src={linkedinIcon} alt="Linkedin" className=" w-6" />
+          </a>
         </div>
       </section>
     </footer>
