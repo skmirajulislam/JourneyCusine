@@ -132,5 +132,22 @@ Keep coding brilliantly!
 For any query regarding this project, for industrial / private use and contribution connect through email given below. thanks for your time and consideration.
 skmirajulislam181@gmail.com
 
+# Production Server Down issue
+Dear User,
 
+I hope this message finds you well.
+
+We have received the query regarding the functionality of our website. After a thorough review, we have identified that the backend server is currently down, which may be affecting certain functionalities. Our technical team is actively working to resolve this issue as quickly as possible.
+
+We apologize for any inconvenience this may cause and appreciate your patience. All other aspects of the website are functioning correctly.
+
+Additionally, the code provided in our GitHub repository is fully updated and can be deployed if you wish to handle the deployment yourself. Please note that our backend cloud service subscription has expired, which is causing a delay in the deployment process.
+
+If you have any further questions or need additional assistance, please do not hesitate to contact us.
+
+Thank you for your understanding.
+
+Best regards,
+
+JourneyCusine
 
