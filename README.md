@@ -137,7 +137,7 @@ Dear User,
 
 I hope this message finds you well.
 
-We have received the query regarding the functionality of our website. After a thorough review, we have identified that the backend server is currently down, which may be affecting certain functionalities. Our technical team is actively working to resolve this issue as quickly as possible.
+We have received many query regarding the functionality of our website. After a thorough review, we have identified that the backend server is currently down, which may be affecting certain functionalities. Our technical team is actively working to resolve this issue as quickly as possible.
 
 We apologize for any inconvenience this may cause and appreciate your patience. All other aspects of the website are functioning correctly.
 
