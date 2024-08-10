@@ -58,12 +58,12 @@ Cloudinary service when the `image` state variable changes. */
     if (image !== null && image?.size / 500000 < 5) {
       const imageFormData = new FormData();
       imageFormData.append("file", image);
-      imageFormData.append("upload_preset", "house-hunter");
-      imageFormData.append("cloud_name", "dc7c1v9e7");
+      imageFormData.append("upload_preset", "?");
+      imageFormData.append("cloud_name", "?");
 
       try {
         setIsImgUploading(true);
-        fetch("https://api.cloudinary.com/v1_1/dc7c1v9e7/image/upload", {
+        fetch(" your cloud end point ?", {
           method: "POST",
           body: imageFormData,
         })
