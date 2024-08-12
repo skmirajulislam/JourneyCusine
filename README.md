@@ -12,6 +12,29 @@ its A hotel booking management platform for the travellers. I led end to end des
 
 👤 Personalized User Interaction: Enabled user registration, login, and hotel/listing management such as reservations and hosting hotels. Based on user role user can create a list or reserve a place. All of user listing/reservations can be controlled from personalized dashboard.
 
+
+# Production Server Down issue
+Dear User,
+
+I hope this message finds you well.
+
+We have received many query regarding the functionality of our website. After a thorough review, we have identified that the backend server is currently down, which may be affecting certain functionalities. Our technical team is actively working to resolve this issue as quickly as possible.
+
+We apologize for any inconvenience this may cause and appreciate your patience. All other aspects of the website are functioning correctly.
+
+Additionally, the code provided in our GitHub repository is fully updated and can be deployed if you wish to handle the deployment yourself. Please note that our backend cloud service subscription has expired, which is causing a delay in the deployment process.
+
+Unfortunately, due to a lack of funding, we will also be shutting down the website's frontend. We are exploring options to secure the necessary resources to bring the entire platform back online in the near future.
+
+If you have any further questions or need additional assistance, please do not hesitate to contact us.
+
+Thank you for your understanding.
+
+Best regards,
+
+JourneyCusine
+
+
 ## Features:
 
 **User-friendly Interface:** A sleek and intuitive design that ensures users can easily navigate and find the perfect accommodation.
@@ -132,22 +155,5 @@ Keep coding brilliantly!
 For any query regarding this project, for industrial / private use and contribution connect through email given below. thanks for your time and consideration.
 skmirajulislam181@gmail.com
 
-# Production Server Down issue
-Dear User,
 
-I hope this message finds you well.
-
-We have received many query regarding the functionality of our website. After a thorough review, we have identified that the backend server is currently down, which may be affecting certain functionalities. Our technical team is actively working to resolve this issue as quickly as possible.
-
-We apologize for any inconvenience this may cause and appreciate your patience. All other aspects of the website are functioning correctly.
-
-Additionally, the code provided in our GitHub repository is fully updated and can be deployed if you wish to handle the deployment yourself. Please note that our backend cloud service subscription has expired, which is causing a delay in the deployment process.
-
-If you have any further questions or need additional assistance, please do not hesitate to contact us.
-
-Thank you for your understanding.
-
-Best regards,
-
-JourneyCusine
 
