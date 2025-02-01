@@ -69,16 +69,16 @@ Dependencies: React icons, React elastic carousel, Leaflet Maps, Country-state-c
 ## Images
 <div style="display: flex; align-items: center;">
     <div style="flex: 1; padding: 5px;">
-        <img src="https://github.com/skmirajulislam/JourneyCusine/blob/master/img1.png" alt="Image 1" style="width: 500px; height: 300px;">
+        <img src="https://github.com/skmirajulislam/JourneyCusine/blob/master/images/img1.png" alt="Image 1" style="width: 500px; height: 300px;">
     </div>
     <div style="flex: 1; padding: 5px;">
-        <img src="https://github.com/skmirajulislam/JourneyCusine/blob/master/img2.png" alt="Image 2" style="width: 500px; height: 300px;">
+        <img src="https://github.com/skmirajulislam/JourneyCusine/blob/master/images/img2.png" alt="Image 2" style="width: 500px; height: 300px;">
     </div>
     <div style="flex: 1; padding: 5px;">
-        <img src="https://github.com/skmirajulislam/JourneyCusine/blob/master/img3.png" alt="Image 3" style="width: 500px; height: 300px;">
+        <img src="https://github.com/skmirajulislam/JourneyCusine/blob/master/images/img3.png" alt="Image 3" style="width: 500px; height: 300px;">
     </div>
     <div style="flex: 1; padding: 5px;">
-        <img src="https://github.com/skmirajulislam/JourneyCusine/blob/master/img4.png" alt="Image 4" style="width: 500px; height: 300px;">
+        <img src="https://github.com/skmirajulislam/JourneyCusine/blob/master/images/img4.png" alt="Image 4" style="width: 500px; height: 300px;">
     </div>
 </div>
 
