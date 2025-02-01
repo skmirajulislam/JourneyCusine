@@ -112,7 +112,7 @@ for Frontend directory Run this command :
  cd Frontend
 ```
 ```js
- npm i
+ npm i --legacy-peer-deps
 ```
 ```js
  npm run dev
@@ -124,7 +124,7 @@ for Backend directory Run this command :
  cd Backend
 ```
 ```js
- npm i
+ npm i 
 ```
 ```js
  npx nodemon api.js
