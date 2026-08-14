@@ -5,9 +5,10 @@ const mongoose = require("mongoose");
 const House = require("../models/house.model.js");
 require('dotenv').config() 
 
-const saltRounds = 10
-const daysToSeconds = 1 * 60 * 60; //   days * hours *  minutes *  seconds
-const expirationTimeInSeconds = Math.floor(Date.now() / 1000) + daysToSeconds;
+const saltRounds = 10;
+// JWT expiration: use a relative duration string so each token expires
+// 1 hour after it is issued (not a fixed timestamp from server startup).
+const TOKEN_EXPIRY = "1h";
 
 exports.signUp = async (req, res, next) => {
     try {
@@ -46,7 +47,7 @@ exports.signUp = async (req, res, next) => {
                 role: userDetails[0].role
             },
             process.env.ACCESS_TOKEN_SECRET,
-            { expiresIn: expirationTimeInSeconds }
+            { expiresIn: TOKEN_EXPIRY }
         )
         const refreshToken = jwt.sign({ _id: userDetails[0]._id, role: userDetails[0].role }, process.env.REFRESH_TOKEN_SECRET)
 
@@ -91,7 +92,7 @@ exports.logIn = async (req, res) => {
                     role: userDetails[0].role
                 },
                 process.env.ACCESS_TOKEN_SECRET,
-                { expiresIn: expirationTimeInSeconds }
+                { expiresIn: TOKEN_EXPIRY }
             )
             const refreshToken = jwt.sign({ _id: userDetails[0]._id, role: userDetails[0].role }, process.env.REFRESH_TOKEN_SECRET)
 
@@ -155,7 +156,7 @@ exports.refreshToken = async (req, res) => {
                         role: userDetails.role
                     },
                     process.env.ACCESS_TOKEN_SECRET,
-                    { expiresIn: expirationTimeInSeconds }
+                    { expiresIn: TOKEN_EXPIRY }
                 );
                 console.log(accessToken, "AccessToken")
 
@@ -188,14 +189,13 @@ exports.logOut = async (req, res) => {
 
 exports.getUserDetails = async (req, res) => {
     try {
-        const userId = req.user
+        const userId = req.user;
         const findCriteria = {
             _id: new mongoose.Types.ObjectId(userId)
-        }
+        };
 
         const userDetails = await User.findById(findCriteria);
-
-        const housesData = await House.find({ author: userId })
+        const housesData = await House.find({ author: userId });
 
         let response = {
             info: "user exists",
@@ -203,166 +203,257 @@ exports.getUserDetails = async (req, res) => {
             success: 1,
             user_details: userDetails,
             house_data: housesData
-        }
-        res.send(response)
+        };
+        res.send(response);
     } catch (error) {
-        console.log(error, "LINE 202")
+        console.log(error, "getUserDetails error");
+        res.status(500).json({ success: 0, error: "Failed to get user details" });
     }
-}
+};
 
 exports.checkEmail = async (req, res) => {
     try {
         const payload = req.body;
-        console.log(payload)
         const findCriteria = {
             emailId: payload.email
-        }
+        };
         const isEmailExist = await User.find(findCriteria);
-        console.log(isEmailExist)
         let response;
         if (isEmailExist.length !== 0) {
             response = {
                 info: "User email exist.",
                 success: 1,
                 status: 200
-            }
+            };
         } else {
             response = {
                 info: "User email doesn't exist.",
                 success: 0,
                 status: 200
-            }
+            };
         }
-        res.status(200).send(response)
+        res.status(200).send(response);
+    } catch (error) {
+        console.log(error);
+        res.status(500).send("Failed to search");
     }
-    catch (error) {
-        console.log(error)
-        res.status(500).send("Failed to search")
-    }
-}
+};
 
 exports.userProfileDetails = async (req, res) => {
-    const userId = req.user
-    const payload = req.body
-    const { valueName: [profileDetailsName], value: [profileDetailsvalue], fieldName } = payload
-    const findCriteria = {
-        _id: new mongoose.Types.ObjectId(userId)
-    }
-
-    console.log(profileDetailsName, profileDetailsvalue, fieldName, payload)
-
     try {
-        const userDetails = await User.findById(findCriteria).limit(1);
+        const userId = req.user;
+        const payload = req.body;
+        const profileDetailsName = Array.isArray(payload.valueName) ? payload.valueName[0] : payload.valueName;
+        const profileDetailsvalue = Array.isArray(payload.value) ? payload.value[0] : payload.value;
+        const fieldName = payload.fieldName;
 
-        const userProfile = userDetails.profileDetails.profile;
-
-        if (typeof userProfile === "object") {
-            if (fieldName in userProfile) {
-                // Update the value of the field
-                userProfile[fieldName].name = profileDetailsName;
-                userProfile[fieldName].value = profileDetailsvalue;
-
-                // Save the updated user details
-                await userDetails.save();
-
-                // console.log("Field updated successfully");
-            } else {
-                console.log("Field not found");
-            }
-        } else {
-            console.log("userProfile is not an object");
+        if (!fieldName) {
+            return res.status(400).json({ success: 0, error: "Field name is required" });
         }
 
-        // Send a response indicating success
-        res.status(200).json({ message: "Added successfully" });
+        const updateQuery = {};
+        updateQuery[`profileDetails.profile.${fieldName}.name`] = profileDetailsName;
+        updateQuery[`profileDetails.profile.${fieldName}.value`] = profileDetailsvalue;
+
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            { $set: updateQuery },
+            { new: true }
+        );
+
+        res.status(200).json({
+            success: 1,
+            message: "Profile detail updated successfully",
+            user_details: updatedUser
+        });
     } catch (error) {
-        // Handle any errors that occurred during the update process
-        console.error("Error updating field:", error);
-        res.status(404).json({ error: "An error occurred while updating the field" });
+        console.error("Error updating profile field:", error);
+        res.status(500).json({ success: 0, error: "An error occurred while updating the field" });
     }
-}
+};
 
 exports.userProfileAbout = async (req, res) => {
     try {
-        const userId = req.user
-        const payload = req.body
-        const { profileDetailsAbout, fieldName } = payload
-        const findCriteria = {
-            _id: new mongoose.Types.ObjectId(userId)
-        }
+        const userId = req.user;
+        const payload = req.body;
+        const { profileDetailsAbout } = payload;
 
-        const userDetails = await User.findById(findCriteria).limit(1);
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            { $set: { "profileDetails.about": profileDetailsAbout } },
+            { new: true }
+        );
 
-        const userProfile = userDetails.profileDetails;
-
-        if (typeof userProfile === "object") {
-            if (fieldName in userProfile) {
-                // Update the value of the field
-                userProfile[fieldName] = profileDetailsAbout;
-
-                // Save the updated user details
-                await userDetails.save();
-
-                console.log("Field updated successfully");
-            } else {
-                console.log("Field not found");
-            }
-        } else {
-            console.log("userProfile is not an object");
-        }
-
-        // Send a response indicating success
-        res.status(200).json({ message: "Added successfully" });
+        res.status(200).json({
+            success: 1,
+            message: "About section updated successfully",
+            user_details: updatedUser
+        });
     } catch (error) {
-        console.error("Error updating field:", error);
-        res.status(404).json({ error: "An error occurred while updating the field" });
+        console.error("Error updating about section:", error);
+        res.status(500).json({ success: 0, error: "An error occurred while updating the about section" });
     }
-}
+};
+
+exports.updateUserName = async (req, res) => {
+    try {
+        const userId = req.user;
+        const { firstName, lastName } = req.body;
+
+        if (!firstName || !firstName.trim()) {
+            return res.status(400).json({ success: 0, error: "First name is required" });
+        }
+
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            {
+                $set: {
+                    "name.firstName": firstName.trim(),
+                    "name.lastName": lastName ? lastName.trim() : "",
+                }
+            },
+            { new: true }
+        );
+
+        res.status(200).json({
+            success: 1,
+            message: "Name updated successfully",
+            user_details: updatedUser,
+        });
+    } catch (error) {
+        console.error("Error updating user name:", error);
+        res.status(500).json({ success: 0, error: "An error occurred while updating name" });
+    }
+};
 
 exports.uploadProfileImage = async (req, res) => {
     try {
         const profileImg = req.body.profileImg;
         const userId = req.user;
-        const findCriteria = {
-            _id: new mongoose.Types.ObjectId(userId)
-        }
-        const userDetails = await User.findOneAndUpdate(findCriteria, { profileImg: profileImg }, { new: true });
+
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            { $set: { profileImg: profileImg } },
+            { new: true }
+        );
 
         let response = {
-            info: "Successfully uploded",
-            profileImg: userDetails.profileImg
-        }
-        res.status(200).send(response)
+            success: 1,
+            info: "Successfully uploaded",
+            profileImg: updatedUser ? updatedUser.profileImg : profileImg,
+            user_details: updatedUser
+        };
+        res.status(200).send(response);
     } catch (error) {
-        console.log(error)
+        console.error("Error uploading profile image:", error);
+        res.status(500).json({ success: 0, error: "Failed to upload image" });
     }
-}
+};
+
+exports.toggleWishlist = async (req, res) => {
+    try {
+        const userId = req.user;
+        const { houseId } = req.body;
+
+        if (!houseId) {
+            return res.status(400).json({ success: 0, error: "House ID is required" });
+        }
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ success: 0, error: "User not found" });
+        }
+
+        const wishlist = user.wishlist || [];
+        const isSaved = wishlist.some((id) => id.toString() === houseId.toString());
+
+        let updatedUser;
+        if (isSaved) {
+            updatedUser = await User.findByIdAndUpdate(
+                userId,
+                { $pull: { wishlist: new mongoose.Types.ObjectId(houseId) } },
+                { new: true }
+            );
+            return res.status(200).json({
+                success: 1,
+                action: "removed",
+                isSaved: false,
+                wishlist: updatedUser.wishlist,
+                message: "Removed from wishlist"
+            });
+        } else {
+            updatedUser = await User.findByIdAndUpdate(
+                userId,
+                { $addToSet: { wishlist: new mongoose.Types.ObjectId(houseId) } },
+                { new: true }
+            );
+            return res.status(200).json({
+                success: 1,
+                action: "added",
+                isSaved: true,
+                wishlist: updatedUser.wishlist,
+                message: "Saved to wishlist!"
+            });
+        }
+    } catch (error) {
+        console.error("Wishlist toggle error:", error);
+        return res.status(500).json({ success: 0, error: "Failed to update wishlist" });
+    }
+};
+
+exports.addWishlist = exports.toggleWishlist;
+
+exports.getWishlist = async (req, res) => {
+    try {
+        const userId = req.user;
+        const user = await User.findById(userId).populate({
+            path: "wishlist",
+            model: "House"
+        });
+
+        if (!user) {
+            return res.status(404).json({ success: 0, error: "User not found" });
+        }
+
+        // Return only complete listings in wishlist
+        const validWishlist = (user.wishlist || []).filter(
+            (item) => item && (item.photos && item.photos.length > 0)
+        );
+
+        return res.status(200).json({
+            success: 1,
+            wishlist: validWishlist
+        });
+    } catch (error) {
+        console.error("Get wishlist error:", error);
+        return res.status(500).json({ success: 0, error: "Failed to retrieve wishlist" });
+    }
+};
 
 exports.userToHost = async (req, res) => {
     try {
         const userId = req.user;
-        const role = req.body.role
+        const role = req.body.role;
         const findCriteria = {
             _id: new mongoose.Types.ObjectId(userId)
-        }
-        const updatedUserDetails = await User.findOneAndUpdate(findCriteria, { role: role }, { new: true })
+        };
+        const updatedUserDetails = await User.findOneAndUpdate(findCriteria, { role: role }, { new: true });
 
         const id = {
             author: updatedUserDetails._id
-        }
+        };
 
-        const updateNewHouseAuthor = await House(id).save()
-
-        // console.log(updateNewHouseAuthor)
+        const updateNewHouseAuthor = await House(id).save();
 
         const response = {
             house: updateNewHouseAuthor,
             updatedUserDetails,
             info: "User role updated",
             succeed: 1
-        }
-        res.status(200).send(response)
+        };
+        res.status(200).send(response);
     } catch (error) {
-        console.log(error)
+        console.log(error);
+        res.status(500).json({ success: 0, error: "Failed to update role" });
     }
-}
+};

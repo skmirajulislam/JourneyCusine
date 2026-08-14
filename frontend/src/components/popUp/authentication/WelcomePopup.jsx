@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 /* eslint-disable react/prop-types */
 import axios from "axios";
 import { useState } from "react";
@@ -6,8 +5,9 @@ import { useForm } from "react-hook-form";
 import { Link } from "react-router-dom";
 import { API } from "../../../backend";
 import { PulseLoader } from "react-spinners";
-// import google from "../../assets/basicIcon/google.svg";
-import facebook from "../../../assets/basicIcon/facebook.svg";
+import { toast } from "react-hot-toast";
+import { FcGoogle } from "react-icons/fc";
+import { FaFacebook, FaInstagram } from "react-icons/fa";
 
 const WelcomePopup = ({
   setDefaultPopup,
@@ -18,7 +18,6 @@ const WelcomePopup = ({
   const [inputFocused, setInputFocused] = useState(false);
   const { handleSubmit, register, reset } = useForm();
   const [isLoading, setIsLoading] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const handleInputFocus = () => {
     setInputFocused(true);
@@ -64,52 +63,35 @@ const WelcomePopup = ({
     }
   };
 
+  const handleGoogleLogin = () => {
+    const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    if (!googleClientId) {
+      toast.error("Google login requires VITE_GOOGLE_CLIENT_ID in your .env file!");
+      return;
+    }
+    toast.success("Connecting to Google authentication...");
+  };
+
   const handleFacebookLogin = () => {
-    // Loading the Facebook SDK asynchronously
-    window.fbAsyncInit = function () {
-      window.FB.init({
-        appId: "1025897438850966",
-        cookie: true,
-        xfbml: true,
-        version: "v13.0",
-      });
+    const facebookAppId = import.meta.env.VITE_FACEBOOK_APP_ID;
+    if (!facebookAppId) {
+      toast.error("Facebook login requires VITE_FACEBOOK_APP_ID in your .env file!");
+      return;
+    }
+    toast.success("Connecting to Facebook authentication...");
+  };
 
-      // Check login status
-      window.FB.getLoginStatus(function (response) {
-        if (response.status === "connected") {
-          // User is logged in and authenticated
-          setIsLoggedIn(true);
-        } else {
-          // User is not logged in or not authenticated
-          // Prompt the user to log in with Facebook
-          window.FB.login(function (response) {
-            if (response.authResponse) {
-              // User successfully logged in and authenticated
-              setIsLoggedIn(true);
-            } else {
-              // User canceled the login or didn't authorize the app
-              setIsLoggedIn(false);
-            }
-          });
-        }
-      });
-    };
-
-    // Load the Facebook SDK script
-    (function (d, s, id) {
-      var js,
-        fjs = d.getElementsByTagName(s)[0];
-      if (d.getElementById(id)) return;
-      js = d.createElement(s);
-      js.id = id;
-      js.src =
-        "https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v13.0&appId=1025897438850966&autoLogAppEvents=1";
-      fjs.parentNode.insertBefore(js, fjs);
-    })(document, "script", "facebook-jssdk");
+  const handleInstagramLogin = () => {
+    const instagramClientId = import.meta.env.VITE_INSTAGRAM_CLIENT_ID;
+    if (!instagramClientId) {
+      toast.error("Instagram login requires VITE_INSTAGRAM_CLIENT_ID in your .env file!");
+      return;
+    }
+    toast.success("Connecting to Instagram authentication...");
   };
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 pb-4">
       {/* welcome option */}
       <div className="px-8 pt-4">
         <h2 className="font-medium text-[22px] text-[#222222]">
@@ -159,23 +141,48 @@ const WelcomePopup = ({
           </button>
         </form>
       </div>
-      {/* devider */}
-      <div className="flex flex-row items-center px-8">
+
+      {/* divider */}
+      <div className="flex flex-row items-center px-8 my-1">
         <div className="h-[1.2px] w-full inline-block bg-[#dddddd]"></div>
-        <p className="inline-block text-xs mx-2">or</p>
+        <p className="inline-block text-xs mx-2 text-[#717171]">or</p>
         <div className="h-[1.2px] w-full inline-block bg-[#dddddd]"></div>
       </div>
-      {/* continue with google/facebook */}
-      <div className=" flex flex-col gap-4 px-8 pb-7">
-        <div
-          className=" w-full flex flex-row items-center border border-[#222222] rounded-lg py-[10px] bg-[#ffffff] hover:bg-[#f7f7f7] transition-colors cursor-pointer"
-          onClick={handleFacebookLogin}
+
+      {/* social logins */}
+      <div className="flex flex-col gap-3 px-8 pb-4">
+        <button
+          type="button"
+          onClick={handleGoogleLogin}
+          className="w-full flex flex-row items-center justify-center gap-3 border border-[#222222] rounded-lg py-[10px] bg-[#ffffff] hover:bg-[#f7f7f7] transition-colors cursor-pointer"
         >
-          <img src={facebook} alt="Log in with facebook" className="w-6 ml-5" />
-          <p className="text-sm mx-auto font-medium text-[#222222]">
+          <FcGoogle size={20} />
+          <span className="text-sm font-medium text-[#222222]">
+            Continue with Google
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={handleFacebookLogin}
+          className="w-full flex flex-row items-center justify-center gap-3 border border-[#222222] rounded-lg py-[10px] bg-[#ffffff] hover:bg-[#f7f7f7] transition-colors cursor-pointer"
+        >
+          <FaFacebook size={20} className="text-[#1877F2]" />
+          <span className="text-sm font-medium text-[#222222]">
             Continue with Facebook
-          </p>
-        </div>
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={handleInstagramLogin}
+          className="w-full flex flex-row items-center justify-center gap-3 border border-[#222222] rounded-lg py-[10px] bg-[#ffffff] hover:bg-[#f7f7f7] transition-colors cursor-pointer"
+        >
+          <FaInstagram size={20} className="text-[#E4405F]" />
+          <span className="text-sm font-medium text-[#222222]">
+            Continue with Instagram
+          </span>
+        </button>
       </div>
     </div>
   );

@@ -1,131 +1,93 @@
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
-// import ShowUserProfileData from "../../components/userProfile/ShowUserProfileData";
 import ProfileData from "../../components/userProfile/ShowUserProfileData";
 
 const UserProfile = () => {
   const user = useSelector((state) => state.user?.userDetails);
-
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth <= 600);
+      setIsMobile(window.innerWidth <= 768);
     };
-
-    // Initial check
     handleResize();
-
-    // Event listener for resize
-    window.addEventListener('resize', handleResize);
-
-    // Cleanup
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const [hasReloaded, setHasReloaded] = useState(false);
-  useEffect(() => {
-    const hasReloadedFromStorage = localStorage.getItem('hasReloaded');
-    if (!hasReloaded && hasReloadedFromStorage !== 'true') {
-      // Reload the page only once
-      localStorage.setItem('hasReloaded', 'true');
-      setHasReloaded(true);
-      window.location.reload();
-    }
-  }, [hasReloaded]);
+  const hasAnyProfileInfo =
+    Boolean(user?.profileDetails?.profile && Object.values(user.profileDetails.profile).some(p => p?.value)) ||
+    Boolean(user?.profileDetails?.about);
 
   return (
-    <main className=" max-w-[1200px] mx-auto xl:px-10 py-12 flex min-h-[80vh] relative">
-      <div className=" flex flex-auto">
-      <section className={isMobile ? 'flex flex-column gap-16 items-start flex-auto' : 'flex flex-row gap-16 items-start flex-auto'} style={isMobile && window.innerWidth <= 600 ? { display: 'flex', flexDirection: 'column', padding: '30px'} : null}>
-        {user?.profileImg ? (
-          <>
-            <div className="w-[350px] flex flex-col profile__container">
-              <div className="flex flex-col gap-4 justify-center items-center min-w-[100%] shadow-xl rounded-3xl p-7 border sticky top-[128px] profile__container__div"
-                style={{
-                  ...(window.innerWidth <= 600 && { marginLeft: '30px', marginRight: '40px', }),
-                  ...((window.innerWidth > 600 || window.innerWidth <= 1024) && {
-                    display: 'flex', // Assuming this is the default display value for PC or tablet
-                    flexDirection: 'row', // Assuming this is the default flexDirection value for PC or tablet
-                    marginLeft: 'auto' // Assuming this is the default marginLeft value for PC or tablet
-                  })
-                }}
-              >
-                <div className=" min-w-[114px] min-h-[114px] bg-[#222222] rounded-full flex justify-center itmes-center">
-                  <img
-                    src={user?.profileImg}
-                    alt="User image"
-                    className=" rounded-full max-w-[140px]"
-                  />
-                </div>
-                <div className=" flex flex-col justify-center items-center">
-                  <p className="text-3xl text-[#222222] font-semibold">
-                    {user?.name.firstName}
-                  </p>
-                  {user?.name.lastName === "guest" ? (
-                    ""
-                  ) : (
-                    <p className="text-sm font-medium">Guest</p>
-                  )}
-                </div>
+    <main className="max-w-[1200px] mx-auto px-5 sm:px-8 xl:px-10 py-12 min-h-[80vh]">
+      <section
+        className={`flex ${
+          isMobile ? "flex-col gap-8" : "flex-row gap-16"
+        } items-start w-full`}
+      >
+        {/* User Card */}
+        <div className="w-full sm:w-[320px] shrink-0">
+          <div className="flex flex-col gap-4 items-center shadow-lg dark:shadow-2xl rounded-3xl p-7 border border-[#dddddd] dark:border-[#333333] bg-white dark:bg-[#1e1e1e] sticky top-[120px]">
+            {user?.profileImg ? (
+              <div className="w-[120px] h-[120px] rounded-full overflow-hidden border-2 border-[#dddddd] dark:border-[#444444]">
+                <img
+                  src={user.profileImg}
+                  alt="User avatar"
+                  className="w-full h-full object-cover"
+                />
               </div>
+            ) : (
+              <div className="w-[120px] h-[120px] bg-[#222222] dark:bg-[#333333] rounded-full flex justify-center items-center">
+                <p className="text-4xl text-white font-semibold">
+                  {user?.name?.firstName?.slice(0, 1) || "U"}
+                </p>
+              </div>
+            )}
+
+            <div className="flex flex-col justify-center items-center text-center">
+              <h2 className="text-2xl font-semibold text-[#222222] dark:text-white">
+                {user?.name?.firstName} {user?.name?.lastName !== "guest" ? user?.name?.lastName : ""}
+              </h2>
+              <span className="text-sm font-medium text-[#717171] dark:text-[#a0a0a0] capitalize mt-0.5">
+                {user?.role === "host" ? "Host" : "Guest"}
+              </span>
             </div>
-          </>
+
+            <Link
+              to={`/users/show/${user?._id}/editMode=true`}
+              className="mt-3 w-full text-center py-2.5 px-4 rounded-xl border border-[#222222] dark:border-[#555555] hover:bg-[#f7f7f7] dark:hover:bg-[#2a2a2a] text-sm font-medium transition-colors"
+            >
+              Edit profile
+            </Link>
+          </div>
+        </div>
+
+        {/* Profile Details or Empty State */}
+        {hasAnyProfileInfo ? (
+          <ProfileData />
         ) : (
-          <div className="w-[350px] flex flex-col profile__container">
-            <div className="flex flex-col gap-4 justify-center items-center min-w-[100%] shadow-xl rounded-3xl p-7 border sticky top-[128px] profile__container__div">
-              <div className=" min-w-[114px] min-h-[114px] bg-[#222222] rounded-full flex justify-center itmes-center">
-                <p className="text-4xl text-white font-semibold m-auto">
-                  {user?.name?.firstName?.slice(0, 1)}
-                </p>
-              </div>
-              <div className=" flex flex-col justify-center items-center">
-                <p className="text-3xl text-[#222222] font-semibold">
-                  {user?.name.firstName}
-                </p>
-                {user?.name.lastName === "guest" ? (
-                  ""
-                ) : (
-                  <p className="text-sm font-medium">Guest</p>
-                )}
-              </div>
+          <div className="flex flex-col flex-1 justify-center items-start max-w-md py-6">
+            <div className="flex flex-col gap-4 items-start">
+              <h2 className="text-2xl text-[#222222] dark:text-white font-semibold">
+                It&apos;s time to create your profile
+              </h2>
+              <p className="text-sm text-[#717171] dark:text-[#a0a0a0] leading-relaxed">
+                Your Motel profile is an important part of every reservation. Create
+                yours to help other Hosts and guests get to know you.
+              </p>
+              <Link
+                to={`/users/show/${user?._id}/editMode=true`}
+                className="bg-[#ff385c] hover:bg-[#d90b63] transition-all duration-300 text-white font-medium rounded-lg px-6 py-3 shadow-sm"
+              >
+                Create profile
+              </Link>
             </div>
           </div>
         )}
-        {user?.profileDetails?.profile ? (
-          // <ShowUserProfileData />
-          <ProfileData />
-        ) : (
-          <section
-            className="xl:min-h-[400px] flex flex-col flex-1 justify-center items-center 
-         profile__container"
-          >
-            <div className=" max-w-sm">
-              <div className=" h-[1.2px] bg-[#dddddd] my-7"> </div>
-              <div className=" max-w-xs flex flex-col gap-4 items-start">
-                <h2 className=" text-[22px] text-[#222222] font-semibold">
-                  It&apos;s time to create your profile
-                </h2>
-                <p className=" text-sm text-[#717171]">
-                  Your Motel profile is an important part of every
-                  reservation. Create yours to help other Hosts and guests get
-                  to know you.
-                </p>
-                <Link
-                  to={`/users/show/${user?._id}/editMode=true`}
-                  className={`bg-[#ff385c] hover:bg-[#d90b63] transition-all duration-300 text-white font-medium rounded-lg px-5 py-3 disabled:bg-[#dddddd]`}
-                  type="submit"
-                >
-                  Create profile
-                </Link>
-              </div>
-            </div>
-          </section>
-        )}
       </section>
-    </div>
-    </main >
+    </main>
   );
 };
 

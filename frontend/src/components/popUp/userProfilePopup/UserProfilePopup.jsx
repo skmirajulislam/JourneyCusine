@@ -6,8 +6,11 @@ import { PulseLoader } from "react-spinners";
 import closeIcon from "../../../assets/basicIcon/closeIcon.svg";
 import api from "../../../backend";
 
+import { useDispatch } from "react-redux";
+import { updateUserDetails } from "../../../redux/actions/userActions";
+
 const UserProfilePopup = ({ showPopup, setShowPopup, popupData }) => {
-  console.log(popupData);
+  const dispatch = useDispatch();
   const [characterCount, setCharacterCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const { handleSubmit, register, watch } = useForm();
@@ -28,16 +31,16 @@ const UserProfilePopup = ({ showPopup, setShowPopup, popupData }) => {
         sendDataToBackend,
         { headers: { "Content-Type": "application/json" } }
       );
-      console.log(responseOfPostingProfileData);
-      if (responseOfPostingProfileData.status === 200) {
-        setTimeout(() => {
-          setShowPopup(false);
-        }, 150);
+      if (responseOfPostingProfileData.data?.user_details) {
+        dispatch(updateUserDetails(responseOfPostingProfileData.data.user_details));
       }
-      toast.success(responseOfPostingProfileData.data.message);
+      toast.success(responseOfPostingProfileData.data?.message || "Profile updated!");
+      setTimeout(() => {
+        setShowPopup(false);
+      }, 150);
     } catch (error) {
       console.log(error);
-      setIsLoading(false);
+      toast.error("Failed to update profile details");
     } finally {
       setIsLoading(false);
     }

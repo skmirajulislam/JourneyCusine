@@ -2,17 +2,20 @@ import { useEffect } from "react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import api from "../../backend";
+import { updateUserDetails } from "../../redux/actions/userActions";
 
 const UserAbout = () => {
+  const dispatch = useDispatch();
   const [showAboutInput, setShowAboutInput] = useState(false);
   const [characterCount, setCharacterCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [aboutData, setAboutData] = useState(null);
   const { register, handleSubmit, reset } = useForm();
 
-  const user = useSelector((state) => state.user?.userDetails?.profileDetails);
+  const userDetails = useSelector((state) => state.user?.userDetails);
+  const user = userDetails?.profileDetails;
 
   const handleAboutForm = async (data) => {
     const sendingData = { ...data, fieldName: "about" };
@@ -25,17 +28,17 @@ const UserAbout = () => {
           headers: { "Content-Type": "application/json" },
         }
       );
-      console.log(postUserAboutData);
-      if (postUserAboutData.status === 200) {
-        toast.success(postUserAboutData.data.message);
+      if (postUserAboutData.data?.user_details) {
+        dispatch(updateUserDetails(postUserAboutData.data.user_details));
       }
+      toast.success(postUserAboutData.data?.message || "About section updated!");
       setTimeout(() => {
         reset();
         setShowAboutInput(false);
       }, 150);
     } catch (error) {
-      setIsLoading(false);
       console.log(error);
+      toast.error("Failed to update about section");
     } finally {
       setIsLoading(false);
     }

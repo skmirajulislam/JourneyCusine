@@ -35,14 +35,22 @@ const userReducer = (state = initialState, { type, payload }) => {
                 userDetails: payload
             }
 
-        case "CHANGE_USER_ROLE":
+        case "UPDATE_USER_DETAILS":
             return {
-                userDetails: payload.updatedUserDetails,
+                ...state,
+                userDetails: payload
+            };
 
-            }
+        case "UPDATE_WISHLIST":
+            return {
+                ...state,
+                userDetails: state.userDetails
+                    ? { ...state.userDetails, wishlist: payload }
+                    : state.userDetails
+            };
 
         default:
-            return state
+            return state;
     }
 }
 

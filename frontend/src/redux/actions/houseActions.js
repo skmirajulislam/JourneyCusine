@@ -20,8 +20,7 @@ export const getHouseDetails = (id) => async (dispatch) => {
 export const getOneListingRoomsDetails = (id) => async (dispatch) => {
     try {
         let listingId = { id: id }
-        const res = await api.post(`${API}house/room_details`, listingId)
-        console.log(res, "resposnse")
+        const res = await api.post("/house/room_details", listingId)
 
         if (res.status === 200) {
             dispatch({
@@ -30,7 +29,7 @@ export const getOneListingRoomsDetails = (id) => async (dispatch) => {
             })
         }
     } catch (error) {
-        console.log(error)
+        console.error("Error in getOneListingRoomsDetails:", error)
     }
 }
 

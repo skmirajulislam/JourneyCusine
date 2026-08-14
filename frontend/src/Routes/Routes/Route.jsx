@@ -50,6 +50,8 @@ const HouseTitle = lazy(() =>
 );
 const Home = lazy(() => import("../../Pages/Home"));
 const ListingDetails = lazy(() => import("../../Pages/ListingDetails"));
+const Wishlist = lazy(() => import("../../Pages/Wishlist"));
+const Trips = lazy(() => import("../../Pages/Trips"));
 // import Book from "../../Pages/Book";
 const Book = lazy(() => import("../../Pages/Book"));
 const PaymentConfirmed = lazy(() => import("../../Pages/PaymentConfirmed"));
@@ -144,6 +146,34 @@ const router = createBrowserRouter([
       {
         path: "/host/homes",
         element: <MotelYourHome />,
+      },
+      {
+        path: "/wishlists",
+        element: (
+          <Suspense
+            fallback={
+              <div className=" flex justify-center items-center w-full h-[60dvh]">
+                <FadeLoader color="#ff385c" />
+              </div>
+            }
+          >
+            <Wishlist />
+          </Suspense>
+        ),
+      },
+      {
+        path: "/trips",
+        element: (
+          <Suspense
+            fallback={
+              <div className=" flex justify-center items-center w-full h-[60dvh]">
+                <FadeLoader color="#ff385c" />
+              </div>
+            }
+          >
+            <Trips />
+          </Suspense>
+        ),
       },
       {
         path: "/contact",

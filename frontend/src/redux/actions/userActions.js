@@ -23,10 +23,15 @@ export const getUser = () => async (dispatch, getState) => {
         return;
     }
 
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+        dispatch({ type: "USER_LOG_OUT" });
+        return;
+    }
+
     try {
         const response = await api.post("/auth/get_user_details");
-        console.log(response.data, "GET USER DETAILS");
-        if (response.data.status === 200) {
+        if (response.data && response.data.status === 200) {
             // saving user details from db
             dispatch({
                 type: "GET_USER_DETAILS",
@@ -36,13 +41,12 @@ export const getUser = () => async (dispatch, getState) => {
             dispatch({
                 type: "SAVE_HOUSE_DATA",
                 payload: response.data.house_data
-            })
+            });
         } else {
             dispatch({ type: "USER_LOG_OUT" });
         }
-    } catch (error) {
-        // Handle error
-        console.log(error)
+    } catch {
+        dispatch({ type: "USER_LOG_OUT" });
     }
 };
 
@@ -83,8 +87,25 @@ export const userRole = () => async (dispatch, getState) => {
 }
 
 
+export const updateUserDetails = (updatedUser) => (dispatch) => {
+    dispatch({
+        type: "UPDATE_USER_DETAILS",
+        payload: updatedUser
+    });
+};
+
+export const updateWishlist = (wishlist) => (dispatch) => {
+    dispatch({
+        type: "UPDATE_WISHLIST",
+        payload: wishlist
+    });
+};
+
 export const userLogOut = () => async (dispatch) => {
-    const response = await api.post("/auth/logout");
-    console.log(response)
-    dispatch({ type: "USER_LOG_OUT" })
-}
+    try {
+        await api.post("/auth/logout");
+    } catch {
+        // Continue logout even if network fails
+    }
+    dispatch({ type: "USER_LOG_OUT" });
+};

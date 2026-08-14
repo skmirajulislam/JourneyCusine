@@ -106,3 +106,26 @@ input[type="checkbox"] {
 .profile__container__div {
   flex: 0 0 auto;
 }
+
+/* ==============================
+   Dark Mode overrides for custom.css
+   ============================== */
+html[data-theme="dark"] .nav__search__button > p:nth-child(-n + 2) {
+  border-color: #444444;
+  color: #e5e7eb;
+}
+
+html[data-theme="dark"] .user__menu > a {
+  color: #e5e7eb;
+}
+
+html[data-theme="dark"] .user__menu > a:hover {
+  background-color: #333333;
+}
+
+html[data-theme="dark"] .popup__container,
+html[data-theme="dark"] .popup__container__login,
+html[data-theme="dark"] .profile__popup__container {
+  background-color: #1e1e1e;
+  box-shadow: 0px 2px 20px rgba(0, 0, 0, 0.5);
+}

@@ -7,7 +7,7 @@ exports.verifyJwtToken = async (req, res, next) => {
     // console.log(token, "LINE 7 JWT");
 
     if (!token) {
-        return res.send("token is not valid");
+        return res.status(401).json({ status: 401, message: "Token is not valid" });
     }
     try {
         let decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
@@ -15,7 +15,6 @@ exports.verifyJwtToken = async (req, res, next) => {
         req.user = decoded._id;
         next();
     } catch (error) {
-        console.error(error);
-        return res.status(401).send("Access denied. Invalid token.");
+        return res.status(401).json({ status: 401, message: "Access denied. Invalid token." });
     }
 };

@@ -535,27 +535,40 @@ exports.getOneListing = async (req, res) => {
         const payload = req.body;
         const listingId = payload.id;
 
-        console.log(listingId, "line 532")
-
-        const findCriteria = {
-            _id: new mongoose.Types.ObjectId(listingId)
+        if (!listingId) {
+            return res.status(400).json({ error: "Listing ID is required" });
         }
 
-        const listingData = await House.findById(findCriteria);
-
-        const findAuthorCriteria = {
-            _id: new mongoose.Types.ObjectId(listingData.author)
+        const listingData = await House.findById(listingId);
+        if (!listingData) {
+            return res.status(404).json({ error: "Listing not found" });
         }
 
-        const authorDetails = await User.findById(findAuthorCriteria)
+        let authorDetails = null;
+
+        if (listingData.author) {
+            try {
+                authorDetails = await User.findById(listingData.author).select("-password -token");
+            } catch (err) {
+                console.error("Error finding author by ID:", err);
+            }
+        }
+
+        // If no author found by listing.author, fallback to active host or admin user in database
+        if (!authorDetails) {
+            authorDetails = await User.findOne({
+                $or: [{ role: "host" }, { role: "admin" }]
+            }).select("-password -token");
+        }
 
         let response = {
             listing: listingData,
             listingAuthor: authorDetails
-        }
+        };
 
-        res.status(200).send(response)
+        res.status(200).send(response);
     } catch (error) {
-        console.log(error)
+        console.error("Error in getOneListing:", error);
+        res.status(500).json({ error: "Failed to fetch listing details" });
     }
-}
+};

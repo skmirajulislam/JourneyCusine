@@ -1,8 +1,10 @@
-import { PiHouseLine, PiTent } from "react-icons/pi";
+import { PiHouseLine, PiTent, PiCampfireLight } from "react-icons/pi";
 import {
   MdOutlineApartment,
   MdOutlineCabin,
   MdOutlineCastle,
+  MdOutlinePool,
+  MdOutlineOutdoorGrill,
 } from "react-icons/md";
 import { TbSailboat2, TbCamper } from "react-icons/tb";
 import {
@@ -10,6 +12,8 @@ import {
   GiLightningDome,
   GiControlTower,
   GiTreehouse,
+  GiTennisCourt,
+  GiSkier,
 } from "react-icons/gi";
 import { GoContainer } from "react-icons/go";
 import { RiEarthquakeLine } from "react-icons/ri";
@@ -155,6 +159,51 @@ const ListHouseStepOneStructure = () => {
           style={structureCardStyle}
           Img={LiaHotelSolid}
           name={"Hotel"}
+          onClick={handleStoreCardData}
+          storedCardData={storedCardData}
+          svgSize={svgSize}
+          ptagStyle={structurePtagClass}
+        />
+        <StructureCard
+          style={structureCardStyle}
+          Img={MdOutlinePool}
+          name={"Pool"}
+          onClick={handleStoreCardData}
+          storedCardData={storedCardData}
+          svgSize={svgSize}
+          ptagStyle={structurePtagClass}
+        />
+        <StructureCard
+          style={structureCardStyle}
+          Img={MdOutlineOutdoorGrill}
+          name={"Grill"}
+          onClick={handleStoreCardData}
+          storedCardData={storedCardData}
+          svgSize={svgSize}
+          ptagStyle={structurePtagClass}
+        />
+        <StructureCard
+          style={structureCardStyle}
+          Img={PiCampfireLight}
+          name={"Campfire"}
+          onClick={handleStoreCardData}
+          storedCardData={storedCardData}
+          svgSize={svgSize}
+          ptagStyle={structurePtagClass}
+        />
+        <StructureCard
+          style={structureCardStyle}
+          Img={GiTennisCourt}
+          name={"Tennis court"}
+          onClick={handleStoreCardData}
+          storedCardData={storedCardData}
+          svgSize={svgSize}
+          ptagStyle={structurePtagClass}
+        />
+        <StructureCard
+          style={structureCardStyle}
+          Img={GiSkier}
+          name={"Ski in/ Ski out"}
           onClick={handleStoreCardData}
           storedCardData={storedCardData}
           svgSize={svgSize}

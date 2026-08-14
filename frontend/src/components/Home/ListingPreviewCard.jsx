@@ -1,51 +1,119 @@
 /* eslint-disable react/prop-types */
-import { AiFillStar } from "react-icons/ai";
+import { useState } from "react";
+import { AiFillStar, AiOutlineHeart, AiFillHeart } from "react-icons/ai";
+import { useDispatch, useSelector } from "react-redux";
+import { toast } from "react-hot-toast";
+import api from "../../backend";
+import { updateWishlist } from "../../redux/actions/userActions";
+import AuthenticationPopUp from "../popUp/authentication/AuthenticationPopUp";
 
 const ListingPreviewCard = ({ listingData, showBeforeTaxPrice }) => {
+  const dispatch = useDispatch();
+  const user = useSelector((state) => state.user?.userDetails);
+  const [showAuthPopup, setShowAuthPopup] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+
   const taxes = Math.round((listingData?.basePrice * 14) / 100);
   const priceAfterTaxes = listingData?.basePrice + taxes;
+
+  const houseId = listingData?._id;
+  const isSaved = (user?.wishlist || []).some(
+    (id) => (typeof id === "object" ? id?._id : id)?.toString() === houseId?.toString()
+  );
+
+  const handleToggleWishlist = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!user) {
+      setShowAuthPopup(true);
+      return;
+    }
+    if (!houseId || isUpdating) return;
+
+    try {
+      setIsUpdating(true);
+      const res = await api.post(
+        "/auth/wishlist/toggle",
+        { houseId },
+        { headers: { "Content-Type": "application/json" } }
+      );
+      if (res.data?.success === 1) {
+        dispatch(updateWishlist(res.data.wishlist));
+        toast.success(res.data.message);
+      }
+    } catch (error) {
+      console.error("Wishlist toggle error:", error);
+      toast.error("Failed to update wishlist");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   return (
     <>
-      <div className=" h-[310px] md:h-[277px] overflow-hidden rounded-xl">
+      <div className="relative h-[310px] md:h-[277px] overflow-hidden rounded-xl group">
         <img
           src={listingData?.photos[0]}
           alt="Listing images"
-          className=" w-full h-[310px] md:h-[277px] object-cover object-center rounded-xl hover:scale-110 transition duration-500 ease-in-out cursor-pointer"
+          className="w-full h-[310px] md:h-[277px] object-cover object-center rounded-xl group-hover:scale-110 transition duration-500 ease-in-out cursor-pointer"
         />
+        {/* Heart / Wishlist button */}
+        <button
+          type="button"
+          onClick={handleToggleWishlist}
+          disabled={isUpdating}
+          aria-label={isSaved ? "Remove from wishlist" : "Save to wishlist"}
+          className="absolute top-3 right-3 p-2 rounded-full bg-black/25 hover:bg-black/40 text-white backdrop-blur-sm transition-all duration-200 cursor-pointer z-10"
+        >
+          {isSaved ? (
+            <AiFillHeart size={20} className="text-[#ff385c]" />
+          ) : (
+            <AiOutlineHeart size={20} className="text-white hover:scale-110 transition-transform" />
+          )}
+        </button>
       </div>
-      <div className=" flex flex-row justify-between items-start w-full">
+
+      <div className="flex flex-row justify-between items-start w-full mt-2">
         {/* listings details */}
-        <div className=" flex flex-col gap-1">
-          <p className="text-sm text-[#222222] font-medium">
-            {listingData?.location?.city?.name},{" "}
-            {listingData?.location?.country?.name}
+        <div className="flex flex-col gap-1">
+          <p className="text-sm font-medium">
+            {listingData?.location?.city?.name || "City"},{" "}
+            {listingData?.location?.country?.name || "Country"}
           </p>
           {showBeforeTaxPrice && (
             <p className="text-sm text-[#717171]">
               After tax ${priceAfterTaxes}{" "}
-              <span className=" font-normal">night</span>
+              <span className="font-normal">night</span>
             </p>
           )}
-          <p className="text-sm text-[#222222] font-semibold">
+          <p className="text-sm font-semibold">
             ${listingData?.basePrice}{" "}
-            <span className=" font-normal">night</span>
+            <span className="font-normal">night</span>
           </p>
         </div>
         {/* ratings / new status */}
-        <div className=" flex flex-row gap-1 items-center">
+        <div className="flex flex-row gap-1 items-center">
           {listingData?.ratings ? (
             <>
               <AiFillStar size={16} />
-              <p className=" text-sm">{listingData?.ratings}</p>
+              <p className="text-sm">{listingData?.ratings}</p>
             </>
           ) : (
             <>
               <AiFillStar size={16} />
-              <p className=" text-sm">New</p>
+              <p className="text-sm">New</p>
             </>
           )}
         </div>
       </div>
+
+      {showAuthPopup && (
+        <AuthenticationPopUp
+          popup={showAuthPopup}
+          setPopup={setShowAuthPopup}
+        />
+      )}
     </>
   );
 };

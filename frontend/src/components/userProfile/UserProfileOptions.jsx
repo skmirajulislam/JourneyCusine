@@ -4,53 +4,47 @@ import { profileOptions } from "./userProfileApi";
 
 const UserProfileOptions = ({ setShowPopup, setSelectedOption }) => {
   const userProfile = useSelector(
-    (state) => state.user.userDetails?.profileDetails.profile
+    (state) => state.user?.userDetails?.profileDetails?.profile
   );
 
   return (
     <>
-      <div className=" flex flex-col">
+      <div className="flex flex-col">
         <div>
-          <h1 className=" text-[#222222] text-[32px] font-semibold">
+          <h1 className="text-[#222222] dark:text-white text-[32px] font-semibold">
             Your profile
           </h1>
-          <div className=" text-base text-[#717171] max-w-[85%] mt-5">
+          <div className="text-base text-[#717171] dark:text-[#a0a0a0] max-w-[85%] mt-3">
             The information you share will be used across Motel to help other
             guests and Hosts get to know you.
           </div>
         </div>
-        <section className=" grid grid-cols-2 gap-x-16 mt-4">
+        <section className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 mt-4">
           {profileOptions.map((option, i) => {
-            /* The code block is iterating over the `profileOptions` array and the `userProfile` object to find a matching field name. */
-            let savedProfileData;
-            for (const keys in option) {
-              let fieldName = option[keys];
-              for (const profileKeys in userProfile) {
-                if (fieldName === profileKeys) {
-                  savedProfileData = userProfile[profileKeys];
-                }
-              }
-            }
+            const savedProfileData = userProfile?.[option.fieldName];
             return (
               <div
                 key={i}
-                className="border-b border-[#dedede] cursor-pointer"
+                className="border-b border-[#dedede] dark:border-[#333333] cursor-pointer"
                 onClick={() => {
                   window.scrollTo({ top: 0, behavior: "smooth" });
                   setSelectedOption(option);
-                  setShowPopup((prev) => !prev);
+                  setShowPopup(true);
                 }}
               >
-                <div className=" flex flex-row gap-3 items-center py-6 px-2 hover:bg-[#f7f7f7] rounded-xl">
-                  <img src={option.img} alt="Options" className=" w-7" />
-                  {savedProfileData ? (
-                    <div className="text-base text-[#717171]">
+                <div className="flex flex-row gap-3 items-center py-5 px-2 hover:bg-[#f7f7f7] dark:hover:bg-[#2a2a2a] rounded-xl transition-colors">
+                  <img src={option.img} alt="Options" className="w-6 h-6 object-contain dark:invert" />
+                  {savedProfileData?.value ? (
+                    <div className="text-base text-[#222222] dark:text-[#e5e7eb]">
                       <p>
-                        {savedProfileData.name} : {savedProfileData.value}
+                        <span className="font-medium text-[#717171] dark:text-[#a0a0a0]">{option.name}:</span>{" "}
+                        {savedProfileData.value}
                       </p>
                     </div>
                   ) : (
-                    <p className=" text-base text-[#717171]">{option.name}</p>
+                    <p className="text-base text-[#717171] dark:text-[#a0a0a0] hover:text-[#222222] dark:hover:text-white">
+                      + Add {option.name}
+                    </p>
                   )}
                 </div>
               </div>

@@ -7,7 +7,8 @@ import { MdKeyboardArrowDown, MdKeyboardArrowUp } from "react-icons/md";
 // date range selector css
 import "react-date-range/dist/styles.css"; // main css file
 import "react-date-range/dist/theme/default.css";
-import { useDispatch } from "react-redux";
+import { toast } from "react-hot-toast";
+import { useDispatch, useSelector } from "react-redux";
 import { newReservation } from "../../redux/actions/reservationsActions";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -22,6 +23,7 @@ const ReservationCard = ({ listingData }) => {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const user = useSelector((state) => state.user.userDetails);
 
   // handling outside click
   const { state: calendarState, setState: setCalendarState } =
@@ -83,6 +85,11 @@ const ReservationCard = ({ listingData }) => {
   const orderId = orderNumber ? orderNumber : 1;
   console.log(orderId);
   const handleBooking = () => {
+    if (!user) {
+      toast.error("Please log in or sign up to reserve a motel!");
+      window.dispatchEvent(new Event("open-auth-popup"));
+      return;
+    }
     navigate(
       `/book/stays/${listingData._id}?numberOfGuests=${totalGuest}&nightStaying=${nightsStaying}&checkin=${formattedStartDate}&checkout=${formattedEndDate}&orderId=${orderId}`
     );

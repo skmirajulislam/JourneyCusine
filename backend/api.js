@@ -5,6 +5,7 @@ const cors = require("cors");
 const auth = require("./routes/auth.js");
 const house = require("./routes/house.js");
 const reservations = require("./routes/reservations.js");
+const trips = require("./routes/trips.js");
 
 require("dotenv").config();
 
@@ -24,6 +25,9 @@ app.use(
   "/api/uploadthing",
   createRouteHandler({
     router: uploadRouter,
+    config: {
+      token: process.env.UPLOADTHING_TOKEN,
+    },
   })
 );
 
@@ -31,12 +35,15 @@ app.use(
 app.use("/auth", auth);
 app.use("/house", house);
 app.use("/reservations", reservations);
+app.use("/trips", trips);
 
 
 async function main() {
-  const mongoUri =
-    process.env.MONGODB_URI ||
-    `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.tkzvadc.mongodb.net/${process.env.DB_NAME || "motel-development-db"}`;
+  let mongoUri = process.env.MONGODB_URI || "";
+  if (!mongoUri || mongoUri.endsWith("mongodb.net/")) {
+    const dbName = process.env.DB_NAME || "motel-develpoment-db";
+    mongoUri = mongoUri ? `${mongoUri}${dbName}` : `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.tkzvadc.mongodb.net/${dbName}`;
+  }
 
   try {
     await mongoose.connect(mongoUri);

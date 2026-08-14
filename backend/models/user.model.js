@@ -39,6 +39,10 @@ const userSchema = new mongoose.Schema({
     profileImg: {
         type: String
     },
+    wishlist: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "House"
+    }],
     profileDetails: {
         profileType: {
             type: String,

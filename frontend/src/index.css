@@ -28,3 +28,262 @@ p {
   overflow: hidden;
 }
 
+/* ==============================
+   Dark Theme Overrides
+   ============================== */
+
+/* --- Base body & text --- */
+html[data-theme="dark"] body {
+  background-color: #121212;
+  color: #e5e7eb;
+}
+
+html[data-theme="dark"] p,
+html[data-theme="dark"] h1,
+html[data-theme="dark"] h2,
+html[data-theme="dark"] h3,
+html[data-theme="dark"] h4,
+html[data-theme="dark"] h5,
+html[data-theme="dark"] h6,
+html[data-theme="dark"] span,
+html[data-theme="dark"] label,
+html[data-theme="dark"] li,
+html[data-theme="dark"] a,
+html[data-theme="dark"] td,
+html[data-theme="dark"] th,
+html[data-theme="dark"] div {
+  color: #e5e7eb;
+}
+
+/* --- Tailwind hardcoded text color overrides --- */
+html[data-theme="dark"] .text-\[\#222222\],
+html[data-theme="dark"] .text-\[\#333333\],
+html[data-theme="dark"] .text-\[\#484848\],
+html[data-theme="dark"] .text-\[\#717171\],
+html[data-theme="dark"] .text-black {
+  color: #e5e7eb !important;
+}
+
+/* --- Backgrounds --- */
+html[data-theme="dark"] nav,
+html[data-theme="dark"] header,
+html[data-theme="dark"] footer {
+  background-color: #1e1e1e !important;
+}
+
+html[data-theme="dark"] .bg-\[\#ffffff\],
+html[data-theme="dark"] .bg-white,
+html[data-theme="dark"] .bg-\[\#f7f7f7\],
+html[data-theme="dark"] .bg-\[\#efefef\] {
+  background-color: #1e1e1e !important;
+}
+
+/* --- Dropdown menus, popups, cards --- */
+html[data-theme="dark"] .user__menu {
+  background-color: #2a2a2a !important;
+  border-color: #444444 !important;
+}
+
+html[data-theme="dark"] .user__menu > a {
+  color: #e5e7eb !important;
+}
+
+html[data-theme="dark"] .user__menu > a:hover {
+  background-color: #333333 !important;
+}
+
+/* --- Popup / Modal backgrounds --- */
+html[data-theme="dark"] .popup__container,
+html[data-theme="dark"] .popup__container__login,
+html[data-theme="dark"] .profile__popup__container {
+  background-color: #1e1e1e !important;
+}
+
+/* Popup modal white bg containers */
+html[data-theme="dark"] [class*="bg-[#ffffff]"],
+html[data-theme="dark"] [class*="bg-white"] {
+  background-color: #1e1e1e !important;
+}
+
+/* --- Borders --- */
+html[data-theme="dark"] .border-\[\#dddddd\],
+html[data-theme="dark"] .border-\[\#f1f1f1\],
+html[data-theme="dark"] .border-\[\#222222\],
+html[data-theme="dark"] .border-black,
+html[data-theme="dark"] .border-b-\[1\.4px\] {
+  border-color: #444444 !important;
+}
+
+html[data-theme="dark"] [class*="border-[#dddddd]"],
+html[data-theme="dark"] [class*="border-[#f1f1f1]"] {
+  border-color: #444444 !important;
+}
+
+html[data-theme="dark"] hr {
+  background-color: #444444 !important;
+  border-color: #444444 !important;
+}
+
+/* --- Input fields --- */
+html[data-theme="dark"] input,
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] select {
+  background-color: #2a2a2a !important;
+  color: #e5e7eb !important;
+  border-color: #444444 !important;
+}
+
+html[data-theme="dark"] input::placeholder,
+html[data-theme="dark"] textarea::placeholder {
+  color: #888888 !important;
+}
+
+/* --- Category bar (nav search & category text) --- */
+html[data-theme="dark"] .nav__search__button > p {
+  color: #e5e7eb !important;
+}
+
+html[data-theme="dark"] .nav__search__button > p:nth-child(-n + 2) {
+  border-color: #444444 !important;
+  color: #e5e7eb !important;
+}
+
+/* --- Shadow overrides for dark cards --- */
+html[data-theme="dark"] .shadow-md,
+html[data-theme="dark"] .shadow-lg,
+html[data-theme="dark"] .shadow-xl,
+html[data-theme="dark"] .shadow-2xl {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5) !important;
+}
+
+html[data-theme="dark"] .shadow-customShadow {
+  box-shadow: rgba(0, 0, 0, 0.4) 0px 6px 16px !important;
+}
+
+/* --- Hover states --- */
+html[data-theme="dark"] .hover\:bg-\[\#f7f7f7\]:hover,
+html[data-theme="dark"] .hover\:bg-\[\#f0f0f0\]:hover,
+html[data-theme="dark"] .hover\:bg-\[\#f1f1f1\]:hover {
+  background-color: #333333 !important;
+}
+
+/* --- Checkbox accent --- */
+html[data-theme="dark"] input[type="checkbox"] {
+  accent-color: #e5e7eb !important;
+}
+
+/* --- Scrollbar for dark mode --- */
+html[data-theme="dark"] ::-webkit-scrollbar {
+  width: 8px;
+}
+
+html[data-theme="dark"] ::-webkit-scrollbar-track {
+  background: #1e1e1e;
+}
+
+html[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: #444444;
+  border-radius: 4px;
+}
+
+/* --- Footer / contact page specific --- */
+html[data-theme="dark"] .bg-\[\#f0efe9\] {
+  background-color: #1e1e1e !important;
+}
+
+/* --- SVG icon inversion (close, hamburger, back, etc.) --- */
+html[data-theme="dark"] img[src$=".svg"],
+html[data-theme="dark"] img[src$=".png"][alt*="icon"],
+html[data-theme="dark"] img[src$=".png"][alt*="close"],
+html[data-theme="dark"] img[src$=".png"][alt*="back"] {
+  filter: invert(1) brightness(2);
+}
+
+/* --- Category bar arrow buttons --- */
+html[data-theme="dark"] button.bg-white,
+html[data-theme="dark"] .bg-white {
+  background-color: #2a2a2a !important;
+}
+
+/* Category active underline indicator */
+html[data-theme="dark"] .bg-\[\#222222\] {
+  background-color: #e5e7eb !important;
+}
+
+/* --- Social login buttons in modals --- */
+html[data-theme="dark"] button[class*="bg-[#ffffff]"] {
+  background-color: #2a2a2a !important;
+  border-color: #555555 !important;
+}
+
+html[data-theme="dark"] button[class*="bg-[#ffffff]"]:hover {
+  background-color: #333333 !important;
+}
+
+/* Facebook icon should keep its blue */
+html[data-theme="dark"] .text-\[\#1877F2\] {
+  color: #1877F2 !important;
+}
+
+/* Instagram icon should keep its pink */
+html[data-theme="dark"] .text-\[\#E4405F\] {
+  color: #E4405F !important;
+}
+
+/* --- Red CTA buttons stay red (not overridden) --- */
+html[data-theme="dark"] .bg-\[\#ff385c\] {
+  background-color: #ff385c !important;
+  color: white !important;
+}
+
+html[data-theme="dark"] .bg-\[\#ff385c\] span,
+html[data-theme="dark"] .bg-\[\#ff385c\] p,
+html[data-theme="dark"] .bg-\[\#ff385c\] div,
+html[data-theme="dark"] button.bg-\[\#ff385c\] {
+  color: white !important;
+}
+
+/* --- Divider line in modals --- */
+html[data-theme="dark"] .bg-\[\#dddddd\] {
+  background-color: #444444 !important;
+}
+
+/* --- "Display total" toggle section --- */
+html[data-theme="dark"] .border-neutral-400 {
+  border-color: #555555 !important;
+}
+
+/* --- Listing card alt text visible against dark bg --- */
+html[data-theme="dark"] img[alt="Listing images"] {
+  filter: none;
+}
+
+/* --- Contact form page --- */
+html[data-theme="dark"] .bg-\[\#fafafa\],
+html[data-theme="dark"] .bg-gray-50 {
+  background-color: #1e1e1e !important;
+}
+
+/* --- Disabled button overrides --- */
+html[data-theme="dark"] button:disabled {
+  background-color: #333333 !important;
+  color: #888888 !important;
+}
+
+/* --- React icons (AiFillStar, etc.) keep default color --- */
+html[data-theme="dark"] svg {
+  color: inherit;
+}
+
+/* --- Opacity text helpers --- */
+html[data-theme="dark"] .opacity-60,
+html[data-theme="dark"] .opacity-70,
+html[data-theme="dark"] .opacity-80 {
+  opacity: 0.85 !important;
+}
+
+/* --- Floor plan +/- buttons --- */
+html[data-theme="dark"] img[alt*="minus"],
+html[data-theme="dark"] img[alt*="plus"] {
+  filter: invert(1) brightness(2);
+}
