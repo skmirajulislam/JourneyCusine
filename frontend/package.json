@@ -14,6 +14,7 @@
     "@stripe/react-stripe-js": "^3.1.1",
     "@stripe/stripe-js": "^5.6.0",
     "@tanstack/react-query": "^5.66.0",
+    "@uploadthing/react": "^7.3.3",
     "axios": "^1.7.9",
     "country-state-city": "^3.2.1",
     "date-fns": "^4.1.0",
@@ -35,7 +36,8 @@
     "redux-logger": "^3.0.6",
     "redux-thunk": "^3.1.0",
     "styled-components": "^6.1.14",
-    "twind": "^0.16.19"
+    "twind": "^0.16.19",
+    "uploadthing": "^7.7.4"
   },
   "devDependencies": {
     "@eslint/js": "^9.2.0",

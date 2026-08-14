@@ -12,6 +12,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@uploadthing/react": "^7.3.3",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
@@ -20,7 +21,8 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.9.6",
     "rimraf": "^6.0.1",
-    "stripe": "^17.6.0"
+    "stripe": "^17.6.0",
+    "uploadthing": "^7.7.4"
   },
   "devDependencies": {
     "nodemon": "^3.1.0"
