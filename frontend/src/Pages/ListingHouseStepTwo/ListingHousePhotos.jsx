@@ -5,7 +5,7 @@ const ListingHousePhotos = () => {
   const photos = useSelector((state) => state.house.newHouse?.photos);
   const [housePhoto, setHousePhoto] = useState([]);
   useEffect(() => {
-    setHousePhoto([...housePhoto, photos]);
+    setHousePhoto((currentPhotos) => [...currentPhotos, photos]);
   }, [photos]);
   return (
     <div className=" flex flex-col gap-20 max-w-screen-md mx-auto my-6 min-h-[70vh]">

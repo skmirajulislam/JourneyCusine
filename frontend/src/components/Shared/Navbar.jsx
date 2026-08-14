@@ -34,7 +34,7 @@ const Navbar = () => {
 
   useEffect(() => {
     dispatch(getUser());
-  }, []);
+  }, [dispatch]);
 
   useEffect(() => {
     const handleOutsideClick = (event) => {
@@ -206,7 +206,7 @@ const Navbar = () => {
                           </Link>
                           <hr className="h-[1.5px] bg-[#dddddd] my-1" />
                           <Link>Motel your home</Link>
-                          <Link>Help</Link>
+                          <Link to="/contact">Contact the team</Link>
                         </div>
                       ) : (
                         // logged in user menu
@@ -246,7 +246,7 @@ const Navbar = () => {
                           <Link to={"/host/homes"}>Motel your home</Link>
                           <Link to={`/users/show/${user._id}`}>Account</Link>
                           <hr className="h-[1.5px] bg-[#dddddd] my-1" />
-                          <Link>Help</Link>
+                          <Link to="/contact">Contact the team</Link>
                           <Link
                             onClick={() => {
                               handleLogout();

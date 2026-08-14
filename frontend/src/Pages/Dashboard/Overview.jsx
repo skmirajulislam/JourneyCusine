@@ -16,7 +16,7 @@ const Overview = () => {
   // set reservation to the global store
   useEffect(() => {
     dispatch(getAuthorReservations());
-  }, []);
+  }, [dispatch]);
 
   // remove duplicates and set reservation to state
   useEffect(() => {

@@ -1,90 +1,72 @@
-/* eslint-disable react/prop-types */
-import { categoryApi } from "./categoryApi";
-import Carousel from "react-elastic-carousel";
-import { consts } from "react-elastic-carousel";
+import { useRef } from "react";
+import PropTypes from "prop-types";
 import { MdKeyboardArrowLeft, MdKeyboardArrowRight } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
+import { categoryApi } from "./categoryApi";
 
-const Category = ({ styleGrid }) => {
+const Category = ({ styleGrid = "" }) => {
   const category = localStorage.getItem("category");
   const navigate = useNavigate();
+  const categoryListRef = useRef(null);
 
   const handleSelectedCat = (cat) => {
-    // setSelectedCategory(cat.name);
-    JSON.stringify(localStorage.setItem("category", cat?.name));
-    // setting query to the url for category search
+    localStorage.setItem("category", cat.name);
     navigate(`/?category=${cat.name}`);
-
-    // refetching listing based on category
   };
 
-  const breakPoints = [
-    { width: 300, itemsToShow: 3 },
-    { width: 500, itemsToShow: 5 },
-    { width: 768, itemsToShow: 8 },
-  ];
+  const scrollCategories = (direction) => {
+    const categoryList = categoryListRef.current;
+    if (!categoryList) return;
+
+    categoryList.scrollBy({
+      left: direction * Math.max(categoryList.clientWidth * 0.7, 240),
+      behavior: "smooth",
+    });
+  };
 
   return (
-    <div className={` flex flex-row gap-2 ${styleGrid}`}>
-      <Carousel
-        // itemsToShow={8}
-        breakPoints={breakPoints}
-        pagination={false}
-        disableArrowsOnEnd={true}
-        itemsToScroll={4}
-        enableSwipe={true}
-        enableMouseSwipe={true}
-        renderArrow={myArrow}
+    <div className={`flex items-center gap-2 ${styleGrid}`}>
+      <button
+        type="button"
+        aria-label="Show previous categories"
+        className="shrink-0 rounded-full border border-neutral-400 bg-white p-1 hover:shadow-lg"
+        onClick={() => scrollCategories(-1)}
       >
-        {categoryApi.map((cat, i) => {
-          return (
-            <div key={i}>
-              <div
-                onClick={() => {
-                  handleSelectedCat(cat);
-                }}
-                className={` flex flex-col-reverse items-center gap-1 cursor-pointer relative pb-4 transition duration-200 ease-in ${
-                  category === cat.name
-                    ? "opacity-100"
-                    : "opacity-70 hover:opacity-100"
-                }
-                `}
-              >
-                <p className=" text-xs font-medium">{cat?.name}</p>
-                <cat.svg size={28} />
-              </div>
-              <div
-                className={` w-9 absolute bg-[#222222] h-[2px] bottom-0 ${
-                  category === cat.name ? "block" : "hidden"
-                }`}
-              >
-                {" "}
-              </div>
-            </div>
-          );
-        })}
-      </Carousel>
+        <MdKeyboardArrowLeft size={18} />
+      </button>
+      <div
+        ref={categoryListRef}
+        className="flex min-w-0 flex-1 gap-4 overflow-x-auto scroll-smooth py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+        {categoryApi.map((cat) => (
+          <button
+            key={cat.name}
+            type="button"
+            onClick={() => handleSelectedCat(cat)}
+            className={`relative flex min-w-16 shrink-0 flex-col-reverse items-center gap-1 pb-4 text-left transition duration-200 ease-in ${
+              category === cat.name ? "opacity-100" : "opacity-70 hover:opacity-100"
+            }`}
+          >
+            <span className="text-xs font-medium">{cat.name}</span>
+            <cat.svg size={28} />
+            {category === cat.name && <span className="absolute bottom-0 h-0.5 w-9 bg-[#222222]" />}
+          </button>
+        ))}
+      </div>
+      <button
+        type="button"
+        aria-label="Show next categories"
+        className="shrink-0 rounded-full border border-neutral-400 bg-white p-1 hover:shadow-lg"
+        onClick={() => scrollCategories(1)}
+      >
+        <MdKeyboardArrowRight size={18} />
+      </button>
     </div>
   );
 };
 
-// custom arrow for carousel
-const myArrow = ({ type, onClick, isEdge }) => {
-  const pointer =
-    type === consts.PREV ? (
-      <MdKeyboardArrowLeft size={18} />
-    ) : (
-      <MdKeyboardArrowRight size={18} />
-    );
-  return (
-    <button
-      className=" p-1 rounded-full border-neutral-400 border bg-white flex items-center max-h-[32px] my-auto hover:shadow-lg mb-6"
-      onClick={onClick}
-      disabled={isEdge}
-    >
-      {pointer}
-    </button>
-  );
-};
-
 export default Category;
+
+Category.propTypes = {
+  styleGrid: PropTypes.string,
+};

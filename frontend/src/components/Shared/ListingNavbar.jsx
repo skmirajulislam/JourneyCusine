@@ -20,7 +20,7 @@ const ListingNavbar = () => {
 
   useEffect(() => {
     dispatch(getUser());
-  }, []);
+  }, [dispatch]);
 
   useEffect(() => {
     window.addEventListener("scroll", handleSticky);

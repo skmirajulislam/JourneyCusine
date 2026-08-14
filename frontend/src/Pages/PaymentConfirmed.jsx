@@ -1,6 +1,6 @@
 import { Link, useSearchParams } from "react-router-dom";
 import motelLogo from "../assets/basicIcon/motel-logo.png";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FadeLoader } from "react-spinners";
 import api from "../backend";
 import { toast } from "react-hot-toast";
@@ -13,52 +13,33 @@ const PaymentConfirmed = () => {
   const [searchParams] = useSearchParams();
 
   //   making the search params in an obj and store in a vairable
-  const searchParamsObj = Object.fromEntries([...searchParams]);
-
-  // reservation data
-  // const listingId = searchParamsObj?.listingId;
-  // const authorId = searchParamsObj?.authorId;
-  // const guestNumber = searchParamsObj?.guestNumber;
-  // const checkIn = searchParamsObj?.checkIn;
-  // const checkOut = searchParamsObj?.checkOut;
-  // const nightStaying = searchParamsObj?.nightStaying;
-  // const orderId = searchParamsObj?.orderId;
-
-  let reservationData = {
-    listingId: searchParamsObj?.listingId,
-    authorId: searchParamsObj?.authorId,
-    guestNumber: searchParamsObj?.guestNumber,
-    checkIn: searchParamsObj?.checkIn,
-    checkOut: searchParamsObj?.checkOut,
-    nightStaying: searchParamsObj?.nightStaying,
-    orderId: searchParamsObj?.orderId,
-  };
+  const reservationData = useMemo(() => {
+    const searchParamsObj = Object.fromEntries(searchParams);
+    return {
+      listingId: searchParamsObj.listingId,
+      authorId: searchParamsObj.authorId,
+      guestNumber: searchParamsObj.guestNumber,
+      checkIn: searchParamsObj.checkIn,
+      checkOut: searchParamsObj.checkOut,
+      nightStaying: searchParamsObj.nightStaying,
+      orderId: searchParamsObj.orderId,
+    };
+  }, [searchParams]);
 
   useEffect(() => {
-    try {
-      (async () => {
-        const res = await api
-          .post("/reservations/booking", reservationData)
-          .catch(function (error) {
-            if (error.response.status === 404) {
-              setPaymentFailed(true);
-              setIsLoading(false);
-              toast.error(error.response.data);
-            }
-          });
-        console.log(res, "response");
+    const createReservation = async () => {
+      try {
+        await api.post("/reservations/booking", reservationData);
+      } catch (error) {
+        setPaymentFailed(true);
+        toast.error(error.response?.data || "We could not confirm your booking.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-        if (res.status === 200) {
-          setIsLoading(false);
-        }
-      })();
-    } catch (error) {
-      console.log(error, "from error");
-      setIsLoading(false);
-    }
-  }, []);
-
-  console.log(reservationData, "reservation");
+    createReservation();
+  }, [reservationData]);
 
   if (isLoading) {
     return (

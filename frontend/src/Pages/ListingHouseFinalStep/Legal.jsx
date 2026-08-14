@@ -40,7 +40,23 @@ const Legal = () => {
         labelValue
       )
     );
-  }, [labelValue]);
+  }, [
+    dispatch,
+    labelValue,
+    newHouseData?.amenities,
+    newHouseData?.authorEarnedPrice,
+    newHouseData?.basePrice,
+    newHouseData?.description,
+    newHouseData?.floorPlan,
+    newHouseData?.guestType,
+    newHouseData?.highlights,
+    newHouseData?.houseType,
+    newHouseData?.location,
+    newHouseData?.photos,
+    newHouseData?.priceBeforeTaxes,
+    newHouseData?.privacyType,
+    newHouseData?.title,
+  ]);
   return (
     <>
       <div className=" flex flex-col max-w-screen-sm mx-auto my-6 min-h-[70vh]">

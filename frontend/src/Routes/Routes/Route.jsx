@@ -14,6 +14,7 @@ import ListHouseStepOne from "../../Pages/ListingHouseStepOne/ListHouseStepOne";
 import ListHouseStepOneStructure from "../../Pages/ListingHouseStepOne/ListHouseStepOneStructure";
 import ListHouseStepOnePlacetype from "../../Pages/ListingHouseStepOne/ListHouseStepOnePlacetype";
 import { FadeLoader } from "react-spinners";
+import ContactUs from "../../Pages/ContactForm";
 // import ListingHouseStepOneAddress from "../../Pages/ListingHouseStepOne/ListingHouseStepOneAddress";
 // import ListingHouseStepOneFloorPlan from "../../Pages/ListingHouseStepOne/ListingHouseStepOneFloorPlan";
 // import StepTwoOverview from "../../Pages/ListingHouseStepTwo/StepTwoOverview";
@@ -143,6 +144,10 @@ const router = createBrowserRouter([
       {
         path: "/host/homes",
         element: <MotelYourHome />,
+      },
+      {
+        path: "/contact",
+        element: <ContactUs />,
       },
       {
         path: "/payment-confirmed",

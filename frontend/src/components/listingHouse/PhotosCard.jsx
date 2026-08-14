@@ -1,4 +1,3 @@
-/* eslint-disable react/prop-types */
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { LiaPhotoVideoSolid } from "react-icons/lia";
@@ -41,7 +40,15 @@ const PhotosCard = () => {
         images
       )
     );
-  }, [images, dispatch]);
+  }, [
+    dispatch,
+    images,
+    newHouseData?.amenities,
+    newHouseData?.floorPlan,
+    newHouseData?.houseType,
+    newHouseData?.location,
+    newHouseData?.privacyType,
+  ]);
 
   useEffect(() => {
     async function uploadImagetoCloudinary() {
@@ -65,7 +72,7 @@ const PhotosCard = () => {
             .then((res) => res.json())
             .then((data) => {
               console.log(data);
-              setImages([...images, data.url]);
+              setImages((currentImages) => [...currentImages, data.url]);
               if (data.error) {
                 toast.error(data?.error?.message);
                 setIsImgUploading(false);

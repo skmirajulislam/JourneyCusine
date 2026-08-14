@@ -20,7 +20,7 @@ const ReservationsData = ({ active }) => {
   // getting authors reservation
   useEffect(() => {
     dispatch(getAuthorReservations());
-  }, []);
+  }, [dispatch]);
 
   // removing duplicates
   useEffect(() => {

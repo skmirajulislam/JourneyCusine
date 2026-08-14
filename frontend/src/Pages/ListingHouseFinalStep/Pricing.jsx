@@ -56,7 +56,22 @@ const Pricing = () => {
         basePrice
       )
     );
-  }, [inputValue]);
+  }, [
+    basePrice,
+    dispatch,
+    newHouseData?.amenities,
+    newHouseData?.description,
+    newHouseData?.floorPlan,
+    newHouseData?.guestType,
+    newHouseData?.highlights,
+    newHouseData?.houseType,
+    newHouseData?.location,
+    newHouseData?.photos,
+    newHouseData?.privacyType,
+    newHouseData?.title,
+    totalAuthorEarned,
+    totalPriceBeforeTax,
+  ]);
 
   return (
     <div className=" flex flex-col max-w-screen-md mx-auto my-6 min-h-[70vh]">

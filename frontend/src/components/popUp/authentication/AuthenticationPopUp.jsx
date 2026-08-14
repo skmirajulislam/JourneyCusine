@@ -38,7 +38,7 @@ const AuthenticationPopUp = ({ popup, setPopup }) => {
     return () => {
       document.removeEventListener("mousedown", handleOutsideClick);
     };
-  }, []);
+  }, [setPopup]);
 
   return (
     <>

@@ -1,10 +1,9 @@
-import { useState } from "react";
 import { MdKeyboardArrowDown } from "react-icons/md";
 
 import { amenititesData } from "./AmenitiesFilterData";
 
 const AmenitiesFilterCard = () => {
-  const [isDisabled, setIsDisabled] = useState(true);
+  const isDisabled = true;
   return (
     <div className="dropdown dropdown-bottom">
       <label

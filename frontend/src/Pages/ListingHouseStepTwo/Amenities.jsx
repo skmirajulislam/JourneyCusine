@@ -48,7 +48,14 @@ const Amenities = () => {
         storedCardData
       )
     );
-  }, [storedCardData, dispatch]);
+  }, [
+    dispatch,
+    newHouseData?.floorPlan,
+    newHouseData?.houseType,
+    newHouseData?.location,
+    newHouseData?.privacyType,
+    storedCardData,
+  ]);
 
   console.log(storedCardData, "amenities");
   return (

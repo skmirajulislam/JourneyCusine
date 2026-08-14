@@ -36,7 +36,17 @@ const Highlight = () => {
         storedCardData
       )
     );
-  }, [storedCardData, dispatch]);
+  }, [
+    dispatch,
+    newHouseData?.amenities,
+    newHouseData?.floorPlan,
+    newHouseData?.houseType,
+    newHouseData?.location,
+    newHouseData?.photos,
+    newHouseData?.privacyType,
+    newHouseData?.title,
+    storedCardData,
+  ]);
 
   console.log(storedCardData, "from descriptions");
 

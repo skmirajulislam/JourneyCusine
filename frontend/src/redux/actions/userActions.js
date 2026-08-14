@@ -1,6 +1,5 @@
 import api from "../../backend";
 
-/* eslint-disable no-undef */
 export const userSignUp = (userData) => async (dispatch) => {
     dispatch({
         type: "USER_SIGN_UP",
