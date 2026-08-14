@@ -10,6 +10,7 @@ import api from "../../backend";
 import UserProfilePopup from "../../components/popUp/userProfilePopup/UserProfilePopup.jsx";
 import UserAbout from "../../components/userProfile/UserAbout";
 import UserProfileOptions from "../../components/userProfile/UserProfileOptions";
+import { uploadFiles } from "../../utils/uploadthing";
 
 const EditProfile = () => {
   const user = useSelector((state) => state.user.userDetails);
@@ -29,9 +30,9 @@ const EditProfile = () => {
     const hasReloadedFromStorage = localStorage.getItem('hasReloaded');
     if (hasReloaded && hasReloadedFromStorage == 'true') {
       // Reload the page only once
-      window.location.reload();
-      setHasReloaded(false);
       localStorage.setItem('hasReloaded', 'false');
+      setHasReloaded(false);
+      window.location.reload();
     }
   }, [hasReloaded]);
 
@@ -52,84 +53,79 @@ const EditProfile = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  /* The `useEffect` hook in the provided code is responsible for uploading an image file to the
-Cloudinary service when the `image` state variable changes. */
+/* The `useEffect` hook in the provided code is responsible for uploading an image file to
+UploadThing service when the `image` state variable changes. */
   useEffect(() => {
-    if (image !== null && image?.size / 500000 < 5) {
-      const imageFormData = new FormData();
-      imageFormData.append("file", image);
-      imageFormData.append("upload_preset", "?");
-      imageFormData.append("cloud_name", "?");
+    async function uploadToUploadThing() {
+      if (image !== null) {
+        if (image.size > 5 * 1024 * 1024) {
+          toast.error("Image size can't exceed 5MB");
+          setImage(null);
+          return;
+        }
 
-      try {
-        setIsImgUploading(true);
-        fetch(" your cloud end point ?", {
-          method: "POST",
-          body: imageFormData,
-        })
-          .then((res) => res.json())
-          .then((data) => {
-            setProfileImageLink(data.url);
-            if (data.error) {
-              toast.error(data?.error?.message);
-              setIsImgUploading(false);
-              setProfileImageLink(null);
-            } else {
-              setIsImgUploading(false);
-            }
-          })
-          .catch((err) => {
-            toast.error(err.message + "try again");
-            setIsImgUploading(false);
+        try {
+          setIsImgUploading(true);
+          const res = await uploadFiles("imageUploader", {
+            files: [image],
           });
-      } catch (error) {
-        console.log(error);
-        toast.error(error);
-        setIsImgUploading(false);
-      } finally {
-        setIsImgUploading(false);
+          if (res && res[0]?.url) {
+            setProfileImageLink(res[0].url);
+          } else {
+            toast.error("Upload failed, please try again.");
+          }
+        } catch (error) {
+          console.error(error);
+          toast.error(error?.message || "Image upload failed. Try again.");
+        } finally {
+          setIsImgUploading(false);
+          setImage(null);
+        }
       }
-    } else if (image?.size / 500000 > 5) {
-      toast.error("Image size can't exceed 5mb");
-      setIsImgUploading(false);
     }
+    uploadToUploadThing();
   }, [image]);
 
   /* The `useEffect` hook in the provided code is responsible for saving an image link to the
-database when the `image` state variable changes. */
+  /* The `useEffect` hook in the provided code is responsible for saving an image link to the
+database when the `profileImageLink` state variable changes. */
   useEffect(() => {
     async function uploadImg() {
-      setIsImgUploading(true);
       if (profileImageLink) {
-        let imageLink = {
-          id: user?._id,
-          profileImg: profileImageLink,
-        };
-        const response = api.post("/auth/uploadimage", imageLink, {
-          headers: { "Content-Type": "application/json" },
-        });
-        // toast.success(response.data);
-        toast.promise(
-          response,
-          {
-            loading: "Uploading image",
-            success: "Image uploaded successfully!",
-            error: "Upload failed try again!",
-          },
-          {
-            position: "top-center",
-            style: {
-              minWidth: "250px",
+        setIsImgUploading(true);
+        try {
+          let imageLink = {
+            id: user?._id,
+            profileImg: profileImageLink,
+          };
+          const responsePromise = api.post("/auth/uploadimage", imageLink, {
+            headers: { "Content-Type": "application/json" },
+          });
+          toast.promise(
+            responsePromise,
+            {
+              loading: "Saving image...",
+              success: "Image saved successfully!",
+              error: "Saving failed, try again!",
             },
-            success: {
-              duration: 2500,
-            },
-          }
-        );
-        console.log(response);
-        setProfileImageLink(null);
-        setIsImgUploading(false);
-        window.location.reload();
+            {
+              position: "top-center",
+              style: {
+                minWidth: "250px",
+              },
+              success: {
+                duration: 2500,
+              },
+            }
+          );
+          await responsePromise;
+          setProfileImageLink(null);
+          window.location.reload();
+        } catch (err) {
+          console.error(err);
+        } finally {
+          setIsImgUploading(false);
+        }
       }
     }
     uploadImg();

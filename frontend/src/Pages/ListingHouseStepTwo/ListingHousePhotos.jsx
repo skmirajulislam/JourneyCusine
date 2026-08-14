@@ -20,7 +20,7 @@ const ListingHousePhotos = () => {
         </p>
       </div>
       <PhotosCard />
-      {/* showing cloudinary saved link images */}
+      {/* showing uploaded images */}
       <div className=" grid grid-cols-2 gap-5 items-center">
         {housePhoto.length === 0
           ? null

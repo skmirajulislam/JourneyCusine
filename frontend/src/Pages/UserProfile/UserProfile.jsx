@@ -29,9 +29,9 @@ const UserProfile = () => {
     const hasReloadedFromStorage = localStorage.getItem('hasReloaded');
     if (!hasReloaded && hasReloadedFromStorage !== 'true') {
       // Reload the page only once
-      window.location.reload();
-      setHasReloaded(true);
       localStorage.setItem('hasReloaded', 'true');
+      setHasReloaded(true);
+      window.location.reload();
     }
   }, [hasReloaded]);
 

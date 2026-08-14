@@ -4,6 +4,7 @@ import { LiaPhotoVideoSolid } from "react-icons/lia";
 import { useDispatch, useSelector } from "react-redux";
 import { PropagateLoader } from "react-spinners";
 import { createNewHouse } from "../../redux/actions/houseActions";
+import { uploadFiles } from "../../utils/uploadthing";
 
 const PhotosCard = () => {
   const newHouseData = useSelector((state) => state.house.newHouse);
@@ -13,12 +14,6 @@ const PhotosCard = () => {
   const dispatch = useDispatch();
 
   const handleImageSelect = (event) => {
-    /* This code block is handling the selection of an image file. It checks if the number of images
-    already selected is equal to 3. If it is, it displays an error message using the `toast.error()`
-    function and returns, preventing further execution of the code. If the number of images is less
-    than 3, it sets the selected image file as the value of the `inputImage` state variable using
-    `setInputImage(event.target.files[0])` and logs the selected file to the console using
-    `console.log(event.target.files[0])`. */
     if (images.length >= 3) {
       toast.error("Maximum images uploaded");
       return;
@@ -51,55 +46,34 @@ const PhotosCard = () => {
   ]);
 
   useEffect(() => {
-    async function uploadImagetoCloudinary() {
-      if (inputImage !== null && inputImage?.size / 500000 < 5) {
-        // console.log(isImgUploading, "loading state");
-        const imageFormData = new FormData();
-        imageFormData.append("file", inputImage);
-        imageFormData.append("upload_preset", "house-hunter");
-        imageFormData.append("cloud_name", "dc7c1v9e7");
+    async function uploadImageToUploadThing() {
+      if (inputImage !== null) {
+        if (inputImage.size > 5 * 1024 * 1024) {
+          toast.error("Image size can't exceed 5MB");
+          setInputImage(null);
+          return;
+        }
 
-        // saving to cloudinary
         setIsImgUploading(true);
         try {
-          await fetch(
-            "https://api.cloudinary.com/v1_1/dc7c1v9e7/image/upload",
-            {
-              method: "POST",
-              body: imageFormData,
-            }
-          )
-            .then((res) => res.json())
-            .then((data) => {
-              console.log(data);
-              setImages((currentImages) => [...currentImages, data.url]);
-              if (data.error) {
-                toast.error(data?.error?.message);
-                setIsImgUploading(false);
-                setImages(null);
-              } else {
-                setIsImgUploading(false);
-              }
-            })
-            .catch((err) => {
-              toast.error(err.message + "try again");
-              setIsImgUploading(false);
-            });
+          const res = await uploadFiles("imageUploader", {
+            files: [inputImage],
+          });
+          if (res && res[0]?.url) {
+            setImages((currentImages) => [...currentImages, res[0].url]);
+          } else {
+            toast.error("Upload failed, try again.");
+          }
         } catch (error) {
-          console.log(error);
-          toast.error(error);
-          setIsImgUploading(false);
+          console.error(error);
+          toast.error(error?.message || "Upload error, try again");
         } finally {
           setIsImgUploading(false);
           setInputImage(null);
         }
-      } else if (inputImage?.size / 500000 > 5) {
-        toast.error("Image size can't exceed 5mb");
-        setIsImgUploading(false);
       }
     }
-    uploadImagetoCloudinary();
-    // only when input file takes an image we want to save it to cloudinary that's why only one dependency
+    uploadImageToUploadThing();
   }, [inputImage]);
 
   console.log(images);
@@ -117,7 +91,7 @@ const PhotosCard = () => {
           <div>
             <LiaPhotoVideoSolid size={72} />
           </div>
-          {/* loading when image is uploading in cloudinary */}
+          {/* loading when image is uploading */}
 
           <div className="text-center h-[100px]">
             <h6 className=" text-2xl text-black font-medium py-2">

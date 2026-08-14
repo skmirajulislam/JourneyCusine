@@ -9,12 +9,23 @@ const reservations = require("./routes/reservations.js");
 require("dotenv").config();
 
 
+const { createRouteHandler } = require("uploadthing/express");
+const { uploadRouter } = require("./uploadthing.js");
+
 const app = express();
 
 // parse Data
 app.use(express.json());
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
+
+// UploadThing route handler
+app.use(
+  "/api/uploadthing",
+  createRouteHandler({
+    router: uploadRouter,
+  })
+);
 
 // Use routes
 app.use("/auth", auth);
