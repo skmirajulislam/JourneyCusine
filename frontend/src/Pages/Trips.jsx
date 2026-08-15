@@ -32,49 +32,62 @@ import { FadeLoader } from "react-spinners";
 import { toast } from "react-hot-toast";
 import api, { API } from "../backend";
 import AuthenticationPopUp from "../components/popUp/authentication/AuthenticationPopUp";
+import { useTheme } from "../context/ThemeContext";
 
-// Custom Leaflet Motel Marker Icon
-const createMotelIcon = (price) => {
+// Custom Leaflet Motel Marker Icon with Theme Awareness
+const createMotelIcon = (price, isDark = false) => {
+  const bg = isDark ? "#18181b" : "#ffffff";
+  const text = isDark ? "#ffffff" : "#111827";
+  const border = isDark ? "#ff385c" : "#111827";
+  const shadow = isDark
+    ? "0 4px 14px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.15)"
+    : "0 3px 10px rgba(0,0,0,0.28)";
+
   return L.divIcon({
     className: "custom-motel-marker",
     html: `<div style="
-      background-color: #ffffff;
-      color: #111827;
-      font-weight: 700;
-      font-size: 11px;
-      padding: 4px 9px;
+      background-color: ${bg};
+      color: ${text};
+      font-weight: 800;
+      font-size: 11.5px;
+      padding: 5px 9px;
       border-radius: 20px;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.28);
-      border: 1.5px solid #111827;
+      box-shadow: ${shadow};
+      border: 1.8px solid ${border};
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 4.5px;
       cursor: pointer;
       white-space: nowrap;
     ">
-      <span>🏨</span>
-      <span>$${price || 100}</span>
+      <span style="font-size: 12px;">🏨</span>
+      <span style="color: ${text}; font-weight: 800; letter-spacing: -0.2px;">$${price || 100}</span>
     </div>`,
-    iconSize: [64, 26],
-    iconAnchor: [32, 13],
+    iconSize: [68, 28],
+    iconAnchor: [34, 14],
   });
 };
 
-// Custom Leaflet Trip Destination Marker Icon
-const createDestIcon = (number, isPast) => {
+// Custom Leaflet Trip Destination Marker Icon with Theme Awareness
+const createDestIcon = (number, isPast, isDark = false) => {
   const bg = isPast ? "#10b981" : "#ff385c";
+  const border = isDark ? "#18181b" : "#ffffff";
+  const shadow = isDark
+    ? "0 4px 14px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.2)"
+    : "0 4px 12px rgba(0,0,0,0.4)";
+
   return L.divIcon({
     className: "custom-dest-marker",
     html: `<div style="
       background-color: ${bg};
       color: white;
-      font-weight: bold;
+      font-weight: 800;
       font-size: 12px;
       width: 32px;
       height: 32px;
       border-radius: 50%;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-      border: 2.5px solid #ffffff;
+      box-shadow: ${shadow};
+      border: 2.5px solid ${border};
       display: flex;
       align-items: center;
       justify-content: center;
@@ -204,6 +217,9 @@ CountdownBadge.displayName = "CountdownBadge";
 
 const Trips = () => {
   const user = useSelector((state) => state.user?.userDetails);
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+
   const [trips, setTrips] = useState([]);
   const [activeTrip, setActiveTrip] = useState(null);
   const [motels, setMotels] = useState([]);
@@ -979,8 +995,13 @@ const Trips = () => {
             className="w-full h-full z-0"
           >
             <TileLayer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+              key={isDark ? "dark-map-tiles" : "light-map-tiles"}
+              url={
+                isDark
+                  ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                  : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+              }
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
             />
             <MapClickHandler onMapClick={handleMapClick} />
             {mapTarget && <MapController targetCoords={mapTarget} />}
@@ -990,10 +1011,10 @@ const Trips = () => {
               <Marker
                 key={motel._id}
                 position={[motel.lat, motel.lng]}
-                icon={createMotelIcon(motel.basePrice)}
+                icon={createMotelIcon(motel.basePrice, isDark)}
               >
                 <Popup className="custom-leaflet-popup">
-                  <div className="p-1 max-w-[220px]">
+                  <div className="p-1 max-w-[220px] text-gray-900 dark:text-white">
                     {motel.photos?.[0] && (
                       <img
                         src={motel.photos[0]}
@@ -1001,31 +1022,31 @@ const Trips = () => {
                         className="w-full h-28 object-cover rounded-xl mb-2"
                       />
                     )}
-                    <h4 className="font-extrabold text-sm text-[#111827] truncate">
+                    <h4 className="font-extrabold text-sm text-gray-900 dark:text-white truncate">
                       {motel.title || "Motel Stay"}
                     </h4>
-                    <p className="text-xs text-[#6b7280] truncate">
-                      {motel.location?.city?.name},{" "}
-                      {motel.location?.country?.name}
+                    <p className="text-xs text-gray-500 dark:text-neutral-400 truncate">
+                      {motel.location?.city?.name || (typeof motel.location?.city === "string" ? motel.location.city : "")},{" "}
+                      {motel.location?.country?.name || (typeof motel.location?.country === "string" ? motel.location.country : "")}
                     </p>
-                    <p className="text-xs font-extrabold text-[#111827] mt-1">
-                      ${motel.basePrice} <span className="font-normal">/ night</span>
+                    <p className="text-xs font-extrabold text-gray-900 dark:text-white mt-1">
+                      ${motel.basePrice} <span className="font-normal text-gray-500 dark:text-neutral-400">/ night</span>
                     </p>
                     <div className="flex items-center gap-1 text-xs text-amber-500 font-bold my-1">
                       <AiFillStar size={12} />
                       <span>{motel.ratings || "New"}</span>
                     </div>
-                    <div className="flex items-center gap-2 mt-2 pt-2 border-t border-neutral-100">
+                    <div className="flex items-center gap-2 mt-2 pt-2 border-t border-gray-100 dark:border-gray-800">
                       <Link
                         to={`/rooms/${motel._id}`}
-                        className="flex-1 text-center py-1.5 px-2 rounded-xl bg-[#111827] text-white text-xs font-bold hover:bg-black"
+                        className="flex-1 text-center py-1.5 px-2 rounded-xl bg-[#111827] dark:bg-white text-white dark:text-[#111827] text-xs font-bold hover:bg-black dark:hover:bg-neutral-200 transition"
                       >
                         View
                       </Link>
                       <button
                         type="button"
                         onClick={() => handleAddMotelToTrip(motel)}
-                        className="flex-1 text-center py-1.5 px-2 rounded-xl bg-[#ff385c] text-white text-xs font-bold hover:bg-[#d90b63] cursor-pointer"
+                        className="flex-1 text-center py-1.5 px-2 rounded-xl bg-[#ff385c] text-white text-xs font-bold hover:bg-[#d90b63] transition cursor-pointer"
                       >
                         + Add Trip
                       </button>
@@ -1042,22 +1063,22 @@ const Trips = () => {
                 <Marker
                   key={dest._id}
                   position={[dest.latitude, dest.longitude]}
-                  icon={createDestIcon(idx + 1, isPast)}
+                  icon={createDestIcon(idx + 1, isPast, isDark)}
                 >
                   <Popup>
-                    <div className="p-1 max-w-[200px]">
+                    <div className="p-1 max-w-[200px] text-gray-900 dark:text-white">
                       <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#ff385c]">
                         Stop #{idx + 1}
                       </span>
-                      <h4 className="font-extrabold text-sm text-[#111827] mt-0.5">
+                      <h4 className="font-extrabold text-sm text-gray-900 dark:text-white mt-0.5">
                         {dest.title}
                       </h4>
                       {dest.address && (
-                        <p className="text-xs text-[#6b7280] mt-0.5">
+                        <p className="text-xs text-gray-500 dark:text-neutral-400 mt-0.5">
                           {dest.address}
                         </p>
                       )}
-                      <p className="text-xs font-semibold text-[#111827] mt-1">
+                      <p className="text-xs font-semibold text-gray-900 dark:text-white mt-1">
                         ⏰ {new Date(dest.visitTime).toLocaleString()}
                       </p>
                       {dest.activities?.length > 0 && (
@@ -1068,7 +1089,7 @@ const Trips = () => {
                       <button
                         type="button"
                         onClick={() => handleRemoveDestination(dest._id)}
-                        className="mt-2.5 w-full py-1 text-center rounded-lg bg-red-50 text-red-600 text-xs font-bold hover:bg-red-100 cursor-pointer"
+                        className="mt-2.5 w-full py-1 text-center rounded-lg bg-red-50 dark:bg-red-950/60 text-red-600 dark:text-red-300 text-xs font-bold hover:bg-red-100 dark:hover:bg-red-900/60 transition cursor-pointer"
                       >
                         Remove Pin
                       </button>
