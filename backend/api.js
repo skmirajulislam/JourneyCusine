@@ -17,9 +17,9 @@ const { uploadRouter } = require("./uploadthing.js");
 const app = express();
 
 // parse Data
-app.use(express.json());
+app.use(express.json({ limit: "20mb" }));
 app.use(cors());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ limit: "20mb", extended: true }));
 
 // UploadThing route handler
 app.use(

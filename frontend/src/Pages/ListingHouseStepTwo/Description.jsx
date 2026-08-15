@@ -1,31 +1,46 @@
-import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { createNewHouse } from "../../redux/actions/houseActions";
 
 const Description = () => {
-  const { register } = useForm();
-  const [characterCount, setCharacterCount] = useState(0);
-  const [description, setDescription] = useState(null);
   const newHouseData = useSelector((state) => state.house.newHouse);
+  const currentListing = useSelector((state) => state.house.currentListingHouse);
+  const initialDesc = newHouseData?.description || currentListing?.description || "";
+
+  const [description, setDescription] = useState(initialDesc);
+  const [characterCount, setCharacterCount] = useState(initialDesc.length);
   const dispatch = useDispatch();
 
-  const handleChange = () => {
+  useEffect(() => {
+    if (initialDesc && !description) {
+      setDescription(initialDesc);
+      setCharacterCount(initialDesc.length);
+    }
+  }, [initialDesc, description]);
+
+  const updateReduxDesc = (newVal) => {
     dispatch(
       createNewHouse(
-        newHouseData?.houseType,
-        newHouseData?.privacyType,
-        newHouseData?.location,
-        newHouseData?.floorPlan,
-        newHouseData?.amenities,
-        newHouseData?.photos,
-        newHouseData?.title,
-        newHouseData?.highlights,
-        description
+        newHouseData?.houseType || currentListing?.houseType,
+        newHouseData?.privacyType || currentListing?.privacyType,
+        newHouseData?.location || currentListing?.location,
+        newHouseData?.floorPlan || currentListing?.floorPlan,
+        newHouseData?.amenities || currentListing?.amenities,
+        newHouseData?.photos || currentListing?.photos,
+        newHouseData?.title || currentListing?.title,
+        newHouseData?.highlights || currentListing?.highlight,
+        newVal
       )
     );
   };
-  console.log(description, "description");
+
+  const handleInputChange = (e) => {
+    const val = e.target.value;
+    setDescription(val);
+    setCharacterCount(val.length);
+    updateReduxDesc(val);
+  };
+
   return (
     <div className="flex flex-col gap-8 max-w-screen-sm mx-auto my-6 min-h-[80vh]">
       <div>
@@ -33,27 +48,29 @@ const Description = () => {
           Create your description
         </h1>
         <p className="text-sm sm:text-base md:text-lg text-[#717171] dark:text-neutral-400">
-          Share what makes your place special.
+          Share what makes your place special, nearby attractions, and amenities.
         </p>
       </div>
       <div>
         <textarea
-          className="w-full p-3 border-[#b0b0b0] dark:border-neutral-700 bg-white dark:bg-[#1f1f1f] text-[#111827] dark:text-white border-[1.3px] rounded-2xl focus:outline-none focus:border-black dark:focus:border-white transition-all shadow-xs"
-          rows="9"
-          autoComplete="off"
-          {...register("profileDetailsAbout", { maxLength: 1600 })}
-          onChange={(event) => {
-            setDescription(event.target.value);
-            setCharacterCount(event.target.value.replace(/\s/g, " ").length);
-            handleChange(event);
-          }}
-          onBlur={handleChange}
-          placeholder="Write your house description here..."
-        ></textarea>
-        <div className="mt-2 mb-3">
+          className="w-full p-3.5 border-[#b0b0b0] dark:border-neutral-700 bg-white dark:bg-[#1f1f1f] text-[#111827] dark:text-white border-[1.3px] rounded-2xl focus:outline-none focus:border-black dark:focus:border-white transition-all shadow-xs"
+          rows="8"
+          value={description}
+          onChange={handleInputChange}
+          onBlur={() => updateReduxDesc(description)}
+          placeholder="Write your house and motel stay description here (minimum 10 characters)..."
+          maxLength={1600}
+        />
+        <div className="mt-2 mb-3 flex items-center justify-between">
+          <span className="text-xs text-rose-500 font-medium">
+            {(!description?.trim() || description.trim().length < 10) &&
+              "Description must be at least 10 characters to proceed"}
+          </span>
           <p
-            className={`text-xs font-semibold mt-1 flex flex-row-reverse ${
-              characterCount > 1600 ? "text-red-400" : "text-[#717171] dark:text-neutral-400"
+            className={`text-xs font-semibold ${
+              characterCount >= 1600
+                ? "text-red-500"
+                : "text-[#717171] dark:text-neutral-400"
             }`}
           >
             {characterCount}/1600 characters

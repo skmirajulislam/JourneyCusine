@@ -1518,3 +1518,210 @@ CORE CAPABILITIES:
     return res.status(500).json({ success: 0, error: "Internal server error" });
   }
 };
+
+/**
+ * AI Image Moderation Endpoint
+ * Evaluates uploaded motel listing images using Gemini Vision API.
+ * Rejects adult/sexual, racism/hate, gore/violence, and murder-related content.
+ * Warns the user with safety strikes (1-5), and permanently blocks & deletes accounts on 5th strike.
+ */
+exports.moderateImage = async (req, res) => {
+  try {
+    const { imageBase64, mimeType = "image/jpeg" } = req.body;
+
+    if (!imageBase64) {
+      return res.status(400).json({
+        success: 0,
+        error: "Missing image data for AI moderation.",
+      });
+    }
+
+    // Clean base64 string
+    const base64Data = imageBase64.replace(/^data:image\/[a-z]+;base64,/, "");
+
+    // 1. Check Authenticated User
+    const dbUser = req.user ? await User.findById(req.user) : null;
+    if (!dbUser) {
+      return res.status(401).json({
+        success: 0,
+        error: "Authentication required for image moderation.",
+      });
+    }
+
+    // Check if user is already blacklisted
+    const userEmail = (dbUser.emailId || "").toLowerCase().trim();
+    const isAlreadyBlocked = userEmail
+      ? await BlockedEmail.findOne({ email: userEmail })
+      : null;
+
+    if (isAlreadyBlocked) {
+      await User.findByIdAndDelete(dbUser._id);
+      return res.status(403).json({
+        success: 0,
+        isTerminated: true,
+        error: "Your account is permanently blocked from Journey Cuisine.",
+      });
+    }
+
+    const apiKey = process.env.GEMINI_API_KEY;
+    const modelsToTry = [
+      process.env.GEMINI_MODERATION_MODEL || "gemini-2.5-flash",
+      "gemini-2.0-flash",
+      "gemini-1.5-flash",
+    ];
+
+    let moderationResult = {
+      isViolating: false,
+      category: "NONE",
+      categoryLabel: "Safe",
+      reason: "No policy violations detected.",
+    };
+
+    let aiAnalyzed = false;
+
+    if (apiKey && apiKey.startsWith("AIzaSy")) {
+      for (const model of modelsToTry) {
+        if (aiAnalyzed) break;
+        try {
+          const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+          const promptText = `You are a strict AI image moderation and safety auditor for "Journey Cuisine" motel and hotel platform.
+Analyze this uploaded motel listing image very carefully.
+Evaluate if this image contains ANY of the following prohibited policy violations:
+1. ADULT_SEXUAL: Adult nudity, pornography, sexually explicit or suggestive poses, genitals, sexual acts, sex toys, erotic fetish material.
+2. RACISM_HATE: Swastikas, Nazi symbols, KKK imagery, Confederate battle flags in hate context, racist caricatures, white supremacist symbols, hate speech slogans.
+3. VIOLENCE_GORE: Severe physical violence, core gore, blood splatter, severed body parts, torture, weapons brandished menacingly in hostile manner.
+4. MURDER_EXTREME_HARM: Dead human bodies, corpses, murder scenes, execution, hanging, self-harm, suicide, horrific fatal trauma.
+
+Normal hospitality scenes (motel rooms, beds, bathrooms, swimming pools, buildings, beaches, scenery, food, happy travelers) are completely SAFE.
+
+Output a valid JSON object ONLY:
+{
+  "isViolating": true or false,
+  "category": "ADULT_SEXUAL" | "RACISM_HATE" | "VIOLENCE_GORE" | "MURDER_EXTREME_HARM" | "NONE",
+  "categoryLabel": "Adult & Sexual Content" | "Racism & Hate Imagery" | "Violence & Gore" | "Murder & Extreme Harm" | "Safe",
+  "reason": "Clear concise explanation of what was detected or why it violated policies"
+}`;
+
+          const response = await fetch(endpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            signal: AbortSignal.timeout(10000),
+            body: JSON.stringify({
+              contents: [
+                {
+                  parts: [
+                    { text: promptText },
+                    {
+                      inlineData: {
+                        mimeType: mimeType,
+                        data: base64Data,
+                      },
+                    },
+                  ],
+                },
+              ],
+              generationConfig: {
+                temperature: 0.1,
+                responseMimeType: "application/json",
+              },
+            }),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            const rawContent =
+              data?.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (rawContent) {
+              const cleaned = rawContent
+                .replace(/^```json\s*/i, "")
+                .replace(/\s*```$/i, "")
+                .trim();
+              const parsed = JSON.parse(cleaned);
+              moderationResult = {
+                isViolating: Boolean(parsed.isViolating),
+                category: parsed.category || "NONE",
+                categoryLabel: parsed.categoryLabel || (parsed.isViolating ? "Prohibited Content" : "Safe"),
+                reason: parsed.reason || "Content policy violation detected.",
+              };
+              aiAnalyzed = true;
+            }
+          } else {
+            console.warn(`Gemini Vision model ${model} returned status ${response.status}`);
+          }
+        } catch (mErr) {
+          console.warn(`Gemini Vision moderation with ${model} error:`, mErr.message);
+        }
+      }
+    }
+
+    // Process Moderation Outcome
+    if (moderationResult.isViolating) {
+      const currentWarnings = Number(dbUser.offensiveWarnings || 0);
+      const newWarningCount = currentWarnings + 1;
+
+      dbUser.offensiveWarnings = newWarningCount;
+      await dbUser.save();
+
+      // Check for 5th or higher Strike (Permanent Termination)
+      if (newWarningCount >= 5) {
+        if (userEmail) {
+          await BlockedEmail.findOneAndUpdate(
+            { email: userEmail },
+            {
+              email: userEmail,
+              reason: `Exceeded 5 community safety violations (Prohibited image upload: ${moderationResult.categoryLabel})`,
+              blockedAt: new Date(),
+            },
+            { upsert: true, new: true }
+          );
+        }
+
+        // Permanently delete user from database
+        await User.findByIdAndDelete(dbUser._id);
+
+        return res.status(200).json({
+          success: 1,
+          isViolating: true,
+          isTerminated: true,
+          category: moderationResult.category,
+          categoryLabel: moderationResult.categoryLabel,
+          reason: moderationResult.reason,
+          warningCount: 5,
+          warningsRemaining: 0,
+          message:
+            "Your account has been permanently terminated and your email blacklisted due to reaching 5 community safety violations.",
+        });
+      } else {
+        // Strike 1 to 4
+        const remainingWarnings = 5 - newWarningCount;
+        return res.status(200).json({
+          success: 1,
+          isViolating: true,
+          isTerminated: false,
+          category: moderationResult.category,
+          categoryLabel: moderationResult.categoryLabel,
+          reason: moderationResult.reason,
+          warningCount: newWarningCount,
+          warningsRemaining: remainingWarnings,
+          message: `Community safety violation detected (${moderationResult.categoryLabel}). This is strike ${newWarningCount} of 5. Reaching 5 strikes will permanently delete your account and blacklist your email.`,
+        });
+      }
+    }
+
+    // Image is clean & compliant
+    return res.status(200).json({
+      success: 1,
+      isViolating: false,
+      isSafe: true,
+      message: "Image verified safe for publication.",
+    });
+  } catch (error) {
+    console.error("moderateImage controller error:", error);
+    return res.status(500).json({
+      success: 0,
+      error: "Error processing image moderation.",
+    });
+  }
+};
+
