@@ -124,29 +124,48 @@ html[data-theme="dark"] textarea::placeholder {
 }
 
 /* react-select dark mode styling */
-html[data-theme="dark"] .react-select__control {
-  background-color: #2a2a2a !important;
-  border-color: #444444 !important;
+html[data-theme="dark"] .react-select__control,
+html.dark .react-select__control {
+  background-color: #1f1f1f !important;
+  border-color: #404040 !important;
   color: #ffffff !important;
 }
-html[data-theme="dark"] .react-select__menu {
-  background-color: #2a2a2a !important;
-  border-color: #444444 !important;
+html[data-theme="dark"] .react-select__menu,
+html.dark .react-select__menu {
+  background-color: #1f1f1f !important;
+  border-color: #404040 !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
 }
-html[data-theme="dark"] .react-select__option {
-  background-color: #2a2a2a !important;
+html[data-theme="dark"] .react-select__menu-list,
+html.dark .react-select__menu-list {
+  background-color: #1f1f1f !important;
+}
+html[data-theme="dark"] .react-select__option,
+html.dark .react-select__option {
+  background-color: #1f1f1f !important;
   color: #e5e7eb !important;
 }
 html[data-theme="dark"] .react-select__option--is-focused,
-html[data-theme="dark"] .react-select__option:hover {
-  background-color: #383838 !important;
-}
-html[data-theme="dark"] .react-select__single-value,
-html[data-theme="dark"] .react-select__input-container {
+html[data-theme="dark"] .react-select__option:hover,
+html.dark .react-select__option--is-focused,
+html.dark .react-select__option:hover {
+  background-color: #2e2e2e !important;
   color: #ffffff !important;
 }
-html[data-theme="dark"] .react-select__placeholder {
-  color: #888888 !important;
+html[data-theme="dark"] .react-select__option--is-selected,
+html.dark .react-select__option--is-selected {
+  background-color: #ff385c !important;
+  color: #ffffff !important;
+}
+html[data-theme="dark"] .react-select__single-value,
+html[data-theme="dark"] .react-select__input-container,
+html.dark .react-select__single-value,
+html.dark .react-select__input-container {
+  color: #ffffff !important;
+}
+html[data-theme="dark"] .react-select__placeholder,
+html.dark .react-select__placeholder {
+  color: #737373 !important;
 }
 
 /* Category bar search buttons text */
