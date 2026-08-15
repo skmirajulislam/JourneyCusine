@@ -315,15 +315,30 @@ const UserReservationsSection = () => {
                             )}
 
                             {/* Cancellation Action Buttons */}
-                            {resItem.status === "confirmed" && (
-                              <button
-                                type="button"
-                                onClick={() => setCancellingRes(resItem)}
-                                className="w-full py-2 px-3 rounded-xl border border-rose-300 dark:border-rose-800/60 bg-rose-50/50 hover:bg-rose-100 dark:bg-rose-950/20 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 text-xs font-semibold transition-all cursor-pointer flex items-center justify-center gap-1 mt-2"
-                              >
-                                Request Cancellation
-                              </button>
-                            )}
+                            {resItem.status === "confirmed" && (() => {
+                              const outDate = new Date(resItem.checkOut || resItem.checkIn || Date.now());
+                              outDate.setHours(23, 59, 59, 999);
+                              const isCompleted = outDate < new Date();
+
+                              if (isCompleted) {
+                                return (
+                                  <div className="p-2 rounded-xl bg-neutral-100 dark:bg-[#252525] border border-neutral-200 dark:border-[#333333] text-[11px] text-gray-500 dark:text-gray-400 mt-2 flex items-center justify-center gap-1">
+                                    <FiCheckCircle className="text-gray-400" size={12} />
+                                    <span>Stay Completed (Non-refundable)</span>
+                                  </div>
+                                );
+                              }
+
+                              return (
+                                <button
+                                  type="button"
+                                  onClick={() => setCancellingRes(resItem)}
+                                  className="w-full py-2 px-3 rounded-xl border border-rose-300 dark:border-rose-800/60 bg-rose-50/50 hover:bg-rose-100 dark:bg-rose-950/20 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 text-xs font-semibold transition-all cursor-pointer flex items-center justify-center gap-1 mt-2"
+                                >
+                                  Request Cancellation
+                                </button>
+                              );
+                            })()}
 
                             {resItem.status === "cancellation_requested" && (
                               <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-500/20 text-[11px] text-amber-800 dark:text-amber-300 mt-2">

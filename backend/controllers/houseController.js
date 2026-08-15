@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const User = require("../models/user.model.js");
 const House = require("../models/house.model.js");
 const Reservation = require("../models/reservation.model.js");
+const Review = require("../models/review.model.js");
 require('dotenv').config() 
 
 exports.saveHouseStructure = async (req, res) => {
@@ -492,20 +493,48 @@ exports.publishList = async (req, res) => {
 
 exports.getAllListing = async (req, res) => {
     try {
-        const data = await House.find({});
+        const data = await House.find({}).lean();
 
-        const allListingData = data.filter((listing) => {
-            return listing.status === "Complete" && listing.photos.length !== 0
-        })
-        // console.log(allListingData.length)
+        // Dynamically compute average ratings from Review collection
+        const reviewStats = await Review.aggregate([
+            {
+                $group: {
+                    _id: "$listingId",
+                    avgRating: { $avg: "$rating" },
+                    reviewsCount: { $sum: 1 },
+                },
+            },
+        ]);
+
+        const ratingsMap = {};
+        reviewStats.forEach((r) => {
+            ratingsMap[String(r._id)] = {
+                avgRating: Number(r.avgRating.toFixed(1)),
+                reviewsCount: r.reviewsCount,
+            };
+        });
+
+        const allListingData = data
+            .filter((listing) => listing.status === "Complete" && listing.photos?.length !== 0)
+            .map((listing) => {
+                const stats = ratingsMap[String(listing._id)];
+                return {
+                    ...listing,
+                    ratings: stats ? stats.avgRating : null,
+                    reviews: stats ? `${stats.reviewsCount} review${stats.reviewsCount === 1 ? "" : "s"}` : "No reviews",
+                    reviewsCount: stats ? stats.reviewsCount : 0,
+                };
+            });
+
         let response = {
             succeed: 1,
             status: 200,
             allListingData
-        }
+        };
         res.status(200).send(response);
     } catch (error) {
-        console.log(error)
+        console.error("getAllListing error:", error);
+        res.status(500).json({ error: error.message });
     }
 }
 
@@ -515,19 +544,49 @@ exports.getListingDataWithCat = async (req, res) => {
         const payload = req.body;
         const category = payload.category;
 
-        const catBasedListing = await House.find({
+        const data = await House.find({
             houseType: { $eq: category }
+        }).lean();
+
+        // Dynamically compute average ratings
+        const reviewStats = await Review.aggregate([
+            {
+                $group: {
+                    _id: "$listingId",
+                    avgRating: { $avg: "$rating" },
+                    reviewsCount: { $sum: 1 },
+                },
+            },
+        ]);
+
+        const ratingsMap = {};
+        reviewStats.forEach((r) => {
+            ratingsMap[String(r._id)] = {
+                avgRating: Number(r.avgRating.toFixed(1)),
+                reviewsCount: r.reviewsCount,
+            };
+        });
+
+        const catBasedListing = data.map((listing) => {
+            const stats = ratingsMap[String(listing._id)];
+            return {
+                ...listing,
+                ratings: stats ? stats.avgRating : null,
+                reviews: stats ? `${stats.reviewsCount} review${stats.reviewsCount === 1 ? "" : "s"}` : "No reviews",
+                reviewsCount: stats ? stats.reviewsCount : 0,
+            };
         });
 
         const response = {
             succeed: 1,
             success: 200,
             catBasedListing
-        }
+        };
 
-        res.status(200).send(response)
+        res.status(200).send(response);
     } catch (error) {
-        console.log(error)
+        console.error("getListingDataWithCat error:", error);
+        res.status(500).json({ error: error.message });
     }
 }
 
@@ -540,10 +599,23 @@ exports.getOneListing = async (req, res) => {
             return res.status(400).json({ error: "Listing ID is required" });
         }
 
-        const listingData = await House.findById(listingId);
-        if (!listingData) {
+        const listingDataDoc = await House.findById(listingId).lean();
+        if (!listingDataDoc) {
             return res.status(404).json({ error: "Listing not found" });
         }
+
+        // Dynamically compute average rating from Review collection
+        const reviews = await Review.find({ listingId: String(listingId) }).lean();
+        const avg = reviews.length > 0
+            ? Number((reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1))
+            : null;
+
+        const listingData = {
+            ...listingDataDoc,
+            ratings: avg,
+            reviews: reviews.length > 0 ? `${reviews.length} review${reviews.length === 1 ? "" : "s"}` : "No reviews",
+            reviewsCount: reviews.length,
+        };
 
         let authorDetails = null;
 

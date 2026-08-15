@@ -39,16 +39,24 @@ const ReservationsData = ({ active }) => {
       ) {
         return false;
       }
-      if (!r.checkOut) return true;
-      return new Date(r.checkOut) >= todayStart;
+      const outDate = new Date(r.checkOut || r.checkIn || Date.now());
+      outDate.setHours(23, 59, 59, 999);
+      return outDate >= todayStart;
     });
   }, [uniqueReservations, todayStart]);
 
   const completedReservations = useMemo(() => {
     return uniqueReservations.filter((r) => {
-      if (r.status !== "confirmed" && r.status !== undefined) return false;
-      if (!r.checkOut) return false;
-      return new Date(r.checkOut) < todayStart;
+      if (
+        r.status === "cancellation_requested" ||
+        r.status === "refunded" ||
+        r.status === "cancelled"
+      ) {
+        return false;
+      }
+      const outDate = new Date(r.checkOut || r.checkIn || Date.now());
+      outDate.setHours(23, 59, 59, 999);
+      return outDate < todayStart;
     });
   }, [uniqueReservations, todayStart]);
 

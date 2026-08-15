@@ -481,6 +481,15 @@ exports.requestCancellation = async (req, res) => {
         .json({ message: "Reservation is already cancelled/refunded" });
     }
 
+    // Prevent cancellation if checkout date has already passed
+    const outDate = new Date(reservation.checkOut || reservation.checkIn || reservation.created_at);
+    outDate.setHours(23, 59, 59, 999);
+    if (outDate < new Date()) {
+      return res.status(400).json({
+        message: "Cannot request cancellation or refund for a completed stay.",
+      });
+    }
+
     reservation.status = "cancellation_requested";
     reservation.cancellationReason = reason || "Guest requested cancellation";
     reservation.cancellationRequestedAt = new Date();

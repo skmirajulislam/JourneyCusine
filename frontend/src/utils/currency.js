@@ -200,10 +200,29 @@ export function convertPrice(amountInUSD, targetCurrency = "INR") {
 }
 
 /**
- * Format price with dynamic symbol
+ * Get currency symbol by code
+ */
+export function getCurrencySymbol(currencyCode = "INR") {
+  return CURRENCY_SYMBOLS[currencyCode] || "$";
+}
+
+/**
+ * Format price with dynamic symbol from USD base
  */
 export function formatPrice(amountInUSD, targetCurrency = "INR") {
-  const symbol = CURRENCY_SYMBOLS[targetCurrency] || "$";
+  const symbol = getCurrencySymbol(targetCurrency);
   const converted = convertPrice(amountInUSD, targetCurrency);
   return `${symbol}${converted.toLocaleString()}`;
+}
+
+/**
+ * Format native amount directly in target currency with symbol
+ */
+export function formatCurrency(amount, currencyCode = "INR") {
+  if (amount === undefined || amount === null || isNaN(amount)) {
+    return `${getCurrencySymbol(currencyCode)}0`;
+  }
+  const symbol = getCurrencySymbol(currencyCode);
+  const num = Math.round(Number(amount));
+  return `${symbol}${num.toLocaleString()}`;
 }

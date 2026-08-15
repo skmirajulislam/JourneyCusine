@@ -25,14 +25,22 @@ const ReservationsList = ({ active, setActivePage }) => {
       ) {
         return false;
       }
-      if (!r.checkOut) return true;
-      return new Date(r.checkOut) >= todayStart;
+      const outDate = new Date(r.checkOut || r.checkIn || Date.now());
+      outDate.setHours(23, 59, 59, 999);
+      return outDate >= todayStart;
     }).length;
 
     const completed = uniqueReservations.filter((r) => {
-      if (r.status !== "confirmed" && r.status !== undefined) return false;
-      if (!r.checkOut) return false;
-      return new Date(r.checkOut) < todayStart;
+      if (
+        r.status === "cancellation_requested" ||
+        r.status === "cancelled" ||
+        r.status === "refunded"
+      ) {
+        return false;
+      }
+      const outDate = new Date(r.checkOut || r.checkIn || Date.now());
+      outDate.setHours(23, 59, 59, 999);
+      return outDate < todayStart;
     }).length;
 
     const cancellations = uniqueReservations.filter(

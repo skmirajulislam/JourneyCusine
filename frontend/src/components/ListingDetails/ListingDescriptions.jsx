@@ -2,6 +2,7 @@ import ListingDescriptionPopup from "../popUp/ListingDescriptionPopup";
 import Map from "../../components/Map";
 import { amenities } from "./amenitiesApi";
 import { AiOutlineRight } from "react-icons/ai";
+import PropertyReviews from "../reviews/PropertyReviews";
 
 /* eslint-disable react/prop-types */
 const ListingDescriptions = ({ listingData, author }) => {
@@ -117,6 +118,9 @@ const ListingDescriptions = ({ listingData, author }) => {
           )}
         </div>
       </div>
+
+      {/* Reviews & Guest Feedback Section */}
+      <PropertyReviews listingId={listingData?._id} />
 
       {/* full description modal */}
       <ListingDescriptionPopup description={listingData?.description} />

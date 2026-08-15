@@ -1,17 +1,20 @@
 /* eslint-disable react/prop-types */
 import { useState } from "react";
 import { AiFillStar, AiOutlineHeart, AiFillHeart } from "react-icons/ai";
+import { FiCheck } from "react-icons/fi";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-hot-toast";
 import api from "../../backend";
 import { updateWishlist } from "../../redux/actions/userActions";
 import AuthenticationPopUp from "../popUp/authentication/AuthenticationPopUp";
 import { useCurrency } from "../../context/CurrencyContext";
+import { useActiveReservations } from "../../hooks/useActiveReservations";
 
 const ListingPreviewCard = ({ listingData, showBeforeTaxPrice }) => {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.user?.userDetails);
-  const { formatPrice, convertPrice, symbol } = useCurrency();
+  const { formatPrice } = useCurrency();
+  const { isListingReserved } = useActiveReservations();
   const [showAuthPopup, setShowAuthPopup] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -23,6 +26,8 @@ const ListingPreviewCard = ({ listingData, showBeforeTaxPrice }) => {
   const isSaved = (user?.wishlist || []).some(
     (id) => (typeof id === "object" ? id?._id : id)?.toString() === houseId?.toString()
   );
+
+  const hasActiveReservation = isListingReserved(houseId);
 
   const handleToggleWishlist = async (e) => {
     e.preventDefault();
@@ -61,6 +66,17 @@ const ListingPreviewCard = ({ listingData, showBeforeTaxPrice }) => {
           alt="Listing images"
           className="w-full h-[310px] md:h-[277px] object-cover object-center rounded-xl group-hover:scale-110 transition duration-500 ease-in-out cursor-pointer"
         />
+
+        {/* Green Tick Reserved Badge (Only shown for active non-completed/non-cancelled bookings) */}
+        {hasActiveReservation && (
+          <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-emerald-600/95 text-white backdrop-blur-md text-[11px] sm:text-xs font-bold flex items-center gap-1 shadow-lg z-10 animate-in fade-in">
+            <span className="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center">
+              <FiCheck size={11} className="stroke-[3]" />
+            </span>
+            <span>Reserved</span>
+          </div>
+        )}
+
         {/* Heart / Wishlist button */}
         <button
           type="button"

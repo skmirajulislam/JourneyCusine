@@ -4,86 +4,166 @@ import revenueIcon from "../../assets/basicIcon/dollar.png";
 import booking from "../../assets/basicIcon/booking.png";
 import house from "../../assets/basicIcon/wallet.png";
 import categories from "../../assets/basicIcon/travel.png";
+import { useCurrency } from "../../context/CurrencyContext";
+import { convertPrice, formatCurrency } from "../../utils/currency";
 
-const DashboardCards = ({ reservations, totalPrice }) => {
-  // calculate total booking
-  const currentDate = new Date(); // Get the current date and time
+const DashboardCards = ({ reservations = [], housesCount = 0 }) => {
+  const { currency: hostCurrency } = useCurrency();
 
-  const activeBookingReservations = reservations?.filter((obj) => {
-    const checkOutDate = new Date(obj.checkOut);
-    return checkOutDate > currentDate;
-  });
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth();
 
-  const activeBooking = activeBookingReservations.length;
+  const prevMonthDate = new Date(currentYear, currentMonth - 1, 1);
+  const prevYear = prevMonthDate.getFullYear();
+  const prevMonth = prevMonthDate.getMonth();
 
-  // calculate authors hosted house
-  const hostedHouse = reservations?.length;
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
 
-  // calculate monthly price
-  function calculateMonthlyEarnings(obj, currentDate) {
-    const checkInDate = new Date(obj.checkIn);
-    const checkOutDate = new Date(obj.checkOut);
-
-    // Check if both checkIn and checkOut dates are within the current month
+  // Helper to extract net earnings for a single reservation in host currency
+  const getNetEarnings = (res) => {
     if (
-      checkInDate.getFullYear() === currentDate.getFullYear() &&
-      checkInDate.getMonth() === currentDate.getMonth() &&
-      checkOutDate.getFullYear() === currentDate.getFullYear() &&
-      checkOutDate.getMonth() === currentDate.getMonth()
+      res.status === "refunded" ||
+      res.status === "cancelled"
     ) {
-      // Calculate the number of days between checkIn and checkOut
-      const numberOfDays = Math.ceil(
-        (checkOutDate - checkInDate) / (1000 * 60 * 60 * 24)
-      );
-
-      // Calculate the total price for the object for the current month
-      const totalPrice = numberOfDays + obj.authorEarnedPrice;
-
-      return totalPrice;
+      return 0; // Refunded reservations contribute 0 to net host earnings
     }
 
-    return 0; // Return 0 for objects outside the current month
-  }
+    if (res.hostEarnings && res.hostCurrency === hostCurrency) {
+      return res.hostEarnings;
+    }
 
-  const currentDates = new Date(); // Get the current date
+    const usdPrice = res.authorEarnedPrice || res.basePrice || 0;
+    return convertPrice(usdPrice, "USD", hostCurrency);
+  };
 
-  const totalMonthlyEarnings = reservations?.reduce(
-    (accumulator, currentObject) => {
-      const objectMonthlyEarnings = calculateMonthlyEarnings(
-        currentObject,
-        currentDates
-      );
-      return accumulator + objectMonthlyEarnings;
-    },
+  // 1. Total Net Revenue
+  const totalRevenue = reservations.reduce(
+    (sum, r) => sum + getNetEarnings(r),
     0
   );
 
-  console.log(reservations, "reservations data");
+  // 2. Active Bookings (Confirmed ongoing & future stays where checkout is today or later)
+  const activeBookings = reservations.filter((r) => {
+    if (
+      r.status === "refunded" ||
+      r.status === "cancelled" ||
+      r.status === "cancellation_requested"
+    ) {
+      return false;
+    }
+    const outDate = new Date(r.checkOut || r.checkIn || Date.now());
+    outDate.setHours(23, 59, 59, 999);
+    return outDate >= startOfToday;
+  }).length;
+
+  // Previous month confirmed bookings
+  const prevMonthActiveBookings = reservations.filter((r) => {
+    if (
+      r.status === "refunded" ||
+      r.status === "cancelled" ||
+      r.status === "cancellation_requested"
+    ) {
+      return false;
+    }
+    const inDate = r.checkIn ? new Date(r.checkIn) : null;
+    return (
+      inDate &&
+      inDate.getFullYear() === prevYear &&
+      inDate.getMonth() === prevMonth
+    );
+  }).length;
+
+  // 3. Current Month vs Previous Month Earnings
+  const currentMonthEarnings = reservations.reduce((sum, r) => {
+    const inDate = r.checkIn ? new Date(r.checkIn) : null;
+    if (
+      inDate &&
+      inDate.getFullYear() === currentYear &&
+      inDate.getMonth() === currentMonth
+    ) {
+      return sum + getNetEarnings(r);
+    }
+    return sum;
+  }, 0);
+
+  const prevMonthEarnings = reservations.reduce((sum, r) => {
+    const inDate = r.checkIn ? new Date(r.checkIn) : null;
+    if (
+      inDate &&
+      inDate.getFullYear() === prevYear &&
+      inDate.getMonth() === prevMonth
+    ) {
+      return sum + getNetEarnings(r);
+    }
+    return sum;
+  }, 0);
+
+  // Helper for computing percentage delta
+  const computeDelta = (current, previous) => {
+    if (previous === 0) {
+      if (current === 0) return { delta: "0.0%", isPositive: true, isNeutral: true };
+      return { delta: "+100%", isPositive: true, isNeutral: false };
+    }
+    const diff = ((current - previous) / previous) * 100;
+    const isPositive = diff >= 0;
+    return {
+      delta: `${isPositive ? "+" : ""}${diff.toFixed(1)}%`,
+      isPositive,
+      isNeutral: Math.abs(diff) < 0.1,
+    };
+  };
+
+  const revenueDelta = computeDelta(currentMonthEarnings, prevMonthEarnings);
+  const bookingDelta = computeDelta(activeBookings, prevMonthActiveBookings);
+  const monthlyDelta = computeDelta(currentMonthEarnings, prevMonthEarnings);
+
+  const displayHousesCount = housesCount > 0 ? housesCount : reservations.length > 0 ? 1 : 0;
+
   return (
-    <div className=" grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 mb-12">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+      {/* 1. Total Revenue */}
       <Cards
-        title={"Total Revenue"}
+        title="Total Revenue"
         icon={revenueIcon}
-        heading={`$${totalPrice}`}
-        subHead={"+12% increase"}
+        heading={formatCurrency(totalRevenue, hostCurrency)}
+        delta={revenueDelta.delta}
+        isPositive={revenueDelta.isPositive}
+        isNeutral={revenueDelta.isNeutral}
+        subHead="vs last month"
       />
+
+      {/* 2. Active Bookings */}
       <Cards
-        title={"Active Booking"}
+        title="Active Bookings"
         icon={booking}
-        heading={`+${activeBooking}`}
-        subHead={"+20% increase"}
+        heading={`+${activeBookings}`}
+        delta={bookingDelta.delta}
+        isPositive={bookingDelta.isPositive}
+        isNeutral={bookingDelta.isNeutral}
+        subHead="vs last month"
       />
+
+      {/* 3. Host Houses */}
       <Cards
-        title={"Host houses"}
+        title="Host Houses"
         icon={house}
-        heading={`+${hostedHouse}`}
-        subHead={"-4% deccrease"}
+        heading={`+${displayHousesCount}`}
+        delta={`${displayHousesCount} Active`}
+        isPositive={true}
+        isNeutral={false}
       />
+
+      {/* 4. Monthly Earned */}
       <Cards
-        title={"Monthly earned"}
+        title="Monthly Earned"
         icon={categories}
-        heading={`+${totalMonthlyEarnings}`}
-        subHead={"-10% deccrease"}
+        heading={formatCurrency(currentMonthEarnings, hostCurrency)}
+        delta={monthlyDelta.delta}
+        isPositive={monthlyDelta.isPositive}
+        isNeutral={monthlyDelta.isNeutral}
+        subHead="vs last month"
       />
     </div>
   );
