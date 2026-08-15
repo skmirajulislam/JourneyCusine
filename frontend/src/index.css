@@ -435,11 +435,18 @@ html[data-theme="dark"] .leaflet-control-attribution a {
 }
 
 .custom-motel-marker {
+  background: transparent !important;
+  border: none !important;
+  width: auto !important;
+  height: auto !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .custom-motel-marker:hover {
-  transform: scale(1.1) translateY(-2px);
+  transform: scale(1.08) translateY(-2px);
   z-index: 1000 !important;
 }
 

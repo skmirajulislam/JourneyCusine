@@ -34,7 +34,7 @@ import api, { API } from "../backend";
 import { useTheme } from "../context/ThemeContext";
 import { useCurrency } from "../context/CurrencyContext";
 
-// Custom Leaflet Motel Marker Icon with Theme Awareness
+// Custom Leaflet Motel Marker Icon with Dynamic Width and Theme Awareness
 const createMotelIcon = (formattedPrice, isDark = false) => {
   const bg = isDark ? "#18181b" : "#ffffff";
   const text = isDark ? "#ffffff" : "#111827";
@@ -50,21 +50,24 @@ const createMotelIcon = (formattedPrice, isDark = false) => {
       color: ${text};
       font-weight: 800;
       font-size: 11.5px;
-      padding: 5px 9px;
-      border-radius: 20px;
+      padding: 4.5px 10px;
+      border-radius: 9999px;
       box-shadow: ${shadow};
       border: 1.8px solid ${border};
-      display: flex;
+      display: inline-flex;
       align-items: center;
-      gap: 4.5px;
+      justify-content: center;
+      gap: 4px;
       cursor: pointer;
       white-space: nowrap;
+      width: max-content;
+      transform: translate(-50%, -50%);
     ">
-      <span style="font-size: 12px;">🏨</span>
-      <span style="color: ${text}; font-weight: 800; letter-spacing: -0.2px;">${formattedPrice || "$100"}</span>
+      <span style="font-size: 11px; line-height: 1;">🏨</span>
+      <span style="color: ${text}; font-weight: 800; letter-spacing: -0.2px; line-height: 1.2;">${formattedPrice || "$100"}</span>
     </div>`,
-    iconSize: [68, 28],
-    iconAnchor: [34, 14],
+    iconSize: [0, 0],
+    iconAnchor: [0, 0],
   });
 };
 
@@ -962,7 +965,7 @@ const Trips = () => {
           }`}
         >
           {/* Top Floating Map Controls: Motel Search & Action Hint */}
-          <div className="absolute top-4 left-4 right-4 z-[500] flex flex-col sm:flex-row items-center gap-3 pointer-events-none">
+          <div className="absolute top-4 left-14 sm:left-16 right-4 z-[500] flex flex-col sm:flex-row items-center gap-3 pointer-events-none">
             <div className="relative flex-1 w-full max-w-md pointer-events-auto shadow-lg rounded-2xl">
               <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400" />
               <input
@@ -970,13 +973,13 @@ const Trips = () => {
                 placeholder="Search motels by city, country or name..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-white/95 dark:bg-[#1e1e1e]/95 backdrop-blur-md border border-neutral-200 dark:border-neutral-700 text-xs sm:text-sm font-medium text-neutral-800 dark:text-neutral-100 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-[#ff385c]"
+                className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-white/95 dark:bg-[#1e1e1e]/95 backdrop-blur-md border border-neutral-200 dark:border-neutral-700 text-xs sm:text-sm font-medium text-neutral-800 dark:text-neutral-100 placeholder-neutral-400 focus:outline-hidden focus:ring-2 focus:ring-[#ff385c]"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 cursor-pointer"
                 >
                   <FiX size={14} />
                 </button>
@@ -992,6 +995,8 @@ const Trips = () => {
           <MapContainer
             center={[23.0, 80.0]}
             zoom={4}
+            minZoom={2}
+            worldCopyJump={true}
             scrollWheelZoom={true}
             className="w-full h-full z-0"
           >
@@ -1007,63 +1012,65 @@ const Trips = () => {
             <MapClickHandler onMapClick={handleMapClick} />
             {mapTarget && <MapController targetCoords={mapTarget} />}
 
-            {/* Motel Pins */}
-            {filteredMotels.map((motel) => (
-              <Marker
-                key={motel._id}
-                position={[motel.lat, motel.lng]}
-                icon={createMotelIcon(formatPrice(motel.basePrice), isDark)}
-              >
-                <Popup className="custom-leaflet-popup">
-                  <div className="p-1 max-w-[220px] text-gray-900 dark:text-white">
-                    {motel.photos?.[0] && (
-                      <img
-                        src={motel.photos[0]}
-                        alt={motel.title}
-                        className="w-full h-28 object-cover rounded-xl mb-2"
-                      />
-                    )}
-                    <h4 className="font-extrabold text-sm text-gray-900 dark:text-white truncate">
-                      {motel.title || "Motel Stay"}
-                    </h4>
-                    <p className="text-xs text-gray-500 dark:text-neutral-400 truncate">
-                      {motel.location?.city?.name || (typeof motel.location?.city === "string" ? motel.location.city : "")},{" "}
-                      {motel.location?.country?.name || (typeof motel.location?.country === "string" ? motel.location.country : "")}
-                    </p>
-                    <p className="text-xs font-extrabold text-gray-900 dark:text-white mt-1">
-                      {formatPrice(motel.basePrice)} <span className="font-normal text-gray-500 dark:text-neutral-400">/ night</span>
-                    </p>
-                    <div className="flex items-center gap-1 text-xs text-amber-500 font-bold my-1">
-                      <AiFillStar size={12} />
-                      <span>{motel.ratings || "New"}</span>
-                    </div>
-                    <div className="flex items-center gap-2 mt-2 pt-2 border-t border-gray-100 dark:border-gray-800">
-                      <Link
-                        to={`/rooms/${motel._id}`}
-                        className="flex-1 text-center py-1.5 px-2 rounded-xl bg-[#111827] dark:bg-white text-white dark:text-[#111827] text-xs font-bold hover:bg-black dark:hover:bg-neutral-200 transition"
-                      >
-                        View
-                      </Link>
-                      <button
-                        type="button"
-                        onClick={() => handleAddMotelToTrip(motel)}
-                        className="flex-1 text-center py-1.5 px-2 rounded-xl bg-[#ff385c] text-white text-xs font-bold hover:bg-[#d90b63] transition cursor-pointer"
-                      >
-                        + Add Trip
-                      </button>
-                    </div>
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
-
-            {/* Scheduled Destination Pins for Active Trip */}
-            {sortedDestinations.map((dest, idx) => {
-              const isPast = new Date(dest.visitTime).getTime() <= Date.now();
-              return (
+            {/* Motel Pins (Repeated seamlessly across all world copies) */}
+            {filteredMotels.flatMap((motel) =>
+              [-720, -360, 0, 360, 720].map((offset) => (
                 <Marker
-                  key={dest._id}
-                  position={[dest.latitude, dest.longitude]}
+                  key={`${motel._id}_${offset}`}
+                  position={[motel.lat, motel.lng + offset]}
+                  icon={createMotelIcon(formatPrice(motel.basePrice), isDark)}
+                >
+                  <Popup className="custom-leaflet-popup">
+                    <div className="p-1 max-w-[220px] text-gray-900 dark:text-white">
+                      {motel.photos?.[0] && (
+                        <img
+                          src={motel.photos[0]}
+                          alt={motel.title}
+                          className="w-full h-28 object-cover rounded-xl mb-2"
+                        />
+                      )}
+                      <h4 className="font-extrabold text-sm text-gray-900 dark:text-white truncate">
+                        {motel.title || "Motel Stay"}
+                      </h4>
+                      <p className="text-xs text-gray-500 dark:text-neutral-400 truncate">
+                        {motel.location?.city?.name || (typeof motel.location?.city === "string" ? motel.location.city : "")},{" "}
+                        {motel.location?.country?.name || (typeof motel.location?.country === "string" ? motel.location.country : "")}
+                      </p>
+                      <p className="text-xs font-extrabold text-gray-900 dark:text-white mt-1">
+                        {formatPrice(motel.basePrice)} <span className="font-normal text-gray-500 dark:text-neutral-400">/ night</span>
+                      </p>
+                      <div className="flex items-center gap-1 text-xs text-amber-500 font-bold my-1">
+                        <AiFillStar size={12} />
+                        <span>{motel.ratings || "New"}</span>
+                      </div>
+                      <div className="flex items-center gap-2 mt-2 pt-2 border-t border-gray-100 dark:border-gray-800">
+                        <Link
+                          to={`/rooms/${motel._id}`}
+                          className="flex-1 text-center py-1.5 px-2 rounded-xl bg-[#111827] dark:bg-white text-white dark:text-[#111827] text-xs font-bold hover:bg-black dark:hover:bg-neutral-200 transition"
+                        >
+                          View
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => handleAddMotelToTrip(motel)}
+                          className="flex-1 text-center py-1.5 px-2 rounded-xl bg-[#ff385c] text-white text-xs font-bold hover:bg-[#d90b63] transition cursor-pointer"
+                        >
+                          + Add Trip
+                        </button>
+                      </div>
+                    </div>
+                  </Popup>
+                </Marker>
+              ))
+            )}
+
+            {/* Scheduled Destination Pins for Active Trip (Repeated seamlessly across all world copies) */}
+            {sortedDestinations.flatMap((dest, idx) => {
+              const isPast = new Date(dest.visitTime).getTime() <= Date.now();
+              return [-720, -360, 0, 360, 720].map((offset) => (
+                <Marker
+                  key={`${dest._id}_${offset}`}
+                  position={[dest.latitude, dest.longitude + offset]}
                   icon={createDestIcon(idx + 1, isPast, isDark)}
                 >
                   <Popup>
@@ -1097,7 +1104,7 @@ const Trips = () => {
                     </div>
                   </Popup>
                 </Marker>
-              );
+              ));
             })}
           </MapContainer>
         </div>
