@@ -104,12 +104,18 @@ html[data-theme="dark"] hr {
 }
 
 /* Input fields in dark mode */
-html[data-theme="dark"] input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
-html[data-theme="dark"] textarea,
+html[data-theme="dark"] input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not(.bg-transparent):not([class*="bg-transparent"]),
+html[data-theme="dark"] textarea:not(.bg-transparent):not([class*="bg-transparent"]),
 html[data-theme="dark"] select {
   background-color: #2a2a2a;
   color: #e5e7eb;
   border-color: #444444;
+}
+
+html[data-theme="dark"] input.bg-transparent,
+html[data-theme="dark"] input[class*="bg-transparent"] {
+  background-color: transparent !important;
+  border-color: transparent !important;
 }
 
 html[data-theme="dark"] input::placeholder,
@@ -279,3 +285,80 @@ html[data-theme="dark"] progress.progress::-webkit-progress-value {
 html[data-theme="dark"] progress.progress::-moz-progress-bar {
   background-color: #ff385c;
 }
+
+/* Airplane takeoff & wind ray animation */
+@keyframes planeTakeoff {
+  0% {
+    transform: rotate(-45deg) translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  25% {
+    transform: rotate(-30deg) translate(-3px, 3px) scale(0.95);
+  }
+  100% {
+    transform: rotate(-15deg) translate(55px, -65px) scale(1.35);
+    opacity: 0;
+  }
+}
+
+@keyframes windRayTrail1 {
+  0% {
+    transform: rotate(45deg) scaleX(0);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+    transform: rotate(45deg) scaleX(1);
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(45deg) translate(-25px, 25px) scaleX(1.8);
+  }
+}
+
+@keyframes windRayTrail2 {
+  0% {
+    transform: rotate(45deg) scaleX(0);
+    opacity: 0;
+  }
+  40% {
+    opacity: 0.9;
+    transform: rotate(45deg) scaleX(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(45deg) translate(-35px, 35px) scaleX(2.2);
+  }
+}
+
+@keyframes windRayTrail3 {
+  0% {
+    transform: rotate(45deg) scaleX(0);
+    opacity: 0;
+  }
+  35% {
+    opacity: 0.8;
+    transform: rotate(45deg) scaleX(0.9);
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(45deg) translate(-20px, 20px) scaleX(1.5);
+  }
+}
+
+.animate-plane-takeoff {
+  animation: planeTakeoff 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.animate-wind-ray-1 {
+  animation: windRayTrail1 0.45s ease-out forwards;
+}
+
+.animate-wind-ray-2 {
+  animation: windRayTrail2 0.45s ease-out 0.04s forwards;
+}
+
+.animate-wind-ray-3 {
+  animation: windRayTrail3 0.45s ease-out 0.08s forwards;
+}
+

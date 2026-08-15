@@ -1,4 +1,5 @@
 const User = require("../models/user.model.js");
+const BlockedEmail = require("../models/blockedEmail.model.js");
 const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
@@ -21,6 +22,17 @@ exports.signUp = async (req, res, next) => {
         }
         if (!payload.birthDate) {
             throw new Error("Please provide date of birth");
+        }
+
+        // Check if email is permanently blacklisted
+        const isBlocked = await BlockedEmail.findOne({ email: payload.emailId.toLowerCase().trim() });
+        if (isBlocked) {
+            return res.status(403).json({
+                info: "This email address has been permanently blacklisted from Journey Cuisine due to violations of community safety guidelines.",
+                success: 0,
+                status: 403,
+                isBlocked: true
+            });
         }
 
         const passwordHash = await bcrypt.hash(payload.password, saltRounds)
@@ -78,12 +90,31 @@ exports.logIn = async (req, res) => {
     const email = payload.email;
     const password = payload.password;
 
-    const findCriteria = {
-        emailId: email
-    }
-    const userDetails = await User.find(findCriteria).limit(1).exec();
-
     try {
+        // Check if email is permanently blacklisted
+        const isBlocked = await BlockedEmail.findOne({ email: (email || "").toLowerCase().trim() });
+        if (isBlocked) {
+            return res.status(403).json({
+                info: "This email address has been permanently blacklisted from Journey Cuisine due to violations of community safety guidelines.",
+                success: 0,
+                status: 403,
+                isBlocked: true
+            });
+        }
+
+        const findCriteria = {
+            emailId: email
+        }
+        const userDetails = await User.find(findCriteria).limit(1).exec();
+
+        if (!userDetails || userDetails.length === 0) {
+            return res.status(404).json({
+                info: "User not found",
+                success: 0,
+                status: 404
+            });
+        }
+
         let isMatched = await bcrypt.compare(password, userDetails[0].password)
         if (isMatched) {
             const accessToken = jwt.sign(
@@ -214,6 +245,19 @@ exports.getUserDetails = async (req, res) => {
 exports.checkEmail = async (req, res) => {
     try {
         const payload = req.body;
+        const email = (payload.email || "").toLowerCase().trim();
+
+        // Check if blacklisted
+        const isBlocked = await BlockedEmail.findOne({ email });
+        if (isBlocked) {
+            return res.status(403).json({
+                info: "This email address has been permanently blacklisted from Journey Cuisine.",
+                success: 0,
+                status: 403,
+                isBlocked: true
+            });
+        }
+
         const findCriteria = {
             emailId: payload.email
         };

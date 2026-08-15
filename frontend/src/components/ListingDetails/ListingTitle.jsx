@@ -85,15 +85,14 @@ const ListingTitle = ({ listingData }) => {
               type="button"
               onClick={handleToggleWishlist}
               disabled={isUpdating}
-              className="flex flex-row-reverse gap-2 items-center cursor-pointer p-2 rounded-md bg-white dark:bg-[#2a2a2a] hover:bg-[#f1f1f1] dark:hover:bg-[#333333] transition duration-200 ease-in border border-[#dddddd] dark:border-[#444444]"
+              className="flex items-center justify-center p-2.5 rounded-full bg-white dark:bg-[#2a2a2a] hover:bg-[#f1f1f1] dark:hover:bg-[#333333] transition duration-200 ease-in border border-[#dddddd] dark:border-[#444444] shadow-xs cursor-pointer"
+              aria-label={isSaved ? "Remove from wishlist" : "Save to wishlist"}
+              title={isSaved ? "Saved to wishlist" : "Save to wishlist"}
             >
-              <span className="text-sm underline underline-offset-1 font-medium">
-                {isSaved ? "Saved" : "Save"}
-              </span>
               {isSaved ? (
-                <AiFillHeart size={18} className="text-[#ff385c]" />
+                <AiFillHeart size={20} className="text-[#ff385c]" />
               ) : (
-                <AiOutlineHeart size={18} />
+                <AiOutlineHeart size={20} className="text-neutral-700 dark:text-neutral-200" />
               )}
             </button>
           </div>

@@ -36,6 +36,10 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: "visitors",
     },
+    offensiveWarnings: {
+        type: Number,
+        default: 0,
+    },
     profileImg: {
         type: String
     },

@@ -18,6 +18,13 @@ const ListingDescriptions = ({ listingData, author }) => {
       }`
     : "Host";
 
+  const hostPhoto =
+    author?.profileImg ||
+    author?.user_image ||
+    author?.avatar ||
+    author?.photo ||
+    listingData?.authorDetails?.profileImg;
+
   return (
     <>
       <div className="flex flex-row justify-between items-center min-h-16 py-2">
@@ -34,16 +41,20 @@ const ListingDescriptions = ({ listingData, author }) => {
         </div>
         {/* host profile img */}
         <div className="shrink-0 ml-4">
-          {author?.profileImg ? (
-            <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-[#dddddd] dark:border-[#444444] shadow-sm">
+          {hostPhoto ? (
+            <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-neutral-300 dark:border-neutral-700 shadow-sm bg-neutral-100 dark:bg-neutral-800">
               <img
-                src={author.profileImg}
+                src={hostPhoto}
                 alt={hostName}
                 className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.target.style.display = "none";
+                  e.target.parentElement.innerHTML = `<div class="w-full h-full bg-[#ff385c] flex items-center justify-center text-white font-bold text-xl">${hostName.slice(0, 1).toUpperCase()}</div>`;
+                }}
               />
             </div>
           ) : (
-            <div className="w-14 h-14 bg-[#ff385c] dark:bg-[#e00b41] flex items-center justify-center rounded-full text-white font-bold text-xl shadow-sm">
+            <div className="w-14 h-14 bg-[#ff385c] dark:bg-[#ff385c] flex items-center justify-center rounded-full text-white font-bold text-xl shadow-sm">
               {hostName.slice(0, 1).toUpperCase()}
             </div>
           )}

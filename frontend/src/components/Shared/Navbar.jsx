@@ -175,7 +175,7 @@ const Navbar = () => {
                       type="text"
                       value={searchValue}
                       onChange={(e) => setSearchValue(e.target.value)}
-                      className="focus:outline-none pl-3 pr-2 text-sm text-[#222222] dark:text-white bg-transparent w-[200px] xl:w-[260px]"
+                      className="focus:outline-none border-0 focus:ring-0 shadow-none pl-3 pr-2 text-sm text-[#222222] dark:text-white bg-transparent w-[200px] xl:w-[260px]"
                       placeholder="Search by city, country, motel..."
                     />
                     {searchValue && (
@@ -288,9 +288,17 @@ const Navbar = () => {
                       className="w-3.5 dark:invert"
                     />
                     {user ? (
-                      <p className=" bg-[#222222] dark:bg-[#444444] text-[#efefef] w-7 h-7 rounded-full text-xs font-bold flex items-center justify-center">
-                        {user.name?.firstName?.slice(0, 1) || "U"}
-                      </p>
+                      user?.profileImg ? (
+                        <img
+                          src={user.profileImg}
+                          alt={user?.name?.firstName || "User profile"}
+                          className="w-7 h-7 rounded-full object-cover border border-neutral-300 dark:border-neutral-700"
+                        />
+                      ) : (
+                        <p className="bg-[#222222] dark:bg-[#444444] text-[#efefef] w-7 h-7 rounded-full text-xs font-bold flex items-center justify-center">
+                          {user.name?.firstName?.slice(0, 1) || "U"}
+                        </p>
+                      )
                     ) : (
                       <img
                         src={userProfile}

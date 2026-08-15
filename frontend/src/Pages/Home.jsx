@@ -19,6 +19,7 @@ import FilterPopUp, {
   RATING_OPTIONS,
   AMENITIES_OPTIONS,
 } from "../components/popUp/FilterPopUp/FilterPopUp";
+import AiChatWidget from "../components/AiAssistant/AiChatWidget";
 
 const Home = () => {
   const user = useSelector((state) => state.user.userDetails);
@@ -381,6 +382,9 @@ const Home = () => {
         onApplyFilters={handleApplyFilters}
         totalMatchingCount={displayedListings.length}
       />
+
+      {/* AI Assistant Concierge Widget */}
+      <AiChatWidget />
     </main>
   );
 };
