@@ -1,5 +1,4 @@
 /* eslint-disable react/prop-types */
-
 import { useState } from "react";
 
 const PlaceTypeCard = ({
@@ -13,6 +12,8 @@ const PlaceTypeCard = ({
 }) => {
   const [scale, setScale] = useState(false);
   const svgSize = window.innerWidth < 768 ? 28 : 40;
+  const isSelected = storedCardData === head;
+
   return (
     <div
       onClick={() => {
@@ -24,11 +25,11 @@ const PlaceTypeCard = ({
       onMouseUp={() => {
         setScale(false);
       }}
-      className={`flex flex-row px-4 sm:px-8 items-center py-4 bg-white hover:bg-[#f7f7f7] hover:border-black hover:border-2 rounded-2xl cursor-pointer h-[120px] transition duration-300
+      className={`flex flex-row px-4 sm:px-8 items-center py-4 rounded-2xl cursor-pointer h-[120px] transition-all duration-200 select-none
       ${
-        storedCardData === head
-          ? "border-2 border-black bg-[#f7f7f7]"
-          : "border-[1.3px] border-[#dddddd] bg-white hover:bg-[#f7f7f7] hover:border-black hover:border-2"
+        isSelected
+          ? "border-2 border-black dark:border-white bg-[#f7f7f7] dark:bg-[#2c2c2c] text-[#111827] dark:text-white shadow-sm"
+          : "border-[1.3px] border-[#dddddd] dark:border-neutral-700 bg-white dark:bg-[#1f1f1f] hover:bg-[#f7f7f7] dark:hover:bg-[#282828] hover:border-black dark:hover:border-neutral-300 text-[#222222] dark:text-neutral-200"
       }
       ${CheckFill ? "gap-4" : "justify-between"}
       ${scale ? "scale-95" : "scale-100"}
@@ -36,19 +37,21 @@ const PlaceTypeCard = ({
     >
       {/* specific to Visibility section only */}
       {CheckFill && CheckOutline && (
-        <>
-          {storedCardData === head ? (
-            <div>{CheckFill && <CheckFill size={28} />}</div>
-          ) : (
-            <div>{CheckOutline && <CheckOutline size={28} />}</div>
-          )}
-        </>
+        <div className="text-black dark:text-white">
+          {isSelected ? <CheckFill size={28} /> : <CheckOutline size={28} />}
+        </div>
       )}
-      <div className=" flex flex-col gap-1 pr-2 md:pr-0">
-        <h4 className=" text-[#222222] text-lg font-medium">{head}</h4>
-        <p className="text-xs sm:text-sm text-[#717171]">{desc}</p>
+      <div className="flex flex-col gap-1 pr-2 md:pr-0">
+        <h4 className={`text-lg font-medium transition-colors ${isSelected ? "text-black dark:text-white font-bold" : "text-[#222222] dark:text-white"}`}>
+          {head}
+        </h4>
+        <p className="text-xs sm:text-sm text-[#717171] dark:text-neutral-400">
+          {desc}
+        </p>
       </div>
-      <div>{Img && <Img size={svgSize} />}</div>
+      <div className={`transition-colors ${isSelected ? "text-black dark:text-white" : "text-[#222222] dark:text-neutral-200"}`}>
+        {Img && <Img size={svgSize} />}
+      </div>
     </div>
   );
 };

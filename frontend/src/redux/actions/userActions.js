@@ -16,10 +16,10 @@ export const userLogIn = (userData) => async (dispatch) => {
 }
 
 
-export const getUser = () => async (dispatch, getState) => {
+export const getUser = (force = false) => async (dispatch, getState) => {
     const { userDetails } = getState().user;
 
-    if (userDetails) {
+    if (userDetails && !force) {
         return;
     }
 
@@ -40,7 +40,7 @@ export const getUser = () => async (dispatch, getState) => {
             // saving houses data from db
             dispatch({
                 type: "SAVE_HOUSE_DATA",
-                payload: response.data.house_data
+                payload: response.data.house_data || []
             });
         } else {
             dispatch({ type: "USER_LOG_OUT" });

@@ -25,19 +25,19 @@ const HouseTitle = () => {
   };
   console.log(title, "title");
   return (
-    <div className=" flex flex-col gap-10 max-w-screen-sm mx-auto my-6 min-h-[80vh]">
-      <div className=" flex flex-col gap-3 md:gap-0">
-        <h1 className=" text-[#222222] text-[32px] font-medium">
-          Now, let&apos;s give your apartment a title
+    <div className="flex flex-col gap-10 max-w-screen-sm mx-auto my-6 min-h-[80vh]">
+      <div className="flex flex-col gap-3 md:gap-0">
+        <h1 className="text-[#222222] dark:text-white text-xl sm:text-2xl md:text-[32px] font-medium">
+          Now, let&apos;s give your place a title
         </h1>
-        <p className="text-sm sm:text-base md:text-lg text-[#717171]">
+        <p className="text-sm sm:text-base md:text-lg text-[#717171] dark:text-neutral-400">
           Short titles work best. Have fun with it—you can always change it
           later.
         </p>
       </div>
       <div>
         <textarea
-          className=" w-full p-3 border-[#b0b0b0] border-[1.3px] rounded-md"
+          className="w-full p-3 border-[#b0b0b0] dark:border-neutral-700 bg-white dark:bg-[#1f1f1f] text-[#111827] dark:text-white border-[1.3px] rounded-2xl focus:outline-none focus:border-black dark:focus:border-white transition-all shadow-xs"
           rows="6"
           autoComplete="off"
           {...register("profileDetailsAbout", { maxLength: 40 })}
@@ -47,12 +47,12 @@ const HouseTitle = () => {
             handleChange(event);
           }}
           onBlur={handleChange}
-          placeholder="Your house title"
+          placeholder="Your motel or stay title"
         ></textarea>
-        <div className=" mt-2 mb-3">
+        <div className="mt-2 mb-3">
           <p
-            className={` text-xs font-semibold mt-1 flex flex-row-reverse ${
-              characterCount > 40 ? " text-red-400" : "text-[#717171]"
+            className={`text-xs font-semibold mt-1 flex flex-row-reverse ${
+              characterCount > 40 ? "text-red-400" : "text-[#717171] dark:text-neutral-400"
             }`}
           >
             {characterCount}/40 characters

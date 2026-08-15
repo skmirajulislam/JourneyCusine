@@ -226,7 +226,12 @@ exports.getUserDetails = async (req, res) => {
         };
 
         const userDetails = await User.findById(findCriteria);
-        const housesData = await House.find({ author: userId });
+        const housesData = await House.find({
+            $or: [
+                { author: userId ? userId.toString() : "" },
+                ...(mongoose.Types.ObjectId.isValid(userId) ? [{ author: new mongoose.Types.ObjectId(userId) }] : [])
+            ]
+        });
 
         let response = {
             info: "user exists",

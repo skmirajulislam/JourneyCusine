@@ -17,8 +17,8 @@ const ListHouseStepOnePlacetype = () => {
   };
 
   return (
-    <div className=" flex flex-col gap-10 max-w-screen-sm mx-auto my-6 min-h-[70dvh]">
-      <h1 className=" text-[#222222] text-xl sm:text-2xl md:text-[32px] font-medium">
+    <div className="flex flex-col gap-10 max-w-screen-sm mx-auto my-6 min-h-[70dvh]">
+      <h1 className="text-[#222222] dark:text-white text-xl sm:text-2xl md:text-[32px] font-medium">
         What type of place will guests have?
       </h1>
       <div className="flex flex-col gap-5">

@@ -34,8 +34,8 @@ const ListHouseStepOneStructure = () => {
   };
 
   return (
-    <div className=" flex flex-col gap-10 max-w-screen-md mx-auto my-6">
-      <h1 className=" text-[#222222] text-xl sm:text-2xl md:text-[32px] font-medium">
+    <div className="flex flex-col gap-10 max-w-screen-md mx-auto my-6">
+      <h1 className="text-[#222222] dark:text-white text-xl sm:text-2xl md:text-[32px] font-medium">
         Which of these best describes <br /> your place?
       </h1>
       <div className=" grid grid-cols-2 md:grid-cols-3 gap-5 mx-auto md:mx-0">
@@ -217,6 +217,6 @@ const ListHouseStepOneStructure = () => {
 // styles for STructuredCard component
 const structureCardStyle =
   "flex flex-col gap-1 px-6 rounded-xl transition duration-300 h-[120px] w-[150px] sm:w-[220px] cursor-pointer justify-center";
-const structurePtagClass = "text-[#222222] text-base md:text-lg font-medium";
+const structurePtagClass = "text-[#222222] dark:text-neutral-200 text-base md:text-lg font-medium";
 
 export default ListHouseStepOneStructure;

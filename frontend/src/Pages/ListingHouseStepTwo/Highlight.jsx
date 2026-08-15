@@ -51,17 +51,17 @@ const Highlight = () => {
   console.log(storedCardData, "from descriptions");
 
   return (
-    <div className=" flex flex-col gap-10 max-w-screen-md mx-auto my-8 xl:py-[15vh] min-h-[70vh]">
+    <div className="flex flex-col gap-10 max-w-screen-md mx-auto my-8 xl:py-[15vh] min-h-[70vh]">
       <div className="flex flex-col gap-3 md:gap-0">
-        <h1 className=" text-[#222222] text-xl sm:text-2xl md:text-[32px] font-medium">
+        <h1 className="text-[#222222] dark:text-white text-xl sm:text-2xl md:text-[32px] font-medium">
           Next, let&apos;s describe your apartment
         </h1>
-        <p className="text-sm sm:text-base md:text-lg text-[#717171]">
+        <p className="text-sm sm:text-base md:text-lg text-[#717171] dark:text-neutral-400">
           Choose up to 2 highlights. We&apos;ll use these to get your
           description started.
         </p>
       </div>
-      <div className=" flex flex-wrap gap-5">
+      <div className="flex flex-wrap gap-5">
         <StructureCard
           style={descriptionCardStyle}
           Img={LiaShoePrintsSolid}
@@ -124,6 +124,6 @@ const Highlight = () => {
 // styles for STructuredCard component
 const descriptionCardStyle =
   "flex flex-row items-center gap-2 px-6 py-3 rounded-full transition duration-300 cursor-pointer justify-center";
-const descriptionPtagStyle = "text-[#222222] text-base font-medium";
+const descriptionPtagStyle = "text-[#222222] dark:text-neutral-200 text-base font-medium";
 
 export default Highlight;

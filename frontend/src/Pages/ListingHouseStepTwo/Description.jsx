@@ -27,18 +27,18 @@ const Description = () => {
   };
   console.log(description, "description");
   return (
-    <div className=" flex flex-col gap-8 max-w-screen-sm mx-auto my-6 min-h-[80vh]">
+    <div className="flex flex-col gap-8 max-w-screen-sm mx-auto my-6 min-h-[80vh]">
       <div>
-        <h1 className=" text-[#222222] text-xl sm:text-2xl md:text-[32px] font-medium">
+        <h1 className="text-[#222222] dark:text-white text-xl sm:text-2xl md:text-[32px] font-medium">
           Create your description
         </h1>
-        <p className=" text-sm sm:text-base md:text-lg text-[#717171]">
+        <p className="text-sm sm:text-base md:text-lg text-[#717171] dark:text-neutral-400">
           Share what makes your place special.
         </p>
       </div>
       <div>
         <textarea
-          className=" w-full p-3 border-[#b0b0b0] border-[1.3px] rounded-md"
+          className="w-full p-3 border-[#b0b0b0] dark:border-neutral-700 bg-white dark:bg-[#1f1f1f] text-[#111827] dark:text-white border-[1.3px] rounded-2xl focus:outline-none focus:border-black dark:focus:border-white transition-all shadow-xs"
           rows="9"
           autoComplete="off"
           {...register("profileDetailsAbout", { maxLength: 1600 })}
@@ -50,10 +50,10 @@ const Description = () => {
           onBlur={handleChange}
           placeholder="Write your house description here..."
         ></textarea>
-        <div className=" mt-2 mb-3">
+        <div className="mt-2 mb-3">
           <p
-            className={` text-xs font-semibold mt-1 flex flex-row-reverse ${
-              characterCount > 1600 ? " text-red-400" : "text-[#717171]"
+            className={`text-xs font-semibold mt-1 flex flex-row-reverse ${
+              characterCount > 1600 ? "text-red-400" : "text-[#717171] dark:text-neutral-400"
             }`}
           >
             {characterCount}/1600 characters

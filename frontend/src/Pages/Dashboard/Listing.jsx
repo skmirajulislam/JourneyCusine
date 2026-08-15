@@ -14,7 +14,7 @@ const Listing = () => {
   const isSmallDevice = window.innerWidth < 640;
 
   useEffect(() => {
-    dispatch(getUser());
+    dispatch(getUser(true));
   }, [dispatch]);
 
   return (

@@ -11,6 +11,8 @@ const StructureCard = ({
   ptagStyle,
 }) => {
   const [scale, setScale] = useState(false);
+  const isSelected = storedCardData?.includes(name);
+
   return (
     <div
       onMouseDown={() => {
@@ -19,20 +21,24 @@ const StructureCard = ({
       onMouseUp={() => {
         setScale(false);
       }}
-      className={`${style}
+      className={`${style} transition-all duration-200 select-none
       ${
-        storedCardData?.includes(name)
-          ? " border-2 border-black bg-[#f7f7f7]"
-          : "bg-white hover:bg-[#f7f7f7] hover:border-black border-[1.3px] border-[#dddddd] hover:border-[1.3px]"
+        isSelected
+          ? "border-2 border-black dark:border-white bg-[#f7f7f7] dark:bg-[#2c2c2c] text-[#111827] dark:text-white shadow-sm"
+          : "bg-white dark:bg-[#1f1f1f] hover:bg-[#f7f7f7] dark:hover:bg-[#282828] border-[1.3px] border-[#dddddd] dark:border-neutral-700 hover:border-black dark:hover:border-neutral-300 text-[#222222] dark:text-neutral-200"
       }
-      ${scale ? "scale-90" : "scale-100"}
+      ${scale ? "scale-95" : "scale-100"}
       `}
       onClick={() => {
         onClick(name);
       }}
     >
-      <Img size={svgSize} />
-      <p className={`${ptagStyle}`}>{name}</p>
+      <div className={`transition-colors ${isSelected ? "text-black dark:text-white" : "text-[#222222] dark:text-neutral-200"}`}>
+        <Img size={svgSize} />
+      </div>
+      <p className={`${ptagStyle} transition-colors ${isSelected ? "!text-black dark:!text-white font-bold" : "!text-[#222222] dark:!text-neutral-200"}`}>
+        {name}
+      </p>
     </div>
   );
 };
