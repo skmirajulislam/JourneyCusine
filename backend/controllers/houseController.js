@@ -641,3 +641,27 @@ exports.deleteListing = async (req, res) => {
         res.status(500).json({ success: 0, message: "Failed to delete listing" });
     }
 };
+
+exports.getAuthorHouses = async (req, res) => {
+    try {
+        const userId = req.user;
+        if (!userId) {
+            return res.status(401).json({ success: 0, message: "Unauthorized" });
+        }
+
+        const query = [
+            { author: String(userId) }
+        ];
+
+        if (mongoose.Types.ObjectId.isValid(userId)) {
+            query.push({ author: new mongoose.Types.ObjectId(userId) });
+        }
+
+        const houses = await House.find({ $or: query }).sort({ created_at: -1 });
+
+        return res.status(200).json({ success: 1, houses });
+    } catch (error) {
+        console.error("getAuthorHouses error:", error);
+        return res.status(500).json({ success: 0, message: "Failed to get author houses" });
+    }
+};

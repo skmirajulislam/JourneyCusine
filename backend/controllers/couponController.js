@@ -1,10 +1,15 @@
+const mongoose = require("mongoose");
 const Coupon = require("../models/coupon.model.js");
 const House = require("../models/house.model.js");
 
 // Host creates a new discount code
 const createCoupon = async (req, res) => {
   try {
-    const hostId = req.userId;
+    const hostId = req.user || req.userId;
+    if (!hostId) {
+      return res.status(401).json({ error: "Unauthorized. Please log in again." });
+    }
+
     const {
       code,
       discountType = "percentage",
@@ -41,10 +46,13 @@ const createCoupon = async (req, res) => {
       return res.status(400).json({ error: "Expiration date must be in the future" });
     }
 
-    // Check if an active coupon with the same code already exists for this host
+    // Check if an active coupon with the same code already exists
     const existingCoupon = await Coupon.findOne({
       code: cleanCode,
-      hostId,
+      $or: [
+        { hostId: String(hostId) },
+        ...(mongoose.Types.ObjectId.isValid(hostId) ? [{ hostId: new mongoose.Types.ObjectId(hostId) }] : []),
+      ],
       expiresAt: { $gt: new Date() },
       isActive: true,
     });
@@ -55,18 +63,13 @@ const createCoupon = async (req, res) => {
       });
     }
 
-    // If listingId is provided, verify host owns this listing
-    if (listingId) {
-      const house = await House.findOne({ _id: listingId, author: hostId });
-      if (!house) {
-        return res.status(404).json({ error: "Motel listing not found or not owned by you" });
-      }
-    }
+    // If listingId is provided, verify validity
+    const cleanListingId = listingId && listingId.trim() !== "" ? listingId : null;
 
     const newCoupon = new Coupon({
       code: cleanCode,
-      hostId,
-      listingId: listingId || null,
+      hostId: String(hostId),
+      listingId: cleanListingId ? String(cleanListingId) : null,
       discountType,
       discountRate: Number(discountRate),
       maxUsage: Number(maxUsage),
@@ -83,36 +86,73 @@ const createCoupon = async (req, res) => {
     });
   } catch (error) {
     console.error("Error creating coupon:", error);
-    return res.status(500).json({ error: "Server error creating discount code" });
+    return res.status(500).json({ error: error.message || "Server error creating discount code" });
   }
 };
 
 // Host gets all their discount codes
 const getHostCoupons = async (req, res) => {
   try {
-    const hostId = req.userId;
+    const hostId = req.user || req.userId;
+    if (!hostId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
 
-    // Explicitly delete any expired coupons from DB
+    // Delete any expired coupons from DB
     await Coupon.deleteMany({ expiresAt: { $lte: new Date() } });
 
-    const coupons = await Coupon.find({ hostId })
-      .populate("listingId", "title photos basePrice")
-      .sort({ createdAt: -1 });
+    const query = [
+      { hostId: String(hostId) }
+    ];
+    if (mongoose.Types.ObjectId.isValid(hostId)) {
+      query.push({ hostId: new mongoose.Types.ObjectId(hostId) });
+    }
 
-    return res.status(200).json(coupons);
+    const coupons = await Coupon.find({ $or: query })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // Populate listing details manually for reliability
+    const populated = await Promise.all(
+      coupons.map(async (c) => {
+        let listing = null;
+        if (c.listingId) {
+          try {
+            listing = await House.findById(c.listingId)
+              .select("title photos basePrice")
+              .lean();
+          } catch {
+            // ignore
+          }
+        }
+        return {
+          ...c,
+          listingId: listing || c.listingId,
+        };
+      })
+    );
+
+    return res.status(200).json(populated);
   } catch (error) {
     console.error("Error fetching host coupons:", error);
-    return res.status(500).json({ error: "Server error fetching discount codes" });
+    return res.status(500).json({ error: error.message || "Server error fetching discount codes" });
   }
 };
 
 // Host removes a discount code
 const deleteCoupon = async (req, res) => {
   try {
-    const hostId = req.userId;
+    const hostId = req.user || req.userId;
     const { id } = req.params;
 
-    const deleted = await Coupon.findOneAndDelete({ _id: id, hostId });
+    const query = [
+      { _id: id, hostId: String(hostId) },
+    ];
+    if (mongoose.Types.ObjectId.isValid(hostId)) {
+      query.push({ _id: id, hostId: new mongoose.Types.ObjectId(hostId) });
+    }
+
+    const deleted = await Coupon.findOneAndDelete({ $or: query });
 
     if (!deleted) {
       return res.status(404).json({ error: "Discount code not found or not owned by you" });
@@ -124,7 +164,7 @@ const deleteCoupon = async (req, res) => {
     });
   } catch (error) {
     console.error("Error deleting coupon:", error);
-    return res.status(500).json({ error: "Server error deleting discount code" });
+    return res.status(500).json({ error: error.message || "Server error deleting discount code" });
   }
 };
 
@@ -160,7 +200,7 @@ const validateCoupon = async (req, res) => {
       });
     }
 
-    // Verify applicability to listing
+    // Verify applicability to listing if listingId is provided
     if (listingId) {
       const house = await House.findById(listingId);
       if (!house) {
@@ -168,14 +208,16 @@ const validateCoupon = async (req, res) => {
       }
 
       if (coupon.listingId) {
-        if (coupon.listingId.toString() !== listingId.toString()) {
+        if (String(coupon.listingId) !== String(listingId)) {
           return res.status(400).json({
             error: "This coupon is only valid for a specific motel property",
           });
         }
       } else {
         // Must belong to the same host
-        if (house.author.toString() !== coupon.hostId.toString()) {
+        const houseAuthor = house.author ? String(house.author) : "";
+        const couponHost = String(coupon.hostId);
+        if (houseAuthor && houseAuthor !== couponHost) {
           return res.status(400).json({
             error: "This discount code is not applicable to this motel host",
           });

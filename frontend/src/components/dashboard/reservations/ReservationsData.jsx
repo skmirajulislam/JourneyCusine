@@ -23,24 +23,34 @@ const ReservationsData = ({ active }) => {
     return removeDuplicates(authorReservations, "_id");
   }, [authorReservations]);
 
-  const currentDate = new Date().toISOString();
+  const todayStart = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
 
   const upcomingReservations = useMemo(() => {
-    return uniqueReservations.filter(
-      (r) =>
-        (r.status === "confirmed" || !r.status) &&
-        (r.checkIn ? new Date(r.checkIn).toISOString() > currentDate : true)
-    );
-  }, [uniqueReservations, currentDate]);
+    return uniqueReservations.filter((r) => {
+      // Exclude cancellations from Upcoming
+      if (
+        r.status === "cancellation_requested" ||
+        r.status === "refunded" ||
+        r.status === "cancelled"
+      ) {
+        return false;
+      }
+      if (!r.checkOut) return true;
+      return new Date(r.checkOut) >= todayStart;
+    });
+  }, [uniqueReservations, todayStart]);
 
   const completedReservations = useMemo(() => {
-    return uniqueReservations.filter(
-      (r) =>
-        r.status === "confirmed" &&
-        r.checkOut &&
-        new Date(r.checkOut).toISOString() <= currentDate
-    );
-  }, [uniqueReservations, currentDate]);
+    return uniqueReservations.filter((r) => {
+      if (r.status !== "confirmed" && r.status !== undefined) return false;
+      if (!r.checkOut) return false;
+      return new Date(r.checkOut) < todayStart;
+    });
+  }, [uniqueReservations, todayStart]);
 
   const cancelledAndRefundReservations = useMemo(() => {
     return uniqueReservations.filter(

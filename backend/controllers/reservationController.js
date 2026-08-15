@@ -167,7 +167,7 @@ exports.verifyRazorpayPayment = async (req, res) => {
     }
 
     // Lookup Host Currency Details
-    const resolvedAuthorId = authorId || listingDetails.authorId;
+    const resolvedAuthorId = authorId || listingDetails.author || listingDetails.authorId;
     let hostCountry = "India";
     let hostCurrency = "INR";
 
@@ -333,7 +333,7 @@ exports.newReservation = async (req, res) => {
       }
     }
 
-    const resolvedAuthorId = authorId || listingDetails.authorId;
+    const resolvedAuthorId = authorId || listingDetails.author || listingDetails.authorId;
     let hostCurrency = "INR";
     if (resolvedAuthorId) {
       const hostUser = await User.findById(resolvedAuthorId);
@@ -612,9 +612,38 @@ exports.getAllReservations = async (req, res) => {
 exports.getAuthorsReservations = async (req, res) => {
   try {
     const userId = req.user;
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    // Find all houses authored by this user
+    let authorHouseIds = [];
+    try {
+      const houses = await House.find({
+        $or: [
+          { author: String(userId) },
+          { author: new mongoose.Types.ObjectId(userId) },
+        ],
+      }).select("_id");
+      authorHouseIds = houses.map((h) => String(h._id));
+    } catch {
+      // ignore
+    }
+
+    const queryConditions = [
+      { authorId: String(userId) },
+    ];
+
+    if (mongoose.Types.ObjectId.isValid(userId)) {
+      queryConditions.push({ authorId: new mongoose.Types.ObjectId(userId) });
+    }
+
+    if (authorHouseIds.length > 0) {
+      queryConditions.push({ listingId: { $in: authorHouseIds } });
+    }
 
     const reservations = await reservationDB
-      .find({ authorId: String(userId) })
+      .find({ $or: queryConditions })
       .sort({ created_at: -1 })
       .lean();
 

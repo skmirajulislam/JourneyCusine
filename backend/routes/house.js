@@ -19,6 +19,7 @@ const {
   getOneListing,
   updateListing,
   deleteListing,
+  getAuthorHouses,
 } = require("../controllers/houseController.js");
 const { verifyJwtToken } = require("../middleware/jwt.js");
 const router = express.Router();
@@ -26,6 +27,7 @@ const router = express.Router();
 router.use(express.json());
 
 router.get("/get_all_listing", getAllListing);
+router.get("/get_author_houses", verifyJwtToken, getAuthorHouses);
 router.post("/room_details", getOneListing);
 router.post("/get_listing_with_cat", getListingDataWithCat);
 

@@ -10,14 +10,12 @@ const couponSchema = new mongoose.Schema(
       index: true,
     },
     hostId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      type: mongoose.Schema.Types.Mixed,
       required: true,
       index: true,
     },
     listingId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "House",
+      type: mongoose.Schema.Types.Mixed,
       default: null, // null means applies to all listings by this host
     },
     discountType: {
@@ -44,8 +42,7 @@ const couponSchema = new mongoose.Schema(
     usedBy: [
       {
         guestId: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "User",
+          type: mongoose.Schema.Types.Mixed,
         },
         orderId: {
           type: String,

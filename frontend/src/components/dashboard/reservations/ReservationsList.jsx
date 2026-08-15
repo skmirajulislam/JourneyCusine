@@ -1,44 +1,107 @@
 /* eslint-disable react/prop-types */
+import { useSelector } from "react-redux";
+import { useMemo } from "react";
 import { reservationListItems } from "./reservationsListName";
+import { removeDuplicates } from "../../../hooks/useRemoveDuplicates";
 
 const ReservationsList = ({ active, setActivePage }) => {
+  const authorReservations = useSelector(
+    (state) => state.reservations?.authorReservations || []
+  );
+
+  const uniqueReservations = useMemo(() => {
+    return removeDuplicates(authorReservations, "_id");
+  }, [authorReservations]);
+
+  const counts = useMemo(() => {
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    const upcoming = uniqueReservations.filter((r) => {
+      if (
+        r.status === "cancellation_requested" ||
+        r.status === "cancelled" ||
+        r.status === "refunded"
+      ) {
+        return false;
+      }
+      if (!r.checkOut) return true;
+      return new Date(r.checkOut) >= todayStart;
+    }).length;
+
+    const completed = uniqueReservations.filter((r) => {
+      if (r.status !== "confirmed" && r.status !== undefined) return false;
+      if (!r.checkOut) return false;
+      return new Date(r.checkOut) < todayStart;
+    }).length;
+
+    const cancellations = uniqueReservations.filter(
+      (r) =>
+        r.status === "cancellation_requested" ||
+        r.status === "refunded" ||
+        r.status === "cancelled"
+    ).length;
+
+    const pendingCancellations = uniqueReservations.filter(
+      (r) => r.status === "cancellation_requested"
+    ).length;
+
+    return {
+      1: upcoming,
+      2: completed,
+      3: cancellations,
+      4: uniqueReservations.length,
+      pendingCancellations,
+    };
+  }, [uniqueReservations]);
+
   const handleActive = (id) => {
-    JSON.stringify(sessionStorage.setItem("reservationsPage", id));
+    sessionStorage.setItem("reservationsPage", JSON.stringify(id));
     setActivePage(id);
   };
 
   return (
-    <section className=" mt-6">
-      <h1 className=" text-[#222222] text-3xl font-semibold">Reservations</h1>
-      <div className=" relative">
-        <div className=" pt-10 flex flex-row gap-2 sm:gap-6 relative z-10 justify-between sm:justify-start">
-          {reservationListItems.map((list, i) => {
+    <section className="mt-6">
+      <h1 className="text-[#222222] dark:text-white text-3xl font-semibold">
+        Reservations
+      </h1>
+      <div className="relative">
+        <div className="pt-8 flex flex-row gap-2 sm:gap-6 relative z-10 justify-between sm:justify-start overflow-x-auto pb-1">
+          {reservationListItems.map((list) => {
+            const count = counts[list.id];
+            const hasPendingAction =
+              list.id === 3 && counts.pendingCancellations > 0;
+
             return (
-              <div
-                key={i}
-                onClick={() => {
-                  handleActive(list.id);
-                }}
-                className={`
-                ${
+              <button
+                key={list.id}
+                type="button"
+                onClick={() => handleActive(list.id)}
+                className={`flex items-center gap-2 pb-3 px-3 cursor-pointer text-sm sm:text-base font-medium whitespace-nowrap transition-all border-b-2 ${
                   active === list.id
-                    ? " border-b-2 border-[#222222] rounded-none transition duration-200"
-                    : " opacity-80"
-                }
-                `}
+                    ? "border-[#222222] dark:border-white text-[#222222] dark:text-white font-bold"
+                    : "border-transparent text-[#717171] dark:text-[#a0a0a0] hover:text-[#222222] dark:hover:text-white"
+                }`}
               >
-                <p
-                  className={`text-sm sm:text-base text-[#222222] cursor-pointer hover:bg-[#f0f0f0] p-2 transition duration-300 rounded-lg ${
-                    active === list.id ? " font-medium mb-1" : " opacity-80"
-                  }`}
-                >
-                  {list?.name}
-                </p>
-              </div>
+                <span>{list.name}</span>
+                {count !== undefined && count > 0 && (
+                  <span
+                    className={`text-xs px-2 py-0.5 rounded-full font-bold ${
+                      hasPendingAction
+                        ? "bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 animate-pulse"
+                        : active === list.id
+                        ? "bg-[#222222] dark:bg-white text-white dark:text-[#222222]"
+                        : "bg-neutral-100 dark:bg-neutral-800 text-gray-600 dark:text-gray-400"
+                    }`}
+                  >
+                    {count}
+                  </span>
+                )}
+              </button>
             );
           })}
         </div>
-        <hr className=" absolute bottom-[1px] w-full h-[1px] bg-[#dddddd] z-0" />
+        <hr className="absolute bottom-0 w-full h-[1px] bg-[#dddddd] dark:bg-[#333333] z-0" />
       </div>
     </section>
   );
