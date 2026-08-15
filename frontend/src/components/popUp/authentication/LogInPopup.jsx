@@ -93,14 +93,14 @@ const LogInPopup = ({
     <div className="flex flex-col gap-4">
       <div className="px-8 pt-1">
         {!showErrorMessage ? null : (
-          <div className=" flex flex-row items-center gap-3 px-3 py-2 border-[#dddddd] border rounded-xl mt-6 mb-3">
+          <div className=" flex flex-row items-center gap-3 px-3 py-2 border border-[#dddddd] dark:border-[#444444] bg-[#f8f8f8] dark:bg-[#2a2a2a] rounded-xl mt-6 mb-3">
             <img src={errorMessageIcon} alt="Error icon" className=" w-14" />
             <div className=" flex flex-col gap-[2px]">
-              <h6 className=" text-sm text-[#222222] font-semibold">
+              <h6 className=" text-sm text-[#222222] dark:text-[#e5e7eb] font-semibold">
                 {/* // &apos; is basically this sign ' */}
                 Let&apos;s try that again
               </h6>
-              <p className=" text-sm text-[#717171] opacity-80">
+              <p className=" text-sm text-[#717171] dark:text-[#a0a0a0] opacity-80">
                 Invalid login credentials. Please try again.
               </p>
             </div>
@@ -111,7 +111,7 @@ const LogInPopup = ({
             <input
               type={passwordVisible ? "text" : "password"}
               placeholder="Password"
-              className="w-full border-[1.5px] border-[#dddddd] p-3 rounded-lg transition-all duration-300"
+              className="w-full border-[1.5px] border-[#dddddd] dark:border-[#444444] bg-white dark:bg-[#2a2a2a] text-[#222222] dark:text-[#e5e7eb] placeholder:text-[#717171] dark:placeholder:text-[#888888] p-3 rounded-lg transition-all duration-300"
               {...register("password", {
                 required: true,
                 pattern: /^.{8,}$/,
@@ -121,7 +121,7 @@ const LogInPopup = ({
             <span
               className={`absolute ${
                 errors.password ? "top-[35%]" : "top-[50%]"
-              }  right-3 transform -translate-y-1/2 text-[#222222] text-xs font-semibold underline cursor-pointer`}
+              }  right-3 transform -translate-y-1/2 text-[#222222] dark:text-[#e5e7eb] text-xs font-semibold underline cursor-pointer`}
               onClick={togglePasswordVisibility}
             >
               {passwordVisible ? "Hide" : "Show"}
@@ -162,12 +162,12 @@ const LogInPopup = ({
           </button>
         </form>
       </div>
-      <Link className=" text-[#222222] text-sm font-medium underline pt-3 px-8">
+      <Link className=" text-[#222222] dark:text-[#e5e7eb] text-sm font-medium underline pt-3 px-8">
         Forgot Password?
       </Link>
 
       <div className=" pt-4 px-8 italic pb-7">
-        <ul className=" list-disc text-xs text-[#222222] opacity-80">
+        <ul className=" list-disc text-xs text-[#222222] dark:text-[#e5e7eb] opacity-80">
           <p>You can use below test credentials to login!</p>
           <li>Password: guest1234</li>
         </ul>

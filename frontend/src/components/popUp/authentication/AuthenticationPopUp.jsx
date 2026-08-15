@@ -52,16 +52,16 @@ const AuthenticationPopUp = ({ popup, setPopup }) => {
                 : (showLoginPopup || profilePopup) && showErrorMessage
                 ? "h-[80vh]"
                 : "h-[80vh] popup__container"
-            } w-[45vw] bg-[#ffffff] shadow-2xl rounded-xl overflow-hidden`}
+            } w-[45vw] bg-white dark:bg-[#1e1e1e] shadow-2xl rounded-xl overflow-hidden`}
             style={{ height: "78vh", minHeight: "520px", width: "420px", maxWidth: "90vw", left: "calc(50% - 210px)" }}
           >
             {/* pop-up navbar */}
-            <div className=" flex items-center w-full py-4 border-b-[1px] px-8 sticky top-0 bg-[#ffffff]">
+            <div className=" flex items-center w-full py-4 border-b-[1px] border-[#dddddd] dark:border-[#333333] px-8 sticky top-0 bg-white dark:bg-[#1e1e1e]">
               {defaultPopup || profilePopup ? (
                 <img
                   src={closeIcon}
                   alt="close icon"
-                  className="w-8 hover:bg-[#f1f1f1] transition-colors rounded-full p-2 cursor-pointer"
+                  className="w-8 hover:bg-[#f1f1f1] dark:hover:bg-[#2a2a2a] transition-colors rounded-full p-2 cursor-pointer"
                   onClick={() => {
                     setPopup(false);
                   }}
@@ -70,13 +70,13 @@ const AuthenticationPopUp = ({ popup, setPopup }) => {
                 <img
                   src={backIcon}
                   alt="close icon"
-                  className="w-8 hover:bg-[#f1f1f1] transition-colors rounded-full p-2 cursor-pointer"
+                  className="w-8 hover:bg-[#f1f1f1] dark:hover:bg-[#2a2a2a] transition-colors rounded-full p-2 cursor-pointer"
                   onClick={() => {
                     handleCloseLoginPopup();
                   }}
                 />
               )}
-              <p className="text-base mx-auto font-semibold text-[#222222]">
+              <p className="text-base mx-auto font-semibold text-[#222222] dark:text-[#e5e7eb]">
                 {defaultPopup
                   ? "Log in or sign up"
                   : showLoginPopup
