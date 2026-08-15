@@ -57,4 +57,36 @@
   font-weight: 900;
 }
 
+/* Smooth Entrance Animations for Contact Form */
+@keyframes contactCardEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
 
+@keyframes checkmarkPop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.18);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.contact-card-animate {
+  animation: contactCardEntrance 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.checkmark-pop-animate {
+  animation: checkmarkPop 0.5s 0.1s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
