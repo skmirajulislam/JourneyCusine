@@ -13,16 +13,34 @@ exports.getStripePublishableKey = async (req, res) => {
 }
 
 exports.createPaymentIntent = async (req, res) => {
-
     try {
-        console.log("hit, payment");
-        const payload = req.body;
-        console.log(payload);
+        const payload = req.body || {};
+        let amountInCents = 1099;
+
+        if (payload.amount && !isNaN(payload.amount)) {
+            amountInCents = Math.round(Number(payload.amount) * 100);
+        } else if (payload.listingId && payload.nightStaying) {
+            try {
+                const listing = await House.findById(payload.listingId);
+                if (listing && listing.basePrice) {
+                    const basePrice = parseInt(listing.basePrice, 10);
+                    const nights = parseInt(payload.nightStaying, 10) || 1;
+                    const tax = Math.round((basePrice * nights * 14) / 100);
+                    const total = basePrice * nights + tax;
+                    amountInCents = Math.round(total * 100);
+                }
+            } catch (err) {
+                console.error("Listing price lookup error:", err);
+            }
+        }
+
+        // Enforce Stripe minimum $0.50 (50 cents)
+        amountInCents = Math.max(amountInCents, 50);
 
         const paymentIntent = await stripe.paymentIntents.create({
-            description: 'Journey Cuisine Holel APP',
+            description: 'Journey Cuisine Motel & Stay Reservation',
             shipping: {
-                name: 'Sk Mirajul Islam',
+                name: payload.guestName || 'Journey Cuisine Guest',
                 address: {
                     line1: '510 Townsend St',
                     postal_code: '98140',
@@ -31,9 +49,9 @@ exports.createPaymentIntent = async (req, res) => {
                     country: 'US',
                 },
             },
-            amount: 1099,
+            amount: amountInCents,
             currency: 'usd',
-            payment_method_types: ['card'],
+            automatic_payment_methods: { enabled: true },
         });
 
         // Send publishable key and PaymentIntent details to client
@@ -41,9 +59,11 @@ exports.createPaymentIntent = async (req, res) => {
             clientSecret: paymentIntent.client_secret,
         });
     } catch (e) {
+        console.error("createPaymentIntent error:", e.message);
         return res.status(400).send({
             error: {
                 message: e.message,
+                code: e.code || 'stripe_error',
             },
         });
     }
