@@ -12,9 +12,9 @@ const ContactUs = () => {
 
   return (
     <section className="mx-auto max-w-xl px-5 py-12">
-      <h1 className="text-3xl font-semibold text-[#222222]">Contact the team</h1>
-      <p className="mt-2 text-gray-600">Tell us about a problem, safety concern, or feature request.</p>
-      <form className="mt-7 flex flex-col gap-4 rounded-xl border p-6 shadow-sm" method="POST" action={formSubmitEndpoint} encType="multipart/form-data" onSubmit={() => setIsSubmitting(true)}>
+      <h1 className="text-3xl font-semibold text-[#222222] dark:text-white">Contact the team</h1>
+      <p className="mt-2 text-gray-600 dark:text-[#a0a0a0]">Tell us about a problem, safety concern, or feature request.</p>
+      <form className="mt-7 flex flex-col gap-4 rounded-xl border dark:border-[#444444] p-6 shadow-sm dark:bg-[#1e1e1e]" method="POST" action={formSubmitEndpoint} encType="multipart/form-data" onSubmit={() => setIsSubmitting(true)}>
         <input type="hidden" name="_subject" value="JourneyCusine team contact" />
         <input type="hidden" name="_template" value="table" />
         <input type="hidden" name="_autoresponse" value="Thanks for contacting JourneyCusine. Our team will review your message." />

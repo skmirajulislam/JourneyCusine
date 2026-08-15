@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const User = require("../models/user.model.js");
 const House = require("../models/house.model.js");
+const Reservation = require("../models/reservation.model.js");
 require('dotenv').config() 
 
 exports.saveHouseStructure = async (req, res) => {
@@ -570,5 +571,73 @@ exports.getOneListing = async (req, res) => {
     } catch (error) {
         console.error("Error in getOneListing:", error);
         res.status(500).json({ error: "Failed to fetch listing details" });
+    }
+};
+
+exports.updateListing = async (req, res) => {
+    try {
+        const userId = req.user;
+        const { id } = req.params;
+        const updateData = req.body;
+
+        const house = await House.findById(id);
+        if (!house) {
+            return res.status(404).json({ success: 0, message: "Listing not found" });
+        }
+
+        // Verify author owns this listing (or is admin)
+        if (house.author && house.author.toString() !== userId.toString()) {
+            return res.status(403).json({ success: 0, message: "Unauthorized to update this listing" });
+        }
+
+        // Calculate priceAfterTaxes & authorEarnedPrice if basePrice is updated
+        if (updateData.basePrice) {
+            const basePrice = Number(updateData.basePrice);
+            const taxes = Math.round((basePrice * 14) / 100);
+            updateData.priceAfterTaxes = basePrice + taxes;
+            updateData.authorEarnedPrice = Math.round(basePrice * 0.97);
+        }
+
+        const updatedHouse = await House.findByIdAndUpdate(
+            id,
+            { $set: updateData },
+            { new: true }
+        );
+
+        res.status(200).json({ success: 1, message: "Listing updated successfully", house: updatedHouse });
+    } catch (error) {
+        console.error("updateListing error:", error);
+        res.status(500).json({ success: 0, message: "Failed to update listing" });
+    }
+};
+
+exports.deleteListing = async (req, res) => {
+    try {
+        const userId = req.user;
+        const { id } = req.params;
+
+        const house = await House.findById(id);
+        if (!house) {
+            return res.status(404).json({ success: 0, message: "Listing not found" });
+        }
+
+        // Verify author owns this listing
+        if (house.author && house.author.toString() !== userId.toString()) {
+            return res.status(403).json({ success: 0, message: "Unauthorized to delete this listing" });
+        }
+
+        await House.findByIdAndDelete(id);
+
+        // Also clean up any reservations associated with this house
+        try {
+            await Reservation.deleteMany({ listingId: id });
+        } catch (rErr) {
+            console.error("Reservation cleanup error:", rErr);
+        }
+
+        res.status(200).json({ success: 1, message: "Listing deleted successfully" });
+    } catch (error) {
+        console.error("deleteListing error:", error);
+        res.status(500).json({ success: 0, message: "Failed to delete listing" });
     }
 };

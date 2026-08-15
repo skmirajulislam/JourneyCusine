@@ -54,12 +54,12 @@ const UserAbout = () => {
   }, [user]);
   return (
     <section>
-      <h1 className=" text-2xl text-[#222222] font-semibold my-9">About you</h1>
-      <div className=" border-[1.3px] border-dashed border-[#b0b0b0] bg-white py-6 px-4 rounded-xl">
+      <h1 className=" text-2xl text-[#222222] dark:text-white font-semibold my-9">About you</h1>
+      <div className=" border-[1.3px] border-dashed border-[#b0b0b0] dark:border-[#555555] bg-white dark:bg-[#2a2a2a] py-6 px-4 rounded-xl">
         {aboutData ? (
-          <p className=" text-[#717171]">{aboutData}</p>
+          <p className=" text-[#717171] dark:text-[#a0a0a0]">{aboutData}</p>
         ) : (
-          <p className=" text-[#717171]">Write something fun and punchy.</p>
+          <p className=" text-[#717171] dark:text-[#a0a0a0]">Write something fun and punchy.</p>
         )}
         {showAboutInput ? (
           <form onSubmit={handleSubmit(handleAboutForm)} className=" mt-4">
@@ -94,7 +94,7 @@ const UserAbout = () => {
                 Save
               </button>
               <button
-                className="px-7 py-3 border-[1.3px] border-[#222222] text-black bg-white hover:bg-[#f7f7f7] rounded-lg"
+                className="px-7 py-3 border-[1.3px] border-[#222222] dark:border-[#555555] text-black dark:text-white bg-white dark:bg-[#2a2a2a] hover:bg-[#f7f7f7] dark:hover:bg-[#333333] rounded-lg"
                 onClick={() => {
                   setShowAboutInput((prev) => !prev);
                 }}
@@ -105,7 +105,7 @@ const UserAbout = () => {
           </form>
         ) : (
           <p
-            className=" text-black font-medium underline mt-1 cursor-pointer"
+            className=" text-black dark:text-white font-medium underline mt-1 cursor-pointer"
             onClick={() => {
               setShowAboutInput((prev) => !prev);
             }}

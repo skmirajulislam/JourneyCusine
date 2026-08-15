@@ -29,7 +29,7 @@ const Listing = ({ searchParamsObj }) => {
 
   return (
     <div>
-      <div className=" border border-[#dddddd] rounded-xl p-6 flex flex-col sticky top-28 min-h-[200px] bg-white">
+      <div className=" border border-[#dddddd] dark:border-[#444444] rounded-xl p-6 flex flex-col sticky top-28 min-h-[200px] bg-white dark:bg-[#1e1e1e]">
         {/* listing data */}
         <div className=" flex flex-row gap-2">
           {/* listing img */}
@@ -41,12 +41,12 @@ const Listing = ({ searchParamsObj }) => {
           {/* title & desc */}
           <div className=" flex flex-col justify-between">
             <span className=" flex flex-col gap-1">
-              <p className="text-xs text-[#717171]">
+              <p className="text-xs text-[#717171] dark:text-[#a0a0a0]">
                 {listingSpace} {listingType}
               </p>
-              <p className="text-sm text-[#222222]">{listingData?.title}</p>
+              <p className="text-sm text-[#222222] dark:text-[#e5e7eb]">{listingData?.title}</p>
             </span>
-            <span className=" text-xs text-[#222222] flex flex-row gap-1 items-center mt-2">
+            <span className=" text-xs text-[#222222] dark:text-[#e5e7eb] flex flex-row gap-1 items-center mt-2">
               <AiFillStar size={16} />
               {listingData?.ratings ? listingData?.ratings : "New"}
               {listingData?.reviews && (
@@ -61,10 +61,10 @@ const Listing = ({ searchParamsObj }) => {
         <hr className="w-full h-[1.3px] bg-[#dddddd] my-6" />
         {/* prices */}
         <div className=" flex flex-col gap-3">
-          <h5 className=" text-[22px] text-[#222222] font-medium pb-1">
+          <h5 className=" text-[22px] text-[#222222] dark:text-white font-medium pb-1">
             Your total
           </h5>
-          <span className=" flex flex-row justify-between text-base text-[#222]">
+          <span className=" flex flex-row justify-between text-base text-[#222] dark:text-[#e5e7eb]">
             {/* calculating night/day */}
             {parseInt(nightStaying) === 0 ? (
               <p>1 day</p>
@@ -74,13 +74,13 @@ const Listing = ({ searchParamsObj }) => {
             {/* calculating price */}
             <p>${basePrice === 0 ? listingData?.basePrice : basePrice}</p>
           </span>
-          <span className=" flex flex-row justify-between text-base text-[#222]">
+          <span className=" flex flex-row justify-between text-base text-[#222] dark:text-[#e5e7eb]">
             <p>Taxes</p>
             <p>${tax}</p>
           </span>
         </div>
         <hr className="w-full h-[1.3px] bg-[#dddddd] my-6" />
-        <div className=" flex flex-row justify-between text-base text-[#222] font-medium">
+        <div className=" flex flex-row justify-between text-base text-[#222] dark:text-white font-medium">
           <p>Total(USD)</p>
           <p>${totalPrice}</p>
         </div>

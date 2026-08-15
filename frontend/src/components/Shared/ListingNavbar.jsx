@@ -31,31 +31,31 @@ const ListingNavbar = () => {
   }, []);
 
   return (
-    <nav
-      className={` top-0 z-10 bg-white transition-all duration-300 max-w-screen-xl px-4 sm:px-8 md:px-10 xl:px-20 xl:mx-auto ${
-        isSticky ? " border-b-[1.4px] border-[#f1f1f1] sticky bottom-0" : ""
+    <header
+      className={`w-full top-0 z-20 bg-white dark:bg-[#121212] transition-colors ${
+        isSticky ? "border-b border-neutral-200 dark:border-neutral-800 sticky top-0" : ""
       }`}
     >
-      <div className=" pt-6 pb-4 flex flex-row justify-between items-center ">
-        <Link to={"/"}>
-          <img src={logo} alt="Logo" className="w-10" />
+      <div className="w-full max-w-screen-xl mx-auto px-4 sm:px-8 md:px-10 xl:px-20 pt-6 pb-4 flex flex-row justify-between items-center">
+        <Link to={"/"} className="flex items-center gap-2">
+          <img src={logo} alt="Logo" className="w-9 dark:invert dark:brightness-200 transition-all" />
         </Link>
-        <div className=" flex flex-row items-center gap-5 text-sm text-[#222222] font-medium">
+        <div className="flex flex-row items-center gap-4 text-sm text-[#111827] dark:text-white font-medium">
           <Link
             to={`/users/dashboard/${user?._id}/overview=true`}
-            className=" border-[1.3px] border-[#dddddd] px-4 py-2 rounded-full hover:border-[#222222]"
+            className="border border-neutral-300 dark:border-neutral-700 px-4 py-2 rounded-full hover:border-[#111827] dark:hover:border-white hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-all"
           >
             Dashboard
           </Link>
           <Link
             to={"/"}
-            className=" border-[1.3px] border-[#dddddd] px-4 py-2 rounded-full hover:border-[#222222]"
+            className="border border-neutral-300 dark:border-neutral-700 px-4 py-2 rounded-full hover:border-[#111827] dark:hover:border-white hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-all"
           >
             Exit
           </Link>
         </div>
       </div>
-    </nav>
+    </header>
   );
 };
 

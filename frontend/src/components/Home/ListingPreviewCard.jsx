@@ -77,32 +77,32 @@ const ListingPreviewCard = ({ listingData, showBeforeTaxPrice }) => {
       <div className="flex flex-row justify-between items-start w-full mt-2">
         {/* listings details */}
         <div className="flex flex-col gap-1">
-          <p className="text-sm font-medium">
+          <p className="text-sm font-semibold text-[#111827] dark:text-white">
             {listingData?.location?.city?.name || "City"},{" "}
             {listingData?.location?.country?.name || "Country"}
           </p>
           {showBeforeTaxPrice && (
-            <p className="text-sm text-[#717171]">
+            <p className="text-sm text-[#717171] dark:text-[#a0a0a0]">
               After tax ${priceAfterTaxes}{" "}
               <span className="font-normal">night</span>
             </p>
           )}
-          <p className="text-sm font-semibold">
+          <p className="text-sm font-semibold text-[#111827] dark:text-white">
             ${listingData?.basePrice}{" "}
-            <span className="font-normal">night</span>
+            <span className="font-normal text-xs text-[#717171] dark:text-[#a0a0a0]">night</span>
           </p>
         </div>
         {/* ratings / new status */}
-        <div className="flex flex-row gap-1 items-center">
+        <div className="flex flex-row gap-1 items-center text-[#111827] dark:text-white">
           {listingData?.ratings ? (
             <>
-              <AiFillStar size={16} />
-              <p className="text-sm">{listingData?.ratings}</p>
+              <AiFillStar size={16} className="text-amber-500" />
+              <p className="text-sm font-medium">{listingData?.ratings}</p>
             </>
           ) : (
             <>
-              <AiFillStar size={16} />
-              <p className="text-sm">New</p>
+              <AiFillStar size={16} className="text-amber-500" />
+              <p className="text-sm font-medium">New</p>
             </>
           )}
         </div>

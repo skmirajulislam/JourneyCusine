@@ -17,6 +17,8 @@ const RoomFilterCard = () => {
   useEffect(() => {
     if (bedroomsNumber !== 0 || bedsNumber !== 0 || bathroomsNumber !== 0) {
       setIsDisabled(false);
+    } else {
+      setIsDisabled(true);
     }
   }, [bedroomsNumber, bedsNumber, bathroomsNumber]);
 
@@ -24,15 +26,14 @@ const RoomFilterCard = () => {
     <div className="dropdown dropdown-bottom">
       <label
         tabIndex={0}
-        className=" flex flex-row gap-1 items-center text-sm text-[#222222] cursor-pointer bg-white  
-         hover:bg-[#f1f1f1] px-4 py-[6px] rounded-full border border-[#b0b0b0] hover:border-[#222222] transition duration-200 ease-in"
+        className="flex flex-row gap-1.5 items-center text-xs sm:text-sm font-semibold text-[#111827] dark:text-white cursor-pointer bg-white dark:bg-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-700 px-4 py-2 rounded-full border border-neutral-300 dark:border-neutral-700 hover:border-[#111827] dark:hover:border-neutral-400 transition-all shadow-xs"
       >
         Rooms and beds
-        <MdKeyboardArrowDown size={20} />
+        <MdKeyboardArrowDown size={18} />
       </label>
       <div
         tabIndex={0}
-        className="dropdown-content z-30 menu p-4 bg-base-100 rounded-box min-w-[300px] flex flex-col gap-4 border border-neutral-200 shadow-lg"
+        className="dropdown-content z-30 menu p-5 bg-white dark:bg-[#1e1e1e] rounded-3xl min-w-[300px] flex flex-col gap-4 border border-neutral-200 dark:border-neutral-800 shadow-2xl mt-2"
       >
         <FloorPlanCard
           name={"Bedrooms"}
@@ -52,17 +53,21 @@ const RoomFilterCard = () => {
           setNumber={setBathroomsNumber}
           filter={true}
         />
-        <hr className=" h-[1px] bg-[#dddddd] my-5" />
+        <hr className="border-t border-neutral-200 dark:border-neutral-800 my-2" />
         {/* buttons */}
-        <div className=" flex flex-row justify-between items-center">
+        <div className="flex flex-row justify-between items-center pt-1">
           <button
-            className="underline text-sm disabled:cursor-not-allowed disabled:text-gray-300 cursor-pointer"
+            type="button"
+            className="underline text-xs sm:text-sm font-semibold disabled:cursor-not-allowed disabled:text-neutral-400 dark:disabled:text-neutral-600 text-[#111827] dark:text-white cursor-pointer"
             disabled={isDisabled}
             onClick={handleClearData}
           >
             Clear
           </button>
-          <button className=" text-base w-[90px] py-3 rounded-lg bg-[#222222] hover:bg-black transition duration-300 text-white">
+          <button
+            type="button"
+            className="text-xs sm:text-sm font-bold w-[90px] py-2.5 rounded-xl bg-[#111827] dark:bg-white hover:bg-black dark:hover:bg-neutral-200 transition-all text-white dark:text-[#111827] shadow-sm cursor-pointer"
+          >
             Apply
           </button>
         </div>

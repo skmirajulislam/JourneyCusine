@@ -33,17 +33,17 @@ const HouseHostingDetails = ({ setLatAndLong }) => {
     <>
       <div className=" flex flex-col gap-3 md:gap-5 md:mx-6">
         {/* heading */}
-        <div className=" flex flex-col gap-2 text-[#222222] font-medium text-2xl md:text-5xl text-center">
+        <div className=" flex flex-col gap-2 text-[#222222] dark:text-white font-medium text-2xl md:text-5xl text-center">
           <h1 className=" text-[#ff385c]"> Motel it.</h1>
           <h1>You could earn</h1>
         </div>
         {/* amount in $ */}
-        <p className=" text-center text-[#222222] font-semibold text-3xl my-2 md:text-7xl md:my-4">
+        <p className=" text-center text-[#222222] dark:text-white font-semibold text-3xl my-2 md:text-7xl md:my-4">
           ${perNightEarnig}
         </p>
         {/* description of earning */}
 
-        <div className="text-sm md:text-base text-[#222222] flex gap-1 justify-center h-5">
+        <div className="text-sm md:text-base text-[#222222] dark:text-[#e5e7eb] flex gap-1 justify-center h-5">
           {!isTooltipActive && (
             <>
               <span className=" font-medium underline underline-offset-3">
@@ -76,12 +76,12 @@ const HouseHostingDetails = ({ setLatAndLong }) => {
           />
         </div>
         {/* how pricing is defined */}
-        <p className=" text-xs md:text-sm text-[#717171] underline font-medium text-center">
+        <p className=" text-xs md:text-sm text-[#717171] dark:text-[#a0a0a0] underline font-medium text-center">
           Learn how we estimates you earnings
         </p>
         {/* selected places */}
         <div
-          className=" flex flex-row gap-4 items-center min-w-[300px] md:min-w-[400px] rounded-full border border-[#dddddd] mx-auto mt-3 px-7 py-3 cursor-pointer"
+          className=" flex flex-row gap-4 items-center min-w-[300px] md:min-w-[400px] rounded-full border border-[#dddddd] dark:border-[#444444] mx-auto mt-3 px-7 py-3 cursor-pointer"
           onClick={() => {
             window.scrollTo({ top: 0, behavior: "smooth" });
             setShowCheckPricePopup((prev) => !prev);

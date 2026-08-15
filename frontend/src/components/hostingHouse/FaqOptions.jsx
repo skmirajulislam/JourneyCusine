@@ -7,7 +7,7 @@ const FaqOptions = () => {
         return (
           <div key={i} className="py-5">
             <details className="group">
-              <summary className="flex justify-between items-center cursor-pointer list-none text-[#222222] text-xl">
+              <summary className="flex justify-between items-center cursor-pointer list-none text-[#222222] dark:text-white text-xl">
                 <span className="text-sm sm:text-base">{list.head}</span>
                 <span className="transition duration-300 group-open:rotate-180">
                   <svg
@@ -25,7 +25,7 @@ const FaqOptions = () => {
                   </svg>
                 </span>
               </summary>
-              <p className="text-[#717171] text-sm sm:text-base mt-3 group-open:animate-fadeIn transition duration-700">
+              <p className="text-[#717171] dark:text-[#a0a0a0] text-sm sm:text-base mt-3 group-open:animate-fadeIn transition duration-700">
                 {list?.desc}
               </p>
             </details>

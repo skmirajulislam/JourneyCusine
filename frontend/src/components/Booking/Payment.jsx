@@ -73,17 +73,17 @@ const Payment = ({ searchParamsObj }) => {
     <div>
       {/* trips section */}
       <div className=" flex flex-col gap-6">
-        <h5 className="text-xl md:text-[22px] text-[#222222] font-medium">
+        <h5 className="text-xl md:text-[22px] text-[#222222] dark:text-white font-medium">
           Your trip
         </h5>
         {/* dates */}
         <div className=" flex flex-row justify-between">
-          <span className="text-sm md:text-base text-[#222222]">
+          <span className="text-sm md:text-base text-[#222222] dark:text-[#e5e7eb]">
             <p className="font-medium">Dates</p>
             <p>{formattedDates}</p>
           </span>
           {/* guests */}
-          <span className="text-sm md:text-base text-[#222222]">
+          <span className="text-sm md:text-base text-[#222222] dark:text-[#e5e7eb]">
             <p className="font-medium">Guests</p>
             <p>
               {guestNumber} {guestNumber === "1" ? "guest" : "guests"}
@@ -93,16 +93,16 @@ const Payment = ({ searchParamsObj }) => {
         <hr className="w-full h-[1.3px] bg-[#dddddd] my-4" />
         {/* payment element */}
         <form onSubmit={handleSubmit}>
-          <h5 className="text-xl md:text-[22px] text-[#222222] font-medium pb-4">
+          <h5 className="text-xl md:text-[22px] text-[#222222] dark:text-white font-medium pb-4">
             Pay with
           </h5>
           <PaymentElement />
           <hr className="w-full h-[1.3px] bg-[#dddddd] my-10" />
           <div>
-            <h5 className="text-xl md:text-[22px] text-[#222222] font-medium">
+            <h5 className="text-xl md:text-[22px] text-[#222222] dark:text-white font-medium">
               Ground rules
             </h5>
-            <p className="text-sm md:text-base text-[#222222] py-4">
+            <p className="text-sm md:text-base text-[#222222] dark:text-[#e5e7eb] py-4">
               We ask every guest to remember a few simple things about what
               makes a great guest.
             </p>

@@ -185,15 +185,15 @@ const ReservationCard = ({ listingData }) => {
 
   return (
     <>
-      <div className=" w-full min-h-[315px] rounded-xl border border-[#dddddd] sticky top-32 shadow-customShadow p-6">
+      <div className=" w-full min-h-[315px] rounded-xl border border-[#dddddd] dark:border-[#444444] sticky top-32 shadow-customShadow p-6 bg-white dark:bg-[#1e1e1e]">
         <div className=" flex felx-row justify-between items-start">
           <div className=" flex flex-col">
-            <h3 className=" text-[22px] text-[#222222] font-semibold">
+            <h3 className=" text-[22px] text-[#222222] dark:text-white font-semibold">
               {/* ${listingData?.basePrice} */}${reservationBasePrice}
             </h3>
-            <p className=" text-[#313131] text-sm">Total before taxes</p>
+            <p className=" text-[#313131] dark:text-[#a0a0a0] text-sm">Total before taxes</p>
           </div>
-          <span className=" text-sm text-[#222222] flex flex-row gap-1 items-center mt-2">
+          <span className=" text-sm text-[#222222] dark:text-[#e5e7eb] flex flex-row gap-1 items-center mt-2">
             <AiFillStar size={18} />
             {listingData?.ratings ? listingData?.ratings : "New"}
             {listingData?.reviews && (
@@ -207,7 +207,7 @@ const ReservationCard = ({ listingData }) => {
         {/* calender section */}
 
         {!calendarState && (
-          <div className=" rounded-tl-lg rounded-tr-lg border border-[#b9b9b9] w-full min-h-[60px] mt-6 relative flex flex-col">
+          <div className=" rounded-tl-lg rounded-tr-lg border border-[#b9b9b9] dark:border-[#555555] w-full min-h-[60px] mt-6 relative flex flex-col">
             {/* dates & calendar & guests here */}
             <div>
               <div
@@ -217,16 +217,16 @@ const ReservationCard = ({ listingData }) => {
                 className=" grid grid-cols-2 cursor-pointer"
               >
                 <div className="px-3 py-3">
-                  <p className=" text-[10px] text-black font-semibold uppercase">
+                  <p className=" text-[10px] text-black dark:text-white font-semibold uppercase">
                     check-in
                   </p>
-                  <p className=" text-sm text-[#222222]">{localStartDate}</p>
+                  <p className=" text-sm text-[#222222] dark:text-[#e5e7eb]">{localStartDate}</p>
                 </div>
-                <div className="px-3 py-3 border-l border-[#b9b9b9]">
-                  <p className=" text-[10px] text-black font-semibold uppercase">
+                <div className="px-3 py-3 border-l border-[#b9b9b9] dark:border-[#555555]">
+                  <p className=" text-[10px] text-black dark:text-white font-semibold uppercase">
                     checkout
                   </p>
-                  <p className=" text-sm text-[#222222]">{localEndDate}</p>
+                  <p className=" text-sm text-[#222222] dark:text-[#e5e7eb]">{localEndDate}</p>
                 </div>
               </div>
             </div>
@@ -242,22 +242,22 @@ const ReservationCard = ({ listingData }) => {
               setShowDropdown((prev) => !prev);
             }}
           >
-            <div className=" rounded-bl-lg rounded-br-lg border border-[#b9b9b9] w-full min-h-[50px] cursor-pointer relative">
+            <div className=" rounded-bl-lg rounded-br-lg border border-[#b9b9b9] dark:border-[#555555] w-full min-h-[50px] cursor-pointer relative">
               {/* guests data */}
               <div className="px-3 py-3 flex flex-row items-center justify-between">
                 <div className=" flex flex-col">
-                  <p className=" text-[10px] text-black font-semibold uppercase">
+                  <p className=" text-[10px] text-black dark:text-white font-semibold uppercase">
                     guests
                   </p>
-                  <p className=" text-sm text-[#222222]">
+                  <p className=" text-sm text-[#222222] dark:text-[#e5e7eb]">
                     {totalGuest} {totalGuest === 1 ? "guest" : "guests"}
                   </p>
                 </div>
                 <div>
                   {showDropdown ? (
-                    <MdKeyboardArrowUp size={26} />
+                    <MdKeyboardArrowUp size={26} className="dark:text-white"/>
                   ) : (
-                    <MdKeyboardArrowDown size={26} />
+                    <MdKeyboardArrowDown size={26} className="dark:text-white"/>
                   )}
                 </div>
               </div>
@@ -268,16 +268,16 @@ const ReservationCard = ({ listingData }) => {
         {showDropdown && (
           <div
             ref={dropdownRef}
-            className="min-h-[200px] w-72 shadow-lg border absolute z-[90] bg-white px-4 py-5 rounded-md"
+            className="min-h-[200px] w-72 shadow-lg border dark:border-[#444444] absolute z-[90] bg-white dark:bg-[#2a2a2a] px-4 py-5 rounded-md"
           >
             <div className=" flex flex-col gap-5">
               <div className=" flex felx-row items-center justify-between">
                 {/* adults number here */}
                 <span>
-                  <p className=" text-base text-[#222222] font-medium">
+                  <p className=" text-base text-[#222222] dark:text-white font-medium">
                     Adults
                   </p>
-                  <p className=" text-sm text-[#313131]">Age 13+</p>
+                  <p className=" text-sm text-[#313131] dark:text-[#a0a0a0]">Age 13+</p>
                 </span>
                 {/* icons */}
                 <span className=" flex flex-row-reverse items-center gap-2">
@@ -286,11 +286,11 @@ const ReservationCard = ({ listingData }) => {
                       setGuestsNumber((prev) => prev + 1);
                     }}
                     disabled={listingData?.floorPlan?.guests === totalGuest}
-                    className={` p-2 rounded-full border border-[#c0c0c0] opacity-90 disabled:cursor-not-allowed disabled:opacity-20`}
+                    className={` p-2 rounded-full border border-[#c0c0c0] dark:border-[#777777] opacity-90 disabled:cursor-not-allowed disabled:opacity-20 dark:text-white`}
                   >
                     <AiOutlinePlus size={16} />
                   </button>
-                  <p className=" w-[30px] flex justify-center">
+                  <p className=" w-[30px] flex justify-center dark:text-white">
                     {guestsNumber}
                   </p>
 
@@ -299,7 +299,7 @@ const ReservationCard = ({ listingData }) => {
                       setGuestsNumber((prev) => prev - 1);
                     }}
                     disabled={guestsNumber === 1}
-                    className=" p-2 rounded-full border border-[#c0c0c0] disabled:cursor-not-allowed disabled:opacity-20"
+                    className=" p-2 rounded-full border border-[#c0c0c0] dark:border-[#777777] disabled:cursor-not-allowed disabled:opacity-20 dark:text-white"
                   >
                     <AiOutlineMinus size={16} />
                   </button>
@@ -308,10 +308,10 @@ const ReservationCard = ({ listingData }) => {
               <div className=" flex felx-row items-center justify-between">
                 {/* children number here */}
                 <span>
-                  <p className=" text-base text-[#222222] font-medium">
+                  <p className=" text-base text-[#222222] dark:text-white font-medium">
                     Children
                   </p>
-                  <p className=" text-sm text-[#313131]">Ages 2-12</p>
+                  <p className=" text-sm text-[#313131] dark:text-[#a0a0a0]">Ages 2-12</p>
                 </span>
                 {/* icons */}
                 <span className=" flex flex-row-reverse items-center gap-2">
@@ -346,7 +346,7 @@ const ReservationCard = ({ listingData }) => {
                 onClick={() => {
                   setShowDropdown(false);
                 }}
-                className="underline text-base text-[#222222] font-medium px-3 py-2 rounded-lg hover:bg-[#f5f5f5]"
+                className="underline text-base text-[#222222] dark:text-white font-medium px-3 py-2 rounded-lg hover:bg-[#f5f5f5] dark:hover:bg-[#333333]"
               >
                 Close
               </button>
@@ -372,7 +372,7 @@ const ReservationCard = ({ listingData }) => {
         {!calendarState ? null : (
           <div
             ref={calendarRef}
-            className=" absolute border-b-[1.2px] border-neutral-200 shadow-md left-[2px] sm:translate-x-[30%] sm:translate-y-[0%] md:translate-x-[-30%] lg:translate-x-[-20%] xl:translate-x-0 xl:translate-y-0"
+            className=" absolute border-b-[1.2px] border-neutral-200 dark:border-neutral-700 shadow-md left-[2px] sm:translate-x-[30%] sm:translate-y-[0%] md:translate-x-[-30%] lg:translate-x-[-20%] xl:translate-x-0 xl:translate-y-0 bg-white dark:bg-[#1e1e1e] rounded-lg overflow-hidden"
           >
             <DateRange
               rangeColors={["#262626"]}

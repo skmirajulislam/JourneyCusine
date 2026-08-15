@@ -29,7 +29,7 @@ const Category = ({ styleGrid = "" }) => {
       <button
         type="button"
         aria-label="Show previous categories"
-        className="shrink-0 rounded-full border border-neutral-400 bg-white p-1 hover:shadow-lg"
+        className="shrink-0 rounded-full border border-neutral-400 dark:border-neutral-600 bg-white dark:bg-[#2a2a2a] p-1 hover:shadow-lg dark:text-white"
         onClick={() => scrollCategories(-1)}
       >
         <MdKeyboardArrowLeft size={18} />
@@ -49,14 +49,14 @@ const Category = ({ styleGrid = "" }) => {
           >
             <span className="text-xs font-medium">{cat.name}</span>
             <cat.svg size={28} />
-            {category === cat.name && <span className="absolute bottom-0 h-0.5 w-9 bg-[#222222]" />}
+            {category === cat.name && <span className="absolute bottom-0 h-0.5 w-9 bg-[#222222] dark:bg-white" />}
           </button>
         ))}
       </div>
       <button
         type="button"
         aria-label="Show next categories"
-        className="shrink-0 rounded-full border border-neutral-400 bg-white p-1 hover:shadow-lg"
+        className="shrink-0 rounded-full border border-neutral-400 dark:border-neutral-600 bg-white dark:bg-[#2a2a2a] p-1 hover:shadow-lg dark:text-white"
         onClick={() => scrollCategories(1)}
       >
         <MdKeyboardArrowRight size={18} />

@@ -2,22 +2,24 @@
 
 const OverviewCard = ({ img, head, desc, num }) => {
   return (
-    <div className=" flex flex-row justify-between items-center gap-5">
-      <div className=" flex flex-row">
-        <h1 className=" text-[#222222] font-medium text-base sm:text-2xl pr-5">
+    <div className="flex flex-row justify-between items-center gap-5">
+      <div className="flex flex-row">
+        <h2 className="text-[#111827] dark:text-white font-bold text-base sm:text-2xl pr-5">
           {num}
-        </h1>
-        <div className=" flex flex-col gap-2 xl:min-w-[350px]">
-          <h1 className=" text-[#222222] font-medium text-base sm:text-2xl">
+        </h2>
+        <div className="flex flex-col gap-1.5 xl:min-w-[350px]">
+          <h2 className="text-[#111827] dark:text-white font-bold text-base sm:text-2xl">
             {head}
-          </h1>
-          <p className=" text-[#717171] text-xs sm:text-lg">{desc}</p>
+          </h2>
+          <p className="text-neutral-500 dark:text-neutral-400 text-xs sm:text-base leading-relaxed">
+            {desc}
+          </p>
         </div>
       </div>
       <img
         src={img}
-        alt="preview"
-        className=" aspect-square w-[80px] sm:w-[120px]"
+        alt={head}
+        className="aspect-square w-[80px] sm:w-[120px] object-contain shrink-0"
       />
     </div>
   );

@@ -6,11 +6,11 @@ import publish from "../../assets/publish.png";
 
 const StepsOfHosting = () => {
   return (
-    <section className=" h-[90vh] grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-10 justify-between items-center bg-white max-w-screen-xl xl:mx-auto mb-20 lg:mt-8">
-      <h1 className=" text-[#222222] text-3xl sm:text-5xl xl:text-[56px] font-medium leading-tight">
+    <section className="min-h-[80vh] grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 justify-between items-center bg-transparent max-w-screen-xl xl:mx-auto py-10 mb-10">
+      <h1 className="text-[#111827] dark:text-white text-3xl sm:text-5xl xl:text-[56px] font-bold leading-tight">
         It’s easy to get started on Motel
       </h1>
-      <div className=" flex flex-col gap-5">
+      <div className="flex flex-col gap-5">
         <OverviewCard
           num={1}
           head={"Tell us about your place"}
@@ -19,7 +19,7 @@ const StepsOfHosting = () => {
           }
           img={aboutPlace}
         />
-        <hr className=" my-5 bg-[#dddddd] h-[1.4px]" />
+        <hr className="my-2 bg-neutral-200 dark:bg-neutral-800 h-[1.4px] border-none" />
         <OverviewCard
           num={2}
           head={"Make it stand out"}
@@ -28,7 +28,7 @@ const StepsOfHosting = () => {
           }
           img={standOut}
         />
-        <hr className=" my-5 bg-[#dddddd] h-[1.4px]" />
+        <hr className="my-2 bg-neutral-200 dark:bg-neutral-800 h-[1.4px] border-none" />
         <OverviewCard
           num={3}
           head={"Finish up and publish"}

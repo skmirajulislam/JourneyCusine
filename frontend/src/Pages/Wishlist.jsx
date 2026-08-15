@@ -82,7 +82,7 @@ const Wishlist = () => {
         </div>
         <Link
           to="/trips"
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#222222] dark:bg-white text-white dark:text-[#222222] hover:bg-black font-semibold text-sm transition-colors self-start sm:self-auto shadow-sm"
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#222222] dark:bg-neutral-800 text-white dark:text-white hover:bg-black dark:hover:bg-neutral-700 font-semibold text-sm transition-colors self-start sm:self-auto shadow-sm border border-transparent dark:border-neutral-700"
         >
           🗺️ Open Trips Map Planner
         </Link>

@@ -15,14 +15,14 @@ const SetupCard = ({ heading, subHeading, img }) => {
       />
       <div className={`${img ? "" : "flex flex-col gap-2"}`}>
         <h3
-          className={` text-[#222222]  font-medium ${
+          className={` text-[#222222] dark:text-white  font-medium ${
             img ? " text-center text-xs md:text-sm xl:text-base" : " text-lg"
           }`}
         >
           {heading}
         </h3>
         <p
-          className={`text-[#717171] ${
+          className={`text-[#717171] dark:text-[#a0a0a0] ${
             img
               ? "text-center text-xs md:text-sm xl:text-base"
               : "text-sm sm:text-base"

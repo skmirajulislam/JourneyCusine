@@ -63,7 +63,7 @@ const Book = () => {
   if (isLoading) {
     return (
       <div className=" flex justify-center items-center w-full h-[60dvh]">
-        <FadeLoader color="#000" />
+        <FadeLoader color="#ff385c" />
       </div>
     );
   }
@@ -77,11 +77,11 @@ const Book = () => {
               onClick={() => {
                 navigate(-1);
               }}
-              className=" p-2 rounded-full hover:bg-[#f1f1f1] cursor-pointer transition duration-200 ease-in"
+              className=" p-2 rounded-full hover:bg-[#f1f1f1] dark:hover:bg-[#333333] cursor-pointer transition duration-200 ease-in"
             >
               <MdKeyboardArrowLeft size={28} />
             </div>
-            <h2 className="text-lg sm:text-xl md:text-[32px] text-[#222222] font-medium text-center">
+            <h2 className="text-lg sm:text-xl md:text-[32px] text-[#222222] dark:text-white font-medium text-center">
               Confirm and pay
             </h2>
           </div>

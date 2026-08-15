@@ -51,16 +51,16 @@ const DashboardMenu = () => {
           {showDashboardMenu && (
             <div
               ref={userDashboardMenu}
-              className="shadow-md absolute right-28 top-16 sm:-right-12 sm:top-12 bg-[#ffffff] border-[1px] border-[#dddddd] rounded-lg flex flex-col py-2 w-[230px] transition-all user__menu"
+              className="shadow-md absolute right-28 top-16 sm:-right-12 sm:top-12 bg-[#ffffff] dark:bg-[#2a2a2a] border-[1px] border-[#dddddd] dark:border-[#444444] rounded-lg flex flex-col py-2 w-[230px] transition-all user__menu"
             >
               {/* dashboard nav menu options */}
               {navItem.map((item, i) => {
                 return (
-                  <div key={i} className=" px-4 py-3 hover:bg-[#f1f1f1]">
+                  <div key={i} className=" px-4 py-3 hover:bg-[#f1f1f1] dark:hover:bg-[#333333]">
                     <Link
                       className={`text-sm font-medium ${
                         activePage === item.id
-                          ? "font-medium text-[#ff3f62ff] hover:bg-white transition duration-200"
+                          ? "font-medium text-[#ff3f62ff] hover:bg-white dark:hover:bg-transparent transition duration-200"
                           : " opacity-80"
                       }`}
                       to={`${
@@ -94,7 +94,7 @@ const DashboardMenu = () => {
                 }`}
               >
                 <p
-                  className={` cursor-pointer p-2 text-sm whitespace-nowrap rounded-full hover:bg-[#f0f0f0] transition duration-300 ${
+                  className={` cursor-pointer p-2 text-sm whitespace-nowrap rounded-full hover:bg-[#f0f0f0] dark:hover:bg-[#333333] transition duration-300 ${
                     activePage === item.id
                       ? "font-medium text-[#ff3f62ff] hover:bg-white transition duration-200"
                       : " opacity-80"

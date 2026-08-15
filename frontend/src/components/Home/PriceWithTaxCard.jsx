@@ -2,7 +2,7 @@
 const PriceWithTaxCard = ({ style, setShowBeforeTaxPrice }) => {
   return (
     <div className={`${style}`}>
-      <p className=" text-xs text-[#222222] font-medium">
+      <p className=" text-xs text-[#222222] dark:text-[#e5e7eb] font-medium">
         Display total after taxes
       </p>
       <input

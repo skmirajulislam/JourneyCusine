@@ -4,13 +4,13 @@ import ListingFooter from "../components/Shared/ListingFooter";
 
 const CreateNewListLayout = () => {
   return (
-    <>
+    <div className="min-h-screen flex flex-col justify-between bg-white dark:bg-[#121212] transition-colors w-full">
       <ListingNavbar />
-      <div className=" max-w-screen-xl mx-auto px-4 sm:px-8 md:px-10 xl:px-20">
+      <main className="flex-1 w-full max-w-screen-xl mx-auto px-4 sm:px-8 md:px-10 xl:px-20">
         <Outlet />
-      </div>
+      </main>
       <ListingFooter />
-    </>
+    </div>
   );
 };
 

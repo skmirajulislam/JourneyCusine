@@ -31,15 +31,9 @@ const ListingFooter = () => {
   const dispatch = useDispatch();
   const currentHouseId = localStorage.getItem("currentHouseId");
 
-  console.log(createHouseData);
-
   useEffect(() => {
     dispatch(getHouseDetails(currentHouseId));
   }, [currentHouseId, dispatch]);
-
-  /**
-   * The function `handleNext` navigates to different URLs based on the current URL.
-   */
 
   const steps = [
     "/become-a-host",
@@ -69,77 +63,66 @@ const ListingFooter = () => {
       setIsLoading(true);
 
       if (currentStepIndex === 0) {
-        // Handle any actions specific to the user role
         await dispatch(userRole());
       } else if (currentStepIndex === 2) {
         const houseData = {
           houseType: createHouseData?.newHouse?.houseType,
           houseId: currentListingHouseId,
         };
-        // Handle data saving for the "structure" step
         await dispatch(saveStructure(houseData));
       } else if (currentStepIndex === 3) {
         const houseData = {
           privacyType: createHouseData?.newHouse?.privacyType,
           houseId: currentListingHouseId,
         };
-        // data saving for privacy type in db
         await dispatch(savePrivacyType(houseData));
       } else if (currentStepIndex === 4) {
         const locationData = {
           location: createHouseData?.newHouse?.location,
           houseId: currentListingHouseId,
         };
-        // data saving for location in db
         await dispatch(saveLocation(locationData));
       } else if (currentStepIndex === 5) {
         const floorPlanData = {
           floorPlan: createHouseData?.newHouse?.floorPlan,
           houseId: currentListingHouseId,
         };
-        // data saving for floor plan in db
         await dispatch(saveFloorPlan(floorPlanData));
       } else if (currentStepIndex === 7) {
         const amenitiesData = {
           amenities: createHouseData?.newHouse?.amenities,
           houseId: currentListingHouseId,
         };
-        // data saving for amenites plan in db
         await dispatch(saveAmenities(amenitiesData));
       } else if (currentStepIndex === 8) {
         const photosData = {
           photos: createHouseData?.newHouse?.photos,
           houseId: currentListingHouseId,
         };
-        // data saving for photos in db
         await dispatch(savePhotos(photosData));
       } else if (currentStepIndex === 9) {
         const titleData = {
           title: createHouseData?.newHouse?.title,
           houseId: currentListingHouseId,
         };
-        // data save title to db
         await dispatch(saveTitle(titleData));
       } else if (currentStepIndex === 10) {
         const highlightData = {
           highlight: createHouseData?.newHouse?.highlights,
           houseId: currentListingHouseId,
         };
-        // data save title to db
         await dispatch(saveHighlight(highlightData));
       } else if (currentStepIndex === 11) {
         const descriptionData = {
           description: createHouseData?.newHouse?.description,
           houseId: currentListingHouseId,
         };
-        // data save title to db
         await dispatch(saveDescription(descriptionData));
       } else if (currentStepIndex === 13) {
         const visibilityData = {
           guestType: createHouseData?.newHouse?.guestType,
           houseId: currentListingHouseId,
         };
-        // data save title to db
         await dispatch(saveGuestType(visibilityData));
       } else if (currentStepIndex === 14) {
         const PriceData = {
@@ -148,34 +131,26 @@ const ListingFooter = () => {
           basePrice: createHouseData?.newHouse?.basePrice,
           houseId: currentListingHouseId,
         };
-        // data save title to db
         await dispatch(savePrices(PriceData));
       } else if (currentStepIndex === 15) {
         const securityData = {
           security: createHouseData?.newHouse?.security,
           houseId: currentListingHouseId,
         };
-        // data save title to db
         await dispatch(saveSecurity(securityData));
       } else if (currentStepIndex === 16) {
         const publishList = {
           houseId: currentListingHouseId,
         };
-        // data save title to db
         await dispatch(publishListing(publishList));
       }
 
       setIsLoading(false);
-
-      // Navigate to the next step
       navigate(steps[currentStepIndex + 1]);
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
-    // // show modal on last page
-    // window.thankyou_modal.showModal();
   };
-  /* The `useEffect` hook in the code snippet is used to update the `progress` state based on the current
-URL. */
+
   useEffect(() => {
     if (url?.includes("/about-your-place")) {
       setProgress(0);
@@ -228,24 +203,23 @@ URL. */
   }, [progress, url]);
 
   return (
-    <footer className=" sticky bottom-0 bg-white">
+    <footer className="w-full sticky bottom-0 bg-white dark:bg-[#121212] border-t border-neutral-200 dark:border-neutral-800 z-30 transition-colors">
       {/* progressbar */}
       {!url.includes("/published") && (
-        <div>
+        <div className="w-full">
           <progress
-            className="progress w-full shadow-sm transition-all duration-700"
+            className="progress w-full transition-all duration-700 block"
             value={progress}
             max="100"
           ></progress>
         </div>
       )}
 
-      {/* button */}
-      <div className=" flex justify-between py-4 px-6 sm:px-10 md:px-20 top-0 z-10 bg-white max-w-screen-xl xl:px-20 xl:mx-auto">
-        {/* if in the success/last page don't show the back button */}
+      {/* button container */}
+      <div className="w-full max-w-screen-xl mx-auto px-4 sm:px-8 md:px-10 xl:px-20 py-4 flex justify-between items-center bg-transparent">
         {!url.includes("/published") ? (
           <button
-            className=" hover:bg-[#f1f1f1] text-black rounded-md px-4 py-2 underline"
+            className="hover:bg-neutral-100 dark:hover:bg-neutral-800 text-[#111827] dark:text-white rounded-xl px-5 py-2.5 font-bold text-sm underline transition-all cursor-pointer"
             onClick={() => {
               navigate(-1);
             }}
@@ -259,36 +233,31 @@ URL. */
         {url.includes("/published") ? (
           <a
             href={`/users/dashboard/${user?._id}/listing=true`}
-            className="text-lg text-white font-medium rounded-md px-9 py-3 disabled:bg-[#dddddd] disabled:cursor-not-allowed transition durtion-300 ease-in bg-[#222222] hover:bg-black"
+            className="text-sm font-bold text-white dark:text-[#111827] rounded-xl px-8 py-3 disabled:bg-neutral-300 disabled:cursor-not-allowed transition-all duration-200 bg-[#111827] dark:bg-white hover:bg-black dark:hover:bg-neutral-200 shadow-md"
           >
             See listing
           </a>
         ) : (
-          <>
-            {/* on publish page showing a colored button */}
-            <button
-              className={`text-lg text-white font-medium rounded-md px-9 py-3 disabled:bg-[#dddddd] disabled:cursor-not-allowed transition durtion-300 ease-in ${
-                url?.includes("/receipt")
-                  ? "bg-[#ff385c] hover:bg-[#d90b63]"
-                  : "bg-[#222222] hover:bg-black"
-              }`}
-              onClick={handleNext}
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <PulseLoader
-                    color="#f7f7f7"
-                    size={7}
-                    margin={4}
-                    speedMultiplier={0.6}
-                  />
-                </>
-              ) : (
-                <>{url?.includes("/receipt") ? "Publish" : "Next"}</>
-              )}
-            </button>
-          </>
+          <button
+            className={`text-sm font-bold text-white rounded-xl px-8 py-3 disabled:bg-neutral-300 dark:disabled:bg-neutral-800 disabled:cursor-not-allowed transition-all duration-200 shadow-md cursor-pointer ${
+              url?.includes("/receipt")
+                ? "bg-[#ff385c] hover:bg-[#d90b63] text-white"
+                : "bg-[#111827] dark:bg-white text-white dark:text-[#111827] hover:bg-black dark:hover:bg-neutral-200"
+            }`}
+            onClick={handleNext}
+            disabled={loading}
+          >
+            {loading ? (
+              <PulseLoader
+                color={url?.includes("/receipt") ? "#ffffff" : "#ff385c"}
+                size={7}
+                margin={4}
+                speedMultiplier={0.6}
+              />
+            ) : (
+              <>{url?.includes("/receipt") ? "Publish" : "Next"}</>
+            )}
+          </button>
         )}
       </div>
     </footer>

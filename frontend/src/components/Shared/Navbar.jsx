@@ -122,7 +122,7 @@ const Navbar = () => {
 
   return (
     <nav
-      className={`border-b-[1.4px] border-[#f1f1f1] sticky top-0 z-[99] bg-white ${inBookingPage && "hidden md:block"
+      className={`border-b-[1.4px] border-[#f1f1f1] dark:border-neutral-800 sticky top-0 z-[99] bg-white dark:bg-[#121212] transition-colors ${inBookingPage && "hidden md:block"
         }`}
     >
       <div
@@ -260,11 +260,9 @@ const Navbar = () => {
                   {user && !inUserDashboard && (
                     <Link
                       to="/host/homes"
-                      className=" bg-[#ffffff] hover:bg-[#f0f0f0] transition-all rounded-full p-3 cursor-pointer mr-1 md:block hidden"
+                      className="bg-transparent hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all rounded-full px-4 py-2 cursor-pointer mr-1 md:block hidden text-sm font-semibold text-[#111827] dark:text-white"
                     >
-                      <p className="text-sm font-medium text-[#222222] dark:text-white">
-                        Motel your home
-                      </p>
+                      Motel your home
                     </Link>
                   )}
 
