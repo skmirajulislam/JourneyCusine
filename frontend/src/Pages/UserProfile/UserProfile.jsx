@@ -2,6 +2,7 @@ import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import ProfileData from "../../components/userProfile/ShowUserProfileData";
+import UserReservationsSection from "../../components/userProfile/UserReservationsSection";
 
 const UserProfile = () => {
   const user = useSelector((state) => state.user?.userDetails);
@@ -87,6 +88,9 @@ const UserProfile = () => {
           </div>
         )}
       </section>
+
+      {/* Bookings, Stays, and Cancellation / Refund Management */}
+      <UserReservationsSection />
     </main>
   );
 };

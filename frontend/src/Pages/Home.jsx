@@ -196,7 +196,14 @@ const Home = () => {
     params.delete("price");
     params.delete("rating");
     params.delete("amenities");
-    navigate(`/?${params.toString()}`);
+    params.delete("search");
+    const queryStr = params.toString();
+    navigate(queryStr ? `/?${queryStr}` : "/");
+  };
+
+  const handleResetAll = () => {
+    localStorage.setItem("category", "House");
+    navigate("/");
   };
 
   if (allListingData.isLoading) {
@@ -299,10 +306,7 @@ const Home = () => {
 
           <button
             type="button"
-            onClick={() => {
-              if (searchQuery) handleClearSearch();
-              if (activeFilterCount > 0) handleClearAllFilters();
-            }}
+            onClick={handleClearAllFilters}
             className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white dark:bg-[#2a2a2a] hover:bg-neutral-200 dark:hover:bg-[#333333] text-xs font-bold text-[#111827] dark:text-white shadow-xs border border-neutral-200 dark:border-neutral-700 transition-colors shrink-0 cursor-pointer"
           >
             <FiX size={14} /> Clear all filters
@@ -332,14 +336,11 @@ const Home = () => {
                 No stays match your criteria
               </h3>
               <p className="text-xs text-[#6b7280] dark:text-[#9ca3af] mt-1.5 mb-6 max-w-sm mx-auto leading-relaxed">
-                Try loosening your price, rating, or amenities filters to see more results.
+                Try loosening your price, rating, or amenities filters, or explore all available stays.
               </p>
               <button
                 type="button"
-                onClick={() => {
-                  handleClearSearch();
-                  handleClearAllFilters();
-                }}
+                onClick={handleResetAll}
                 className="px-5 py-2.5 rounded-xl bg-[#ff385c] hover:bg-[#d90b63] text-white text-xs font-bold shadow-md transition-all cursor-pointer"
               >
                 Reset all filters &amp; search

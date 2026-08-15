@@ -1,72 +1,79 @@
 import { useDispatch, useSelector } from "react-redux";
+import PropTypes from "prop-types";
 import AllReservations from "./AllReservations";
 import CancelledReservations from "./CancelledReservations";
 import CompletedReservations from "./CompletedReservations";
 import UpcomingReservation from "./UpcomingReservation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { removeDuplicates } from "../../../hooks/useRemoveDuplicates";
 import { getAuthorReservations } from "../../../redux/actions/reservationsActions";
 
-/* eslint-disable react/prop-types */
 const ReservationsData = ({ active }) => {
   const authorReservations = useSelector(
-    (state) => state.reservations.authorReservations
+    (state) => state.reservations.authorReservations || []
   );
-  const [reservations, setReservations] = useState([]);
-  const [upcomingReservations, setUpcomingReservations] = useState([]);
-  const [completedReservations, setCompletedReservations] = useState([]);
   const dispatch = useDispatch();
 
-  // getting authors reservation
   useEffect(() => {
     dispatch(getAuthorReservations());
   }, [dispatch]);
 
-  // removing duplicates
-  useEffect(() => {
-    setReservations(
-      removeDuplicates(authorReservations, "checkIn", "checkOut")
-    );
+  const uniqueReservations = useMemo(() => {
+    return removeDuplicates(authorReservations, "_id");
   }, [authorReservations]);
 
-  // setting upcoming and completed reservations
-  useEffect(() => {
-    const currentDate = new Date().toISOString();
+  const currentDate = new Date().toISOString();
 
-    const upcoming = reservations.filter(
-      (reservation) => reservation.checkIn > currentDate
+  const upcomingReservations = useMemo(() => {
+    return uniqueReservations.filter(
+      (r) =>
+        (r.status === "confirmed" || !r.status) &&
+        (r.checkIn ? new Date(r.checkIn).toISOString() > currentDate : true)
     );
-    const completed = reservations.filter(
-      (reservation) => reservation.checkOut < currentDate
-    );
+  }, [uniqueReservations, currentDate]);
 
-    setUpcomingReservations(upcoming);
-    setCompletedReservations(completed);
-  }, [reservations]);
+  const completedReservations = useMemo(() => {
+    return uniqueReservations.filter(
+      (r) =>
+        r.status === "confirmed" &&
+        r.checkOut &&
+        new Date(r.checkOut).toISOString() <= currentDate
+    );
+  }, [uniqueReservations, currentDate]);
+
+  const cancelledAndRefundReservations = useMemo(() => {
+    return uniqueReservations.filter(
+      (r) =>
+        r.status === "cancellation_requested" ||
+        r.status === "refunded" ||
+        r.status === "cancelled"
+    );
+  }, [uniqueReservations]);
+
+  const handleRefresh = () => {
+    dispatch(getAuthorReservations());
+  };
 
   return (
-    <section className="  py-10 flex justify-center items-center overflow-x-auto pl-10 sm:pl-44 lg:pl-0">
-      <div className=" text-xl font-semibold">
-        {active === 1 ? (
-          <>
-            <UpcomingReservation data={upcomingReservations} />
-          </>
-        ) : active === 2 ? (
-          <>
-            <CompletedReservations data={completedReservations} />
-          </>
-        ) : active === 3 ? (
-          <>
-            <CancelledReservations />
-          </>
-        ) : (
-          <>
-            <AllReservations />
-          </>
-        )}
-      </div>
+    <section className="py-8 w-full">
+      {active === 1 ? (
+        <UpcomingReservation data={upcomingReservations} />
+      ) : active === 2 ? (
+        <CompletedReservations data={completedReservations} />
+      ) : active === 3 ? (
+        <CancelledReservations
+          data={cancelledAndRefundReservations}
+          onRefresh={handleRefresh}
+        />
+      ) : (
+        <AllReservations data={uniqueReservations} />
+      )}
     </section>
   );
+};
+
+ReservationsData.propTypes = {
+  active: PropTypes.number,
 };
 
 export default ReservationsData;

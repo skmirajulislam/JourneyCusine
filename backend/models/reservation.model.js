@@ -1,39 +1,84 @@
 const mongoose = require("mongoose");
 
-const reservationSchema = new mongoose.Schema({
+const reservationSchema = new mongoose.Schema(
+  {
     listingId: {
-        type: String
+      type: String,
+      ref: "House",
     },
     authorId: {
-        type: String
+      type: String,
+      ref: "userDB",
+    },
+    guestId: {
+      type: String,
+      ref: "userDB",
+    },
+    guestEmail: {
+      type: String,
+    },
+    guestName: {
+      type: String,
     },
     checkIn: {
-        type: String
+      type: String,
     },
     checkOut: {
-        type: String
+      type: String,
     },
     nightStaying: {
-        type: Number
+      type: Number,
+      default: 1,
     },
     guestNumber: {
-        type: Number
+      type: Number,
+      default: 1,
     },
     basePrice: {
-        type: Number
+      type: Number,
     },
     taxes: {
-        type: Number
+      type: Number,
+    },
+    totalPrice: {
+      type: Number,
     },
     authorEarnedPrice: {
-        type: Number
+      type: Number,
     },
     orderId: {
-        type: Number
-    }
-
-}, { timestamps: { createdAt: "created_at", updatedAt: "updated_at" } })
+      type: Number,
+    },
+    paymentIntentId: {
+      type: String,
+    },
+    paymentStatus: {
+      type: String,
+      enum: ["paid", "pending", "failed", "refunded", "partially_refunded"],
+      default: "paid",
+    },
+    status: {
+      type: String,
+      enum: ["confirmed", "cancellation_requested", "cancelled", "refunded"],
+      default: "confirmed",
+    },
+    cancellationReason: {
+      type: String,
+      default: "",
+    },
+    cancellationRequestedAt: {
+      type: Date,
+    },
+    refundDetails: {
+      refundAmount: { type: Number, default: 0 },
+      taxDeduction: { type: Number, default: 0 },
+      refundedAt: { type: Date },
+      stripeRefundId: { type: String },
+    },
+  },
+  { timestamps: { createdAt: "created_at", updatedAt: "updated_at" } }
+);
 
 const reservationDB = mongoose.model("reservationDB", reservationSchema);
 
-module.exports = reservationDB
+module.exports = reservationDB;

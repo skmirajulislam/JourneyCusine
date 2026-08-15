@@ -1,111 +1,112 @@
+import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
+import { FiUser, FiCalendar } from "react-icons/fi";
 
-/* eslint-disable react/prop-types */
-const CompletedReservations = ({ data }) => {
-  return (
-    <div className="flex flex-col overflow-x-auto">
-      <div className="">
-        <div className="inline-block min-w-full py-2">
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-left text-sm font-light">
-              <thead className=" text-xs text-[#717171] font-medium border-b border-[#dddddd]">
-                <tr>
-                  <th scope="col" className="px-6 py-4">
-                    S.NO
-                  </th>
-                  <th scope="col" className="px-6 py-4">
-                    ORDER ID
-                  </th>
-                  <th scope="col" className="px-6 py-4">
-                    LISTING
-                  </th>
-                  <th scope="col" className="px-6 py-4">
-                    GUEST
-                  </th>
-                  <th scope="col" className="px-6 py-4">
-                    NIGHT
-                  </th>
-                  <th scope="col" className="px-6 py-4">
-                    EARNED
-                  </th>
-                  <th scope="col" className="px-6 py-4">
-                    CHECK IN
-                  </th>
-                  <th scope="col" className="px-6 py-4">
-                    CHECK OUT
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {data?.map((listing, i, arr) => {
-                  const checkIn = new Date(
-                    listing.checkIn
-                  ).toLocaleDateString();
-                  const checkOut = new Date(
-                    listing.checkOut
-                  ).toLocaleDateString();
-                  return (
-                    <tr
-                      key={i}
-                      className={`${
-                        i === arr.length - 1 ? "" : "border-b border-[#dddddd]"
-                      }`}
-                    >
-                      {/* serial */}
-                      <td className=" px-6 py-4 w-[120px]">
-                        <p className="text-sm text-[#222222]">{i + 1}</p>
-                      </td>
-                      {/* see listing btn */}
-                      <td className=" px-6 py-4 flex flex-row items-center gap-2">
-                        <Link
-                          to={`/rooms/${listing.listingId}`}
-                          className=" text-sm text-gray-800 font-medium w-[120px] underline hover:text-blue-500 transition-all duration-200 ease-in"
-                        >
-                          See listing
-                        </Link>
-                      </td>
-                      {/* order id*/}
-                      <td className=" px-6 py-4 w-[120px]">
-                        <p className="text-sm text-[#222222]">
-                          {listing.orderId}
-                        </p>
-                      </td>
-                      {/* guest number */}
-                      <td className=" px-6 py-4 w-[120px]">
-                        <p className="text-sm text-[#222222]">
-                          {listing.guestNumber}
-                        </p>
-                      </td>
-                      {/* night staying */}
-                      <td className=" px-6 py-4 w-[120px]">
-                        <p className="text-sm text-[#222222]">
-                          {listing.nightStaying}
-                        </p>
-                      </td>
-                      {/* author earned */}
-                      <td className=" px-6 py-4 w-[120px]">
-                        <p className="text-sm text-[#222222]">
-                          ${listing.authorEarnedPrice}
-                        </p>
-                      </td>
-                      {/* check in */}
-                      <td className=" px-6 py-4 w-[120px]">
-                        <p className="text-sm text-[#222222]">{checkIn}</p>
-                      </td>
-                      {/* check out */}
-                      <td className=" px-6 py-4 w-[120px]">
-                        <p className="text-sm text-[#222222]">{checkOut}</p>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
+const CompletedReservations = ({ data = [] }) => {
+  if (!data || data.length === 0) {
+    return (
+      <div className="py-12 px-6 text-center max-w-md mx-auto">
+        <p className="text-base font-semibold text-gray-800 dark:text-gray-200">
+          No completed reservations
+        </p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          Past trips and concluded stays will be archived here.
+        </p>
       </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col w-full min-w-[750px] overflow-x-auto">
+      <table className="min-w-full text-left text-xs font-normal border-collapse">
+        <thead className="text-xs text-[#717171] dark:text-[#a0a0a0] font-semibold border-b border-[#dddddd] dark:border-[#333333]">
+          <tr>
+            <th className="px-4 py-3.5">ORDER ID</th>
+            <th className="px-4 py-3.5">LISTING</th>
+            <th className="px-4 py-3.5">GUEST</th>
+            <th className="px-4 py-3.5">CHECK IN</th>
+            <th className="px-4 py-3.5">CHECK OUT</th>
+            <th className="px-4 py-3.5">EARNED</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-[#eeeeee] dark:divide-[#2a2a2a]">
+          {data.map((item) => {
+            const checkIn = item.checkIn
+              ? new Date(item.checkIn).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })
+              : "N/A";
+            const checkOut = item.checkOut
+              ? new Date(item.checkOut).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })
+              : "N/A";
+
+            const nights = item.nightStaying || 1;
+
+            return (
+              <tr
+                key={item._id}
+                className="hover:bg-neutral-50 dark:hover:bg-[#222222] transition-colors"
+              >
+                <td className="px-4 py-4 font-mono font-medium text-gray-900 dark:text-white">
+                  #{item.orderId || item._id?.slice(-6)}
+                </td>
+
+                <td className="px-4 py-4 max-w-[180px]">
+                  <Link
+                    to={`/rooms/${item.listingId}`}
+                    className="font-medium text-gray-900 dark:text-white hover:text-[#ff385c] transition line-clamp-1"
+                  >
+                    {item.listing?.title || "Motel Stay"}
+                  </Link>
+                  <span className="text-[11px] text-gray-500 capitalize">
+                    {item.listing?.houseType || "Property"}
+                  </span>
+                </td>
+
+                <td className="px-4 py-4">
+                  <div className="flex items-center gap-1.5 font-medium text-gray-900 dark:text-white">
+                    <FiUser className="text-gray-400" size={13} />
+                    <span>{item.guest?.name?.firstName || item.guestName || "Guest"}</span>
+                  </div>
+                  <span className="text-[11px] text-gray-500">
+                    {item.guestNumber || 1} Guests • {nights} Nights
+                  </span>
+                </td>
+
+                <td className="px-4 py-4 text-gray-800 dark:text-gray-200">
+                  <span className="flex items-center gap-1 font-medium">
+                    <FiCalendar size={12} className="text-gray-400" />
+                    {checkIn}
+                  </span>
+                </td>
+
+                <td className="px-4 py-4 text-gray-800 dark:text-gray-200">
+                  <span className="flex items-center gap-1 font-medium">
+                    <FiCalendar size={12} className="text-gray-400" />
+                    {checkOut}
+                  </span>
+                </td>
+
+                <td className="px-4 py-4 font-semibold text-gray-900 dark:text-white">
+                  ${item.authorEarnedPrice || Math.round((item.basePrice || 0) * nights * 0.97)}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
+};
+
+CompletedReservations.propTypes = {
+  data: PropTypes.array,
 };
 
 export default CompletedReservations;

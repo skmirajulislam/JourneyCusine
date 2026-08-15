@@ -23,6 +23,8 @@ const PaymentConfirmed = () => {
       checkOut: searchParamsObj.checkOut,
       nightStaying: searchParamsObj.nightStaying,
       orderId: searchParamsObj.orderId,
+      paymentIntentId:
+        searchParamsObj.payment_intent || searchParamsObj.paymentIntentId || "",
     };
   }, [searchParams]);
 
