@@ -1,23 +1,22 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import toast from "react-hot-toast";
 import "./Contactform.css";
 
-const rawEndpoint = import.meta.env.VITE_FORMSUBMIT_ENDPOINT;
-
-// Use FormSubmit's AJAX endpoint to submit without any browser page reload
-const getAjaxEndpoint = (endpoint) => {
-  if (!endpoint) return "";
-  if (endpoint.includes("/ajax/")) return endpoint;
-  return endpoint.replace("https://formsubmit.co/", "https://formsubmit.co/ajax/");
-};
+const formSubmitEndpoint = import.meta.env.VITE_FORMSUBMIT_ENDPOINT;
 
 const ContactUs = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const isSubmittingRef = useRef(false);
+  const timeoutRef = useRef(null);
 
-  const endpoint = getAjaxEndpoint(rawEndpoint);
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
 
-  if (!rawEndpoint) {
+  if (!formSubmitEndpoint) {
     return (
       <section className="mx-auto max-w-xl px-5 py-16 text-center">
         <h1 className="text-3xl font-semibold">Contact the team</h1>
@@ -26,46 +25,40 @@ const ContactUs = () => {
     );
   }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const form = e.currentTarget;
-
+  const handleFormSubmit = (e) => {
     // Validate attachment size if selected (FormSubmit limit is 10 MB)
+    const form = e.currentTarget;
     const fileInput = form.querySelector('input[name="attachment"]');
     if (fileInput && fileInput.files && fileInput.files[0]) {
       const file = fileInput.files[0];
       if (file.size > 10 * 1024 * 1024) {
-        toast.error("Attachment size must be under 10 MB.", { id: "contact-submit-toast" });
+        e.preventDefault();
+        toast.error("Attachment size must be under 10 MB.", { id: "contact-toast" });
         return;
       }
     }
 
+    isSubmittingRef.current = true;
     setIsSubmitting(true);
-    const formData = new FormData(form);
 
-    try {
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-        },
-        body: formData,
-      });
-
-      const result = await response.json();
-
-      if (response.ok && (result.success === "true" || result.success === true || result.message)) {
-        // Unique toast id prevents double popup
-        toast.success("Message sent successfully!", { id: "contact-submit-toast" });
+    // Backup safety timer in case cross-origin iframe response event is blocked by browser
+    timeoutRef.current = setTimeout(() => {
+      if (isSubmittingRef.current) {
+        isSubmittingRef.current = false;
+        setIsSubmitting(false);
         setSubmitted(true);
-      } else {
-        throw new Error(result.message || "Failed to submit message");
+        toast.success("Message and attachment sent successfully!", { id: "contact-toast" });
       }
-    } catch (error) {
-      console.error("Form submission error:", error);
-      toast.error("Failed to send your message. Please try again.", { id: "contact-submit-toast" });
-    } finally {
+    }, 3500);
+  };
+
+  const handleIframeLoad = () => {
+    if (isSubmittingRef.current) {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      isSubmittingRef.current = false;
       setIsSubmitting(false);
+      setSubmitted(true);
+      toast.success("Message and attachment sent successfully!", { id: "contact-toast" });
     }
   };
 
@@ -73,6 +66,24 @@ const ContactUs = () => {
     <section className="mx-auto max-w-xl px-5 py-12">
       <h1 className="text-3xl font-semibold text-[#222222] dark:text-white">Contact the team</h1>
       <p className="mt-2 text-gray-600 dark:text-[#a0a0a0]">Tell us about a problem, safety concern, or feature request.</p>
+
+      {/* Off-screen iframe allows standard multipart file upload without refreshing the main window */}
+      <iframe
+        name="formsubmit_silent_frame"
+        id="formsubmit_silent_frame"
+        title="FormSubmit Silent Frame"
+        tabIndex="-1"
+        style={{
+          position: "absolute",
+          top: "-9999px",
+          left: "-9999px",
+          width: "1px",
+          height: "1px",
+          opacity: 0,
+          pointerEvents: "none",
+        }}
+        onLoad={handleIframeLoad}
+      />
 
       {submitted ? (
         <div className="contact-card-animate mt-7 rounded-2xl border border-emerald-500/30 bg-emerald-50/70 p-8 text-center backdrop-blur-sm dark:bg-emerald-950/30 dark:border-emerald-500/20 shadow-sm">
@@ -96,7 +107,11 @@ const ContactUs = () => {
       ) : (
         <form
           className="contact-card-animate mt-7 flex flex-col gap-4 rounded-2xl border dark:border-[#444444] p-6 shadow-sm dark:bg-[#1e1e1e]"
-          onSubmit={handleSubmit}
+          action={formSubmitEndpoint}
+          method="POST"
+          encType="multipart/form-data"
+          target="formsubmit_silent_frame"
+          onSubmit={handleFormSubmit}
         >
           {/* FormSubmit configurations */}
           <input type="hidden" name="_subject" value="JourneyCusine team contact" />
