@@ -7,11 +7,13 @@ import { FiHeart } from "react-icons/fi";
 import { toast } from "react-hot-toast";
 import api from "../backend";
 import { updateWishlist } from "../redux/actions/userActions";
+import { useCurrency } from "../context/CurrencyContext";
 
 const Wishlist = () => {
   const [wishlistItems, setWishlistItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const user = useSelector((state) => state.user?.userDetails);
+  const { formatPrice } = useCurrency();
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -143,7 +145,7 @@ const Wishlist = () => {
                     {house.houseType || "Entire place"}
                   </p>
                   <p className="text-sm font-semibold text-[#222222] dark:text-white mt-1">
-                    ${house.basePrice}{" "}
+                    {formatPrice(house.basePrice)}{" "}
                     <span className="font-normal text-xs text-[#717171] dark:text-[#a0a0a0]">
                       night
                     </span>

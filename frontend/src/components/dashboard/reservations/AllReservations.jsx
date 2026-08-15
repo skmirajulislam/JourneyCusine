@@ -84,7 +84,20 @@ const AllReservations = ({ data = [] }) => {
                 </td>
 
                 <td className="px-4 py-4 font-semibold text-gray-900 dark:text-white">
-                  ${item.authorEarnedPrice || Math.round((item.basePrice || 0) * nights * 0.97)}
+                  {(() => {
+                    const hostCur = item.hostCurrency || "INR";
+                    const hostSymbol = hostCur === "INR" ? "₹" : "$";
+                    const earned = item.hostEarnings !== undefined ? item.hostEarnings : (item.authorEarnedPrice || Math.round((item.basePrice || 0) * nights * 0.97));
+                    const guestCur = item.guestCurrency || item.currency || "USD";
+                    return (
+                      <div>
+                        <span>{hostSymbol}{earned.toLocaleString()} ({hostCur})</span>
+                        <p className="text-[10px] font-normal text-gray-400 dark:text-gray-500">
+                          Paid by guest in {guestCur}
+                        </p>
+                      </div>
+                    );
+                  })()}
                 </td>
 
                 <td className="px-4 py-4">

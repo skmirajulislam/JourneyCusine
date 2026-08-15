@@ -14,7 +14,8 @@ const {
     addWishlist,
     toggleWishlist,
     getWishlist,
-    updateUserName
+    updateUserName,
+    updateUserCountry,
 } = require("../controllers/authController.js");
 const { verifyJwtToken } = require("../middleware/jwt.js");
 const router = express.Router();
@@ -29,6 +30,7 @@ router.post("/post", verifyJwtToken, postUser);
 router.post("/uploadimage", verifyJwtToken, uploadProfileImage);
 router.post("/become_a_host", verifyJwtToken, userToHost);
 router.post("/updatename", verifyJwtToken, updateUserName);
+router.post("/updatecountry", verifyJwtToken, updateUserCountry);
 
 router.post("/refresh_token", refreshToken);
 router.post("/check_email", checkEmail);

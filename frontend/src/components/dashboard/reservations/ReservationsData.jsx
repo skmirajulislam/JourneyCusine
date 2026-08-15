@@ -4,6 +4,7 @@ import AllReservations from "./AllReservations";
 import CancelledReservations from "./CancelledReservations";
 import CompletedReservations from "./CompletedReservations";
 import UpcomingReservation from "./UpcomingReservation";
+import HostCouponsManager from "../coupons/HostCouponsManager";
 import { useEffect, useMemo } from "react";
 import { removeDuplicates } from "../../../hooks/useRemoveDuplicates";
 import { getAuthorReservations } from "../../../redux/actions/reservationsActions";
@@ -65,6 +66,8 @@ const ReservationsData = ({ active }) => {
           data={cancelledAndRefundReservations}
           onRefresh={handleRefresh}
         />
+      ) : active === 5 ? (
+        <HostCouponsManager />
       ) : (
         <AllReservations data={uniqueReservations} />
       )}

@@ -36,6 +36,18 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: "visitors",
     },
+    country: {
+        type: String,
+        default: "India",
+    },
+    countryCode: {
+        type: String,
+        default: "IN",
+    },
+    currency: {
+        type: String,
+        default: "INR",
+    },
     offensiveWarnings: {
         type: Number,
         default: 0,

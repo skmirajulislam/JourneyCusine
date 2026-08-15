@@ -10,9 +10,12 @@ import UserAbout from "../../components/userProfile/UserAbout";
 import UserProfileOptions from "../../components/userProfile/UserProfileOptions";
 import { uploadFiles } from "../../utils/uploadthing";
 import { updateUserDetails } from "../../redux/actions/userActions";
+import { useCurrency } from "../../context/CurrencyContext";
+import { FiGlobe, FiDollarSign } from "react-icons/fi";
 
 const EditProfile = () => {
   const user = useSelector((state) => state.user?.userDetails);
+  const { countriesList, supportedCurrencies, setCountry: setGlobalCountry, setCurrency: setGlobalCurrency, currency: currentGlobalCurrency, symbol } = useCurrency();
   const dispatch = useDispatch();
   const [showPopup, setShowPopup] = useState(false);
   const [selectedOption, setSelectedOption] = useState(null);
@@ -26,12 +29,24 @@ const EditProfile = () => {
   const [lastName, setLastName] = useState(user?.name?.lastName || "");
   const [isSavingName, setIsSavingName] = useState(false);
 
+  // Edit Country & Currency states
+  const [showCountryModal, setShowCountryModal] = useState(false);
+  const [selectedCountry, setSelectedCountry] = useState(user?.country || "India");
+  const [selectedCurrency, setSelectedCurrency] = useState(user?.currency || "INR");
+  const [isSavingCountry, setIsSavingCountry] = useState(false);
+
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     if (user?.name) {
       setFirstName(user.name.firstName || "");
       setLastName(user.name.lastName !== "guest" ? user.name.lastName : "");
+    }
+    if (user?.country) {
+      setSelectedCountry(user.country);
+    }
+    if (user?.currency) {
+      setSelectedCurrency(user.currency);
     }
   }, [user]);
 
@@ -128,124 +143,157 @@ const EditProfile = () => {
 
       if (res.data?.success === 1) {
         dispatch(updateUserDetails(res.data.user_details));
-        toast.success("Name updated successfully!");
+        toast.success("Legal name updated successfully!");
         setShowNameModal(false);
+      } else {
+        toast.error(res.data?.error || "Failed to update name");
       }
     } catch (err) {
       console.error(err);
-      toast.error("Failed to update name");
+      toast.error(err.response?.data?.error || "Failed to update name");
     } finally {
       setIsSavingName(false);
     }
   };
 
+  const handleCountryChange = (countryName) => {
+    setSelectedCountry(countryName);
+    const matched = supportedCurrencies.find(c => c.country.toLowerCase() === countryName.toLowerCase());
+    if (matched) {
+      setSelectedCurrency(matched.code);
+    }
+  };
+
+  const handleSaveCountry = async (e) => {
+    e.preventDefault();
+    try {
+      setIsSavingCountry(true);
+      const res = await api.post("/auth/updatecountry", {
+        country: selectedCountry,
+        currency: selectedCurrency,
+      });
+
+      if (res.data?.success === 1) {
+        dispatch(updateUserDetails(res.data.user_details));
+        setGlobalCountry(selectedCountry);
+        setGlobalCurrency(selectedCurrency);
+        toast.success(`Country & Currency updated to ${selectedCountry} (${selectedCurrency})!`);
+        setShowCountryModal(false);
+      } else {
+        toast.error(res.data?.error || "Failed to update country and currency");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.error || "Failed to update country");
+    } finally {
+      setIsSavingCountry(false);
+    }
+  };
+
   return (
-    <div>
-      <main className="max-w-[1200px] mx-auto xl:px-10 py-12 flex min-h-[80vh] relative">
+    <div className="flex flex-col min-h-screen">
+      <main className="max-w-[1120px] mx-auto px-6 sm:px-8 xl:px-0 py-8 flex-1">
         <section
-          className={`flex flex-row gap-16 items-start flex-auto${
-            isMobile ? " flex-column" : ""
-          }`}
-          style={
-            isMobile && window.innerWidth <= 600
-              ? { display: "flex", flexDirection: "column", padding: "30px" }
-              : null
-          }
+          className={`flex ${
+            isMobile ? "flex-col" : "flex-row gap-20"
+          } items-start justify-between w-full`}
         >
-          {user?.profileImg ? (
-            <div className="relative md:w-[320px]">
-              <figure>
-                <img
-                  src={user?.profileImg}
-                  alt="User image"
-                  className={`max-w-xs rounded-full border-[1px] object-cover aspect-square ${
-                    isMobile ? "mobile-style" : "desktop-style"
-                  }`}
-                  style={
-                    isMobile && window.innerWidth <= 600
-                      ? {
-                          marginRight: "auto",
-                          marginLeft: "auto",
-                          display: "block",
-                          width: "50%",
-                        }
-                      : null
-                  }
-                />
-              </figure>
-              <div className="flex justify-center items-center relative">
-                <label
-                  htmlFor="imageUpload"
-                  className="absolute flex flex-row gap-2 items-center bg-white dark:bg-[#2a2a2a] shadow-md px-4 py-2 rounded-full -bottom-4 cursor-pointer hover:shadow-lg transition-all"
-                >
-                  {isImageLoading ? (
-                    <PulseLoader
-                      color="#ff385c"
-                      size={8}
-                      speedMultiplier={0.8}
+          {/* profile image */}
+          {isMobile ? (
+            <div className="flex flex-col items-center justify-center w-full mb-8">
+              <div className="relative">
+                {user?.profileImg ? (
+                  <div className="w-[150px] h-[150px] rounded-full overflow-hidden border">
+                    <img
+                      src={user.profileImg}
+                      alt="User avatar"
+                      className="w-full h-full object-cover"
                     />
-                  ) : (
-                    <>
-                      <img
-                        src={cameraIcon}
-                        alt="Choose photo"
-                        className="w-4 h-4 object-contain"
-                      />
-                      <p className="text-sm font-medium">Add</p>
-                    </>
-                  )}
-                </label>
-                <input
-                  type="file"
-                  id="imageUpload"
-                  className="hidden"
-                  onChange={handleImageChange}
-                  accept=".jpg,.jpeg,.png,image/jpeg,image/jpg,image/png"
-                />
+                  </div>
+                ) : (
+                  <div className="w-[150px] h-[150px] bg-[#222222] dark:bg-[#333333] rounded-full flex justify-center items-center">
+                    <p className="text-5xl text-white font-semibold">
+                      {user?.name?.firstName?.slice(0, 1) || "U"}
+                    </p>
+                  </div>
+                )}
+                {isImageLoading ? (
+                  <div className="absolute inset-0 bg-black/50 rounded-full flex justify-center items-center">
+                    <PulseLoader size={8} color="#ffffff" />
+                  </div>
+                ) : (
+                  <label
+                    htmlFor="profileImgInputMobile"
+                    className="absolute bottom-1 right-1 p-2.5 rounded-full bg-white dark:bg-[#333333] shadow-md hover:scale-105 transition duration-200 cursor-pointer border border-[#dddddd] dark:border-[#555555]"
+                    title="Change profile picture"
+                  >
+                    <img src={cameraIcon} alt="Camera" className="w-5 h-5" />
+                    <input
+                      type="file"
+                      id="profileImgInputMobile"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                    />
+                  </label>
+                )}
               </div>
+              <h2 className="text-xl font-bold text-[#222222] dark:text-white mt-4">
+                {user?.name?.firstName} {user?.name?.lastName && user?.name?.lastName !== "guest" ? user?.name?.lastName : ""}
+              </h2>
             </div>
           ) : (
-            <div className="flex flex-col gap-4 justify-center items-center w-[350px] h-[220px] p-7 sticky top-[128px]">
-              <div className="min-w-[214px] min-h-[214px] bg-[#222222] dark:bg-[#333333] rounded-full flex justify-center items-center relative">
-                <p className="text-8xl text-white font-semibold mb-2">
-                  {user?.name?.firstName?.slice(0, 1) || "U"}
-                </p>
-                <label
-                  htmlFor="imageUpload"
-                  className="absolute flex flex-row gap-2 items-center bg-white dark:bg-[#2a2a2a] shadow-md px-4 py-2 rounded-full -bottom-4 cursor-pointer hover:shadow-lg transition-all"
-                >
-                  {isImageLoading ? (
-                    <PulseLoader
-                      color="#ff385c"
-                      size={8}
-                      speedMultiplier={0.8}
-                    />
-                  ) : (
-                    <>
+            <div className="w-[300px] shrink-0 sticky top-[100px]">
+              <div className="flex flex-col gap-4 items-center shadow-lg rounded-3xl p-7 border border-[#dddddd] dark:border-[#333333] bg-white dark:bg-[#1e1e1e]">
+                <div className="relative">
+                  {user?.profileImg ? (
+                    <div className="w-[180px] h-[180px] rounded-full overflow-hidden border">
                       <img
-                        src={cameraIcon}
-                        alt="Choose photo"
-                        className="w-4 h-4 object-contain"
+                        src={user.profileImg}
+                        alt="User avatar"
+                        className="w-full h-full object-cover"
                       />
-                      <p className="text-sm font-medium">Add</p>
-                    </>
+                    </div>
+                  ) : (
+                    <div className="w-[180px] h-[180px] bg-[#222222] dark:bg-[#333333] rounded-full flex justify-center items-center">
+                      <p className="text-7xl text-white font-semibold">
+                        {user?.name?.firstName?.slice(0, 1) || "U"}
+                      </p>
+                    </div>
                   )}
-                </label>
-                <input
-                  type="file"
-                  id="imageUpload"
-                  className="hidden"
-                  onChange={handleImageChange}
-                  accept=".jpg,.jpeg,.png,image/jpeg,image/jpg,image/png"
-                />
+                  {isImageLoading ? (
+                    <div className="absolute inset-0 bg-black/50 rounded-full flex justify-center items-center">
+                      <PulseLoader size={8} color="#ffffff" />
+                    </div>
+                  ) : (
+                    <label
+                      htmlFor="profileImgInputDesktop"
+                      className="absolute bottom-1 right-1 p-2.5 rounded-full bg-white dark:bg-[#333333] shadow-md hover:scale-105 transition duration-200 cursor-pointer border border-[#dddddd] dark:border-[#555555]"
+                      title="Change profile picture"
+                    >
+                      <img src={cameraIcon} alt="Camera" className="w-5 h-5" />
+                      <input
+                        type="file"
+                        id="profileImgInputDesktop"
+                        className="hidden"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                      />
+                    </label>
+                  )}
+                </div>
+                <h3 className="text-lg font-bold text-[#222222] dark:text-white text-center">
+                  {user?.name?.firstName} {user?.name?.lastName && user?.name?.lastName !== "guest" ? user?.name?.lastName : ""}
+                </h3>
               </div>
             </div>
           )}
+
           <section className="xl:min-h-[400px] flex flex-col flex-1 profile__container">
-            {/* Legal Name Card with Edit button */}
-            <div className="mb-6 p-5 rounded-2xl border border-[#dddddd] dark:border-[#333333] bg-[#fafafa] dark:bg-[#222222] flex items-center justify-between">
+            {/* Legal Name Card */}
+            <div className="mb-4 p-5 rounded-2xl border border-[#dddddd] dark:border-[#333333] bg-[#fafafa] dark:bg-[#222222] flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-bold text-[#222222] dark:text-white">
+                <h2 className="text-lg font-bold text-[#222222] dark:text-white">
                   {user?.name?.firstName} {user?.name?.lastName && user?.name?.lastName !== "guest" ? user?.name?.lastName : ""}
                 </h2>
                 <p className="text-xs text-[#717171] dark:text-[#a0a0a0] mt-0.5">
@@ -261,6 +309,28 @@ const EditProfile = () => {
               </button>
             </div>
 
+            {/* Country & Currency Card */}
+            <div className="mb-6 p-5 rounded-2xl border border-[#dddddd] dark:border-[#333333] bg-[#fafafa] dark:bg-[#222222] flex items-center justify-between">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <FiGlobe className="text-[#ff385c]" size={16} />
+                  <h3 className="text-sm font-bold text-[#222222] dark:text-white">
+                    {user?.country || "India"} • {user?.currency || currentGlobalCurrency} ({symbol})
+                  </h3>
+                </div>
+                <p className="text-xs text-[#717171] dark:text-[#a0a0a0]">
+                  Prices and Razorpay checkouts are automatically calculated in your local currency.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowCountryModal(true)}
+                className="px-4 py-2 rounded-xl border border-[#222222] dark:border-[#555555] hover:bg-white dark:hover:bg-[#2a2a2a] text-xs font-semibold text-[#222222] dark:text-white transition-colors cursor-pointer shadow-xs"
+              >
+                Change Country & Currency
+              </button>
+            </div>
+
             <UserProfileOptions
               setShowPopup={setShowPopup}
               setSelectedOption={setSelectedOption}
@@ -269,7 +339,8 @@ const EditProfile = () => {
           </section>
         </section>
       </main>
-      <div className="border-t border-[#dddddd] py-5 bg-[#ffffff] dark:bg-[#1e1e1e] w-full flex flex-row-reverse">
+
+      <div className="border-t border-[#dddddd] dark:border-neutral-800 py-5 bg-[#ffffff] dark:bg-[#1e1e1e] w-full flex flex-row-reverse">
         <Link
           to={`/users/show/${user?._id}`}
           className="px-7 py-3 bg-[#282828] hover:bg-[#000000] text-white rounded-lg mx-6 font-medium transition-colors"
@@ -331,6 +402,74 @@ const EditProfile = () => {
                   className="px-5 py-2.5 rounded-xl bg-[#ff385c] hover:bg-[#d90b63] text-white text-sm font-bold shadow-md transition-all cursor-pointer"
                 >
                   {isSavingName ? "Saving..." : "Save Name"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Country & Currency Modal */}
+      {showCountryModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fadeIn">
+          <div className="bg-white dark:bg-[#1e1e1e] rounded-3xl max-w-md w-full p-6 shadow-2xl border border-neutral-200 dark:border-neutral-800">
+            <h3 className="text-xl font-bold text-[#111827] dark:text-white mb-1 flex items-center gap-2">
+              <FiGlobe className="text-[#ff385c]" />
+              Country & Currency Settings
+            </h3>
+            <p className="text-xs text-[#6b7280] dark:text-[#9ca3af] mb-4">
+              Select your country. Razorpay will automatically process orders in your national currency.
+            </p>
+
+            <form onSubmit={handleSaveCountry} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-[#111827] dark:text-white mb-1">
+                  Country
+                </label>
+                <select
+                  value={selectedCountry}
+                  onChange={(e) => handleCountryChange(e.target.value)}
+                  className="w-full p-3 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-[#2a2a2a] text-sm text-[#111827] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#ff385c]"
+                >
+                  {countriesList.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#111827] dark:text-white mb-1">
+                  Preferred Currency (Processed by Razorpay)
+                </label>
+                <select
+                  value={selectedCurrency}
+                  onChange={(e) => setSelectedCurrency(e.target.value)}
+                  className="w-full p-3 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-[#2a2a2a] text-sm text-[#111827] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#ff385c]"
+                >
+                  {supportedCurrencies.map((cur) => (
+                    <option key={cur.code} value={cur.code}>
+                      {cur.code} - {cur.name} ({cur.symbol})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowCountryModal(false)}
+                  className="px-4 py-2.5 rounded-xl border border-neutral-300 dark:border-neutral-700 text-sm font-semibold text-[#111827] dark:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingCountry}
+                  className="px-5 py-2.5 rounded-xl bg-[#ff385c] hover:bg-[#d90b63] text-white text-sm font-bold shadow-md transition-all cursor-pointer"
+                >
+                  {isSavingCountry ? "Saving..." : "Save Settings"}
                 </button>
               </div>
             </form>

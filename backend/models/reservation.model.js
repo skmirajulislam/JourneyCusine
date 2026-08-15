@@ -34,6 +34,7 @@ const reservationSchema = new mongoose.Schema(
       type: Number,
       default: 1,
     },
+    // Base standard USD values
     basePrice: {
       type: Number,
     },
@@ -46,8 +47,57 @@ const reservationSchema = new mongoose.Schema(
     authorEarnedPrice: {
       type: Number,
     },
+    // Multi-Currency Breakdown
+    currency: {
+      type: String,
+      default: "INR",
+    },
+    guestCurrency: {
+      type: String,
+      default: "INR",
+    },
+    guestTotalPaid: {
+      type: Number,
+    },
+    guestBasePrice: {
+      type: Number,
+    },
+    guestTaxes: {
+      type: Number,
+    },
+    hostCurrency: {
+      type: String,
+      default: "INR",
+    },
+    hostEarnings: {
+      type: Number,
+    },
+    exchangeRate: {
+      type: Number,
+      default: 1.0,
+    },
+    couponCode: {
+      type: String,
+      default: null,
+    },
+    couponDiscount: {
+      type: Number,
+      default: 0,
+    },
+    originalTotalPrice: {
+      type: Number,
+    },
     orderId: {
       type: Number,
+    },
+    razorpayOrderId: {
+      type: String,
+    },
+    razorpayPaymentId: {
+      type: String,
+    },
+    razorpaySignature: {
+      type: String,
     },
     paymentIntentId: {
       type: String,
@@ -72,7 +122,9 @@ const reservationSchema = new mongoose.Schema(
     refundDetails: {
       refundAmount: { type: Number, default: 0 },
       taxDeduction: { type: Number, default: 0 },
+      refundCurrency: { type: String, default: "INR" },
       refundedAt: { type: Date },
+      razorpayRefundId: { type: String },
       stripeRefundId: { type: String },
     },
   },

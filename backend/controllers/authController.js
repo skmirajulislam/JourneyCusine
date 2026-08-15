@@ -35,7 +35,10 @@ exports.signUp = async (req, res, next) => {
             });
         }
 
-        const passwordHash = await bcrypt.hash(payload.password, saltRounds)
+        const passwordHash = await bcrypt.hash(payload.password, saltRounds);
+        const { getCurrencyForCountry } = require("../utils/currency.js");
+        const resolvedCountry = payload.country || "India";
+        const resolvedCurrency = payload.currency || getCurrencyForCountry(resolvedCountry);
 
         const userObj = {
             name: {
@@ -44,8 +47,10 @@ exports.signUp = async (req, res, next) => {
             },
             emailId: payload.emailId,
             birthDate: payload.birthDate,
-            password: passwordHash
-        }
+            password: passwordHash,
+            country: resolvedCountry,
+            currency: resolvedCurrency,
+        };
 
         const user = await User(userObj).save();
         const findCriteria = {
@@ -372,6 +377,40 @@ exports.updateUserName = async (req, res) => {
     } catch (error) {
         console.error("Error updating user name:", error);
         res.status(500).json({ success: 0, error: "An error occurred while updating name" });
+    }
+};
+
+exports.updateUserCountry = async (req, res) => {
+    try {
+        const userId = req.user;
+        const { country, currency } = req.body;
+        const { getCurrencyForCountry } = require("../utils/currency.js");
+
+        if (!country) {
+            return res.status(400).json({ success: 0, error: "Country is required" });
+        }
+
+        const resolvedCurrency = currency || getCurrencyForCountry(country);
+
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            {
+                $set: {
+                    country: country.trim(),
+                    currency: resolvedCurrency.toUpperCase().trim(),
+                }
+            },
+            { new: true }
+        );
+
+        res.status(200).json({
+            success: 1,
+            message: `Country updated to ${country} (${resolvedCurrency}) successfully`,
+            user_details: updatedUser,
+        });
+    } catch (error) {
+        console.error("Error updating country/currency:", error);
+        res.status(500).json({ success: 0, error: "Failed to update country and currency" });
     }
 };
 

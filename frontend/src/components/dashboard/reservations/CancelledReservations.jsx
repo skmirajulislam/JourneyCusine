@@ -217,26 +217,36 @@ const CancelledReservations = ({ data = [], onRefresh }) => {
               </div>
 
               {/* Refund Breakdown */}
-              <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-4 text-xs space-y-2">
-                <div className="flex justify-between text-gray-600 dark:text-gray-400">
-                  <span>Total Guest Paid</span>
-                  <span className="font-semibold text-gray-900 dark:text-white">
-                    ${selectedRes.totalPrice || ((selectedRes.basePrice || 0) * (selectedRes.nightStaying || 1) + (selectedRes.taxes || 0))}
-                  </span>
-                </div>
-                <div className="flex justify-between text-rose-600 dark:text-rose-400">
-                  <span>Non-refundable Tax Retained (14%)</span>
-                  <span>
-                    - ${selectedRes.taxes || Math.round(((selectedRes.basePrice || 0) * (selectedRes.nightStaying || 1) * 14) / 100)}
-                  </span>
-                </div>
-                <div className="flex justify-between pt-2 border-t border-gray-200 dark:border-gray-700 text-sm font-bold text-emerald-600 dark:text-emerald-400">
-                  <span>Net Refund to Guest via Gateway</span>
-                  <span>
-                    ${(selectedRes.basePrice || 0) * (selectedRes.nightStaying || 1)}
-                  </span>
-                </div>
-              </div>
+              {(() => {
+                const gCur = selectedRes.guestCurrency || selectedRes.currency || "INR";
+                const gSymbol = gCur === "INR" ? "₹" : (gCur === "EUR" ? "€" : (gCur === "GBP" ? "£" : "$"));
+                const guestTotal = selectedRes.guestTotalPaid || selectedRes.totalPrice || ((selectedRes.basePrice || 0) * (selectedRes.nightStaying || 1) + (selectedRes.taxes || 0));
+                const guestTaxes = selectedRes.guestTaxes || selectedRes.taxes || Math.round(((selectedRes.basePrice || 0) * (selectedRes.nightStaying || 1) * 14) / 100);
+                const guestNetRefund = selectedRes.guestBasePrice || (guestTotal - guestTaxes);
+
+                return (
+                  <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-4 text-xs space-y-2">
+                    <div className="flex justify-between text-gray-600 dark:text-gray-400">
+                      <span>Total Guest Paid ({gCur})</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">
+                        {gSymbol}{guestTotal.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-rose-600 dark:text-rose-400">
+                      <span>Non-refundable Tax Retained (14%)</span>
+                      <span>
+                        - {gSymbol}{guestTaxes.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between pt-2 border-t border-gray-200 dark:border-gray-700 text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                      <span>Net Refund to Guest via Razorpay ({gCur})</span>
+                      <span>
+                        {gSymbol}{guestNetRefund.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })()}
 
               <div className="flex items-center justify-end gap-3 pt-2">
                 <button
@@ -254,7 +264,7 @@ const CancelledReservations = ({ data = [], onRefresh }) => {
                   disabled={isProcessing}
                   className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-xs font-semibold text-white transition shadow-sm disabled:opacity-60 flex items-center gap-1.5 cursor-pointer"
                 >
-                  {isProcessing ? "Processing Stripe Refund..." : "Approve & Issue Refund"}
+                  {isProcessing ? "Processing Razorpay Refund..." : "Approve & Issue Refund"}
                 </button>
               </div>
             </div>

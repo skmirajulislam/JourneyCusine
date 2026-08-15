@@ -6,15 +6,18 @@ import { toast } from "react-hot-toast";
 import api from "../../backend";
 import { updateWishlist } from "../../redux/actions/userActions";
 import AuthenticationPopUp from "../popUp/authentication/AuthenticationPopUp";
+import { useCurrency } from "../../context/CurrencyContext";
 
 const ListingPreviewCard = ({ listingData, showBeforeTaxPrice }) => {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.user?.userDetails);
+  const { formatPrice, convertPrice, symbol } = useCurrency();
   const [showAuthPopup, setShowAuthPopup] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
-  const taxes = Math.round((listingData?.basePrice * 14) / 100);
-  const priceAfterTaxes = listingData?.basePrice + taxes;
+  const baseUSD = Number(listingData?.basePrice) || 0;
+  const taxUSD = Math.round((baseUSD * 14) / 100);
+  const priceAfterTaxesUSD = baseUSD + taxUSD;
 
   const houseId = listingData?._id;
   const isSaved = (user?.wishlist || []).some(
@@ -83,12 +86,12 @@ const ListingPreviewCard = ({ listingData, showBeforeTaxPrice }) => {
           </p>
           {showBeforeTaxPrice && (
             <p className="text-sm text-[#717171] dark:text-[#a0a0a0]">
-              After tax ${priceAfterTaxes}{" "}
+              After tax {formatPrice(priceAfterTaxesUSD)}{" "}
               <span className="font-normal">night</span>
             </p>
           )}
           <p className="text-sm font-semibold text-[#111827] dark:text-white">
-            ${listingData?.basePrice}{" "}
+            {formatPrice(baseUSD)}{" "}
             <span className="font-normal text-xs text-[#717171] dark:text-[#a0a0a0]">night</span>
           </p>
         </div>

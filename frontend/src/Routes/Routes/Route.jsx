@@ -128,6 +128,22 @@ const router = createBrowserRouter([
         element: <UserProfile />,
       },
       {
+        path: "/user/profile",
+        element: <UserProfile />,
+      },
+      {
+        path: "/users/profile",
+        element: <UserProfile />,
+      },
+      {
+        path: "/profile",
+        element: <UserProfile />,
+      },
+      {
+        path: "/my-bookings",
+        element: <UserProfile />,
+      },
+      {
         path: "/users/show/:id/editMode=true",
         element: <EditProfile />,
       },

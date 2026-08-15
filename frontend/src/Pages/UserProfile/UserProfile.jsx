@@ -51,16 +51,21 @@ const UserProfile = () => {
               <h2 className="text-2xl font-semibold text-[#222222] dark:text-white">
                 {user?.name?.firstName} {user?.name?.lastName !== "guest" ? user?.name?.lastName : ""}
               </h2>
-              <span className="text-sm font-medium text-[#717171] dark:text-[#a0a0a0] capitalize mt-0.5">
-                {user?.role === "host" ? "Host" : "Guest"}
-              </span>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-[#717171] dark:text-[#a0a0a0] capitalize">
+                  {user?.role === "host" ? "Host" : "Guest"}
+                </span>
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-rose-50 dark:bg-rose-950/60 text-[#ff385c] border border-rose-200 dark:border-rose-900">
+                  {user?.country || "India"} ({user?.currency || "INR"})
+                </span>
+              </div>
             </div>
 
             <Link
               to={`/users/show/${user?._id}/editMode=true`}
               className="mt-3 w-full text-center py-2.5 px-4 rounded-xl border border-[#222222] dark:border-[#555555] hover:bg-[#f7f7f7] dark:hover:bg-[#2a2a2a] text-sm font-medium transition-colors"
             >
-              Edit profile
+              Edit profile & currency
             </Link>
           </div>
         </div>

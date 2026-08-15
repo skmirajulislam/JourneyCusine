@@ -7,6 +7,7 @@ const house = require("./routes/house.js");
 const reservations = require("./routes/reservations.js");
 const trips = require("./routes/trips.js");
 const ai = require("./routes/ai.js");
+const coupon = require("./routes/coupon.js");
 
 require("dotenv").config();
 
@@ -38,6 +39,7 @@ app.use("/house", house);
 app.use("/reservations", reservations);
 app.use("/trips", trips);
 app.use("/ai", ai);
+app.use("/coupons", coupon);
 
 
 async function main() {

@@ -14,6 +14,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { API } from "../../backend";
 import { parseISO } from "date-fns";
+import { useCurrency } from "../../context/CurrencyContext";
 
 /* eslint-disable react/prop-types */
 const ReservationCard = ({ listingData }) => {
@@ -183,13 +184,15 @@ const ReservationCard = ({ listingData }) => {
     return dates;
   }, []);
 
+  const { formatPrice } = useCurrency();
+
   return (
     <>
       <div className=" w-full min-h-[315px] rounded-xl border border-[#dddddd] dark:border-[#444444] sticky top-32 shadow-customShadow p-6 bg-white dark:bg-[#1e1e1e]">
         <div className=" flex felx-row justify-between items-start">
           <div className=" flex flex-col">
             <h3 className=" text-[22px] text-[#222222] dark:text-white font-semibold">
-              {/* ${listingData?.basePrice} */}${reservationBasePrice}
+              {formatPrice(reservationBasePrice)}
             </h3>
             <p className=" text-[#313131] dark:text-[#a0a0a0] text-sm">Total before taxes</p>
           </div>

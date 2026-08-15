@@ -16,6 +16,7 @@ import {
   FiRefreshCw,
 } from "react-icons/fi";
 import { FadeLoader } from "react-spinners";
+import { CURRENCY_SYMBOLS } from "../../utils/currency";
 
 const UserReservationsSection = () => {
   const [reservations, setReservations] = useState([]);
@@ -271,55 +272,69 @@ const UserReservationsSection = () => {
                     </div>
 
                     <div className="text-xs space-y-1 text-gray-600 dark:text-gray-300">
-                      <div className="flex justify-between">
-                        <span>
-                          ${resItem.basePrice} × {nights} nights
-                        </span>
-                        <span>${roomTotal}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Taxes (14%)</span>
-                        <span>${taxes}</span>
-                      </div>
-                      <div className="flex justify-between font-bold text-sm text-gray-900 dark:text-white pt-1 border-t border-gray-200 dark:border-gray-700">
-                        <span>Total Paid</span>
-                        <span className="text-[#ff385c]">${totalPaid}</span>
-                      </div>
-                    </div>
+                      {(() => {
+                        const resCurrency = resItem.guestCurrency || resItem.currency || "INR";
+                        const resSymbol = CURRENCY_SYMBOLS[resCurrency] || "$";
+                        const displayBase = resItem.guestBasePrice !== undefined ? resItem.guestBasePrice : roomTotal;
+                        const displayTax = resItem.guestTaxes !== undefined ? resItem.guestTaxes : taxes;
+                        const displayTotal = resItem.guestTotalPaid !== undefined ? resItem.guestTotalPaid : totalPaid;
+                        const displayRefund = resItem.refundDetails?.refundAmount !== undefined ? resItem.refundDetails.refundAmount : displayBase;
+                        const displayTaxRetained = resItem.refundDetails?.taxDeduction !== undefined ? resItem.refundDetails.taxDeduction : displayTax;
 
-                    <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-2 flex items-center gap-1">
-                      <FiCreditCard size={12} /> Booked on {bookedDateFormatted}
-                    </p>
+                        return (
+                          <>
+                            <div className="flex justify-between">
+                              <span>
+                                {resSymbol}{Math.round(displayBase / nights)} × {nights} nights
+                              </span>
+                              <span>{resSymbol}{displayBase.toLocaleString()}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Taxes (14%)</span>
+                              <span>{resSymbol}{displayTax.toLocaleString()}</span>
+                            </div>
+                            <div className="flex justify-between font-bold text-sm text-gray-900 dark:text-white pt-1 border-t border-gray-200 dark:border-gray-700">
+                              <span>Total Paid ({resCurrency})</span>
+                              <span className="text-[#ff385c]">{resSymbol}{displayTotal.toLocaleString()}</span>
+                            </div>
+
+                            <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-2 flex items-center gap-1">
+                              <FiCreditCard size={12} /> Booked on {bookedDateFormatted}
+                            </p>
+
+                            {/* Refund details card if refunded */}
+                            {resItem.status === "refunded" && (
+                              <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-500/20 text-xs mt-2">
+                                <p className="font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-1">
+                                  <FiDollarSign size={13} /> Refund Completed
+                                </p>
+                                <p className="text-emerald-700 dark:text-emerald-400 mt-0.5 text-[11px]">
+                                  <strong>{resSymbol}{displayRefund.toLocaleString()}</strong> credited back to your payment method ({resSymbol}{displayTaxRetained.toLocaleString()} tax retained).
+                                </p>
+                              </div>
+                            )}
+
+                            {/* Cancellation Action Buttons */}
+                            {resItem.status === "confirmed" && (
+                              <button
+                                type="button"
+                                onClick={() => setCancellingRes(resItem)}
+                                className="w-full py-2 px-3 rounded-xl border border-rose-300 dark:border-rose-800/60 bg-rose-50/50 hover:bg-rose-100 dark:bg-rose-950/20 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 text-xs font-semibold transition-all cursor-pointer flex items-center justify-center gap-1 mt-2"
+                              >
+                                Request Cancellation
+                              </button>
+                            )}
+
+                            {resItem.status === "cancellation_requested" && (
+                              <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-500/20 text-[11px] text-amber-800 dark:text-amber-300 mt-2">
+                                Host is reviewing your cancellation. You will be refunded {resSymbol}{displayBase.toLocaleString()} upon approval.
+                              </div>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </div>
                   </div>
-
-                  {/* Refund details card if refunded */}
-                  {resItem.status === "refunded" && (
-                    <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-500/20 text-xs">
-                      <p className="font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-1">
-                        <FiDollarSign size={13} /> Refund Completed
-                      </p>
-                      <p className="text-emerald-700 dark:text-emerald-400 mt-0.5 text-[11px]">
-                        <strong>${resItem.refundDetails?.refundAmount || roomTotal}</strong> credited back to your payment method (Tax of ${resItem.refundDetails?.taxDeduction || taxes} retained).
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Cancellation Action Buttons */}
-                  {resItem.status === "confirmed" && (
-                    <button
-                      type="button"
-                      onClick={() => setCancellingRes(resItem)}
-                      className="w-full py-2 px-3 rounded-xl border border-rose-300 dark:border-rose-800/60 bg-rose-50/50 hover:bg-rose-100 dark:bg-rose-950/20 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 text-xs font-semibold transition-all cursor-pointer flex items-center justify-center gap-1"
-                    >
-                      Request Cancellation
-                    </button>
-                  )}
-
-                  {resItem.status === "cancellation_requested" && (
-                    <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-500/20 text-[11px] text-amber-800 dark:text-amber-300">
-                      Host is reviewing your cancellation. You will be refunded ${roomTotal} upon approval.
-                    </div>
-                  )}
                 </div>
               </div>
             );

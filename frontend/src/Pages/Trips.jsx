@@ -31,11 +31,11 @@ import { AiFillStar } from "react-icons/ai";
 import { FadeLoader } from "react-spinners";
 import { toast } from "react-hot-toast";
 import api, { API } from "../backend";
-import AuthenticationPopUp from "../components/popUp/authentication/AuthenticationPopUp";
 import { useTheme } from "../context/ThemeContext";
+import { useCurrency } from "../context/CurrencyContext";
 
 // Custom Leaflet Motel Marker Icon with Theme Awareness
-const createMotelIcon = (price, isDark = false) => {
+const createMotelIcon = (formattedPrice, isDark = false) => {
   const bg = isDark ? "#18181b" : "#ffffff";
   const text = isDark ? "#ffffff" : "#111827";
   const border = isDark ? "#ff385c" : "#111827";
@@ -61,7 +61,7 @@ const createMotelIcon = (price, isDark = false) => {
       white-space: nowrap;
     ">
       <span style="font-size: 12px;">🏨</span>
-      <span style="color: ${text}; font-weight: 800; letter-spacing: -0.2px;">$${price || 100}</span>
+      <span style="color: ${text}; font-weight: 800; letter-spacing: -0.2px;">${formattedPrice || "$100"}</span>
     </div>`,
     iconSize: [68, 28],
     iconAnchor: [34, 14],
@@ -219,6 +219,7 @@ const Trips = () => {
   const user = useSelector((state) => state.user?.userDetails);
   const { theme } = useTheme();
   const isDark = theme === "dark";
+  const { formatPrice } = useCurrency();
 
   const [trips, setTrips] = useState([]);
   const [activeTrip, setActiveTrip] = useState(null);
@@ -1011,7 +1012,7 @@ const Trips = () => {
               <Marker
                 key={motel._id}
                 position={[motel.lat, motel.lng]}
-                icon={createMotelIcon(motel.basePrice, isDark)}
+                icon={createMotelIcon(formatPrice(motel.basePrice), isDark)}
               >
                 <Popup className="custom-leaflet-popup">
                   <div className="p-1 max-w-[220px] text-gray-900 dark:text-white">
@@ -1030,7 +1031,7 @@ const Trips = () => {
                       {motel.location?.country?.name || (typeof motel.location?.country === "string" ? motel.location.country : "")}
                     </p>
                     <p className="text-xs font-extrabold text-gray-900 dark:text-white mt-1">
-                      ${motel.basePrice} <span className="font-normal text-gray-500 dark:text-neutral-400">/ night</span>
+                      {formatPrice(motel.basePrice)} <span className="font-normal text-gray-500 dark:text-neutral-400">/ night</span>
                     </p>
                     <div className="flex items-center gap-1 text-xs text-amber-500 font-bold my-1">
                       <AiFillStar size={12} />

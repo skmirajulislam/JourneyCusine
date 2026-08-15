@@ -3,9 +3,11 @@ import { useEffect, useState } from "react";
 import { MdEdit, MdKeyboardArrowDown, MdKeyboardArrowUp } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
 import { createNewHouse } from "../../redux/actions/houseActions";
+import { useCurrency } from "../../context/CurrencyContext";
 
 const Pricing = () => {
   const newHouseData = useSelector((state) => state.house.newHouse);
+  const { symbol, currency } = useCurrency();
   const [inputValue, setInputValue] = useState("168");
   const [showEdit, setShowEdit] = useState(true);
   const [showPricingTable, setShowPricingTable] = useState(false);
@@ -23,7 +25,7 @@ const Pricing = () => {
   };
 
   // Price calculation
-  const basePrice = parseInt(inputValue ? inputValue : 0);
+  const basePrice = parseInt(inputValue ? inputValue : 0, 10);
   const taxesPercentValue = 14;
   const hostServiceFee = 3;
   const taxBasedOnBasePrice = Math.round((basePrice * taxesPercentValue) / 100);
@@ -80,14 +82,14 @@ const Pricing = () => {
           Now, set your price
         </h1>
         <p className="text-sm sm:text-base md:text-lg text-[#717171] dark:text-neutral-400">
-          You can change it anytime.
+          You can change it anytime ({currency}).
         </p>
       </div>
       {/* Price */}
       <div className="mx-auto mt-10">
         <div className="flex flex-row items-center relative">
           <span className="text-[#222222] dark:text-white text-4xl sm:text-6xl md:text-9xl font-semibold">
-            $
+            {symbol}
           </span>
           <input
             type="text"
@@ -100,43 +102,42 @@ const Pricing = () => {
             onBlur={handleEdit}
           />
           {showEdit && (
-            <div
-              className={`absolute bottom-12 p-2 rounded-full shadow-sm hover:shadow-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-[#1e1e1e] text-[#111827] dark:text-white cursor-pointer hidden lg:block ${
-                inputValue.length >= 4
-                  ? "-right-9"
-                  : inputValue.length == 2
-                  ? "right-32"
-                  : inputValue.length <= 1
-                  ? "right-52"
-                  : "right-7"
-              }`}
+            <span
+              onClick={handleEdit}
+              className="p-1 rounded-full border border-[#222222] dark:border-neutral-600 absolute right-4 bottom-7 text-[#222222] dark:text-white"
             >
-              <MdEdit size={18} />
-            </div>
+              <MdEdit size={16} />
+            </span>
           )}
         </div>
-        {/* calculations */}
-        {!showPricingTable && (
-          <div className="flex justify-center items-center gap-1.5 cursor-pointer mt-4 text-[#717171] dark:text-neutral-400 hover:text-black dark:hover:text-white transition-colors" onClick={handleShowPricingTable}>
-            <p className="text-sm">
-              Guest price before taxes ${priceBeforeTaxes}
-            </p>
-            <MdKeyboardArrowDown size={22} />
-          </div>
-        )}
       </div>
-      {/* group-open:animate-fadeIn */}
+      {/* more description */}
+      <div className="mx-auto mt-8 flex flex-col justify-center items-center">
+        <div
+          onClick={handleShowPricingTable}
+          className="flex flex-row justify-center items-center gap-1 cursor-pointer"
+        >
+          <span className="text-sm text-[#717171] dark:text-neutral-400">
+            Guest price before taxes {symbol}{priceBeforeTaxes}
+          </span>
+          <MdKeyboardArrowDown size={24} className="text-[#717171] dark:text-neutral-400" />
+        </div>
+        <p className="text-sm text-[#717171] dark:text-neutral-400 mt-2">
+          Earn {symbol}{authorEarnedPrice} per night after standard hosting fee
+        </p>
+      </div>
+
+      {/* pricing modal view */}
       {showPricingTable && (
         <div className="mt-5 flex flex-col gap-4 min-w-[300px] md:min-w-[600px] mx-auto">
           <div className="flex flex-col gap-3 px-6 py-6 rounded-2xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-[#1e1e1e]">
-            {/* house price calculation */}
             <div className="flex flex-row justify-between items-center">
               <p className="text-sm text-[#717171] dark:text-neutral-400">Base Price</p>
-              <p className="text-sm text-[#717171] dark:text-neutral-400">${basePrice}</p>
+              <p className="text-sm text-[#717171] dark:text-neutral-400">{symbol}{basePrice}</p>
             </div>
             <div className="flex flex-row justify-between items-center">
-              <p className="text-sm text-[#717171] dark:text-neutral-400">Guest service fee</p>
-              <p className="text-sm text-[#717171] dark:text-neutral-400">${taxBasedOnBasePrice}</p>
+              <p className="text-sm text-[#717171] dark:text-neutral-400">Guest service fee (14%)</p>
+              <p className="text-sm text-[#717171] dark:text-neutral-400">{symbol}{taxBasedOnBasePrice}</p>
             </div>
             <hr className="border-neutral-200 dark:border-neutral-800" />
             <div className="flex flex-row justify-between items-center">
@@ -144,28 +145,27 @@ const Pricing = () => {
                 Guest price before taxes
               </p>
               <p className="text-sm text-[#222222] dark:text-white font-bold">
-                ${priceBeforeTaxes}
+                {symbol}{priceBeforeTaxes}
               </p>
             </div>
           </div>
-          {/* host earning calculation */}
 
           <div className="flex flex-col gap-3 px-6 py-6 rounded-2xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-[#1e1e1e]">
             <div className="flex flex-row justify-between items-center">
               <p className="text-sm text-[#717171] dark:text-neutral-400">Base Price</p>
-              <p className="text-sm text-[#717171] dark:text-neutral-400">${basePrice}</p>
+              <p className="text-sm text-[#717171] dark:text-neutral-400">{symbol}{basePrice}</p>
             </div>
             <div className="flex flex-row justify-between items-center">
-              <p className="text-sm text-[#717171] dark:text-neutral-400">Host service fee</p>
+              <p className="text-sm text-[#717171] dark:text-neutral-400">Host service fee (3%)</p>
               <p className="text-sm text-[#717171] dark:text-neutral-400">
-                - ${serviceFeeBasedOnBasePrice}
+                - {symbol}{serviceFeeBasedOnBasePrice}
               </p>
             </div>
             <hr className="border-neutral-200 dark:border-neutral-800" />
             <div className="flex flex-row justify-between items-center">
               <p className="text-sm text-[#222222] dark:text-white font-medium">You earn</p>
               <p className="text-sm text-[#222222] dark:text-white font-bold">
-                ${authorEarnedPrice}
+                {symbol}{authorEarnedPrice}
               </p>
             </div>
           </div>
