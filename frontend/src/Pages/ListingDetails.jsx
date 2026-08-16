@@ -142,6 +142,8 @@ const ListingDetails = () => {
             listingData={listingData}
             selectedCuisineAddons={selectedCuisineAddons}
             onToggleCuisineAddon={handleToggleCuisineAddon}
+            isHost={isHost}
+            onOpenHostEdit={() => setIsEditingListing(true)}
           />
         </div>
       </section>

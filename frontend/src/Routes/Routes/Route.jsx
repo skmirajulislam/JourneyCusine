@@ -109,6 +109,20 @@ const router = createBrowserRouter([
         ),
       },
       {
+        path: "/house/:id",
+        element: (
+          <Suspense
+            fallback={
+              <div className=" flex justify-center items-center w-full h-[60dvh]">
+                <FadeLoader color="#000" />
+              </div>
+            }
+          >
+            <ListingDetails />
+          </Suspense>
+        ),
+      },
+      {
         path: "/book/stays/:id",
         element: (
           <Suspense

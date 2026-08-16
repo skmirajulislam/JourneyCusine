@@ -250,6 +250,9 @@ const Trips = () => {
 
   // Modals & UI states
   const [showNewTripModal, setShowNewTripModal] = useState(false);
+  const [showJoinModal, setShowJoinModal] = useState(false);
+  const [inputInviteCode, setInputInviteCode] = useState("");
+  const [isJoining, setIsJoining] = useState(false);
   const [showAddDestModal, setShowAddDestModal] = useState(false);
   const [showWishlistPicker, setShowWishlistPicker] = useState(false);
   const [showAddActivityModal, setShowAddActivityModal] = useState(false);
@@ -633,11 +636,77 @@ const Trips = () => {
     }
   };
 
+  const handleRemoveCollaborator = async (collabId) => {
+    if (!activeTrip) return;
+    try {
+      const res = await api.delete(
+        `/trips/${activeTrip._id}/collaborators/${collabId}`
+      );
+      if (res.data?.success === 1) {
+        setActiveTrip(res.data.trip);
+        setTrips((prev) =>
+          prev.map((t) => (t._id === res.data.trip._id ? res.data.trip : t))
+        );
+        toast.success("Co-traveler removed from trip");
+      }
+    } catch (err) {
+      console.error("remove collaborator error:", err);
+      toast.error(err.response?.data?.error || "Failed to remove co-traveler");
+    }
+  };
+
   const handleCopyInviteLink = () => {
     if (!activeTrip?.inviteCode) return;
     const link = `${window.location.origin}/trips/join/${activeTrip.inviteCode}`;
     navigator.clipboard.writeText(link);
     toast.success("Group invite link copied to clipboard!");
+  };
+
+  const handleJoinByCode = async (e) => {
+    if (e) e.preventDefault();
+    if (!user) {
+      setShowAuthPopup(true);
+      return;
+    }
+    if (!inputInviteCode || !inputInviteCode.trim()) {
+      toast.error("Please enter a trip invite code or link");
+      return;
+    }
+
+    // Extract code if user pasted full URL (e.g. .../trips/join/TRIP_12345)
+    let rawInput = inputInviteCode.trim();
+    let code = rawInput;
+    if (rawInput.includes("/trips/join/")) {
+      code = rawInput.split("/trips/join/")[1]?.split("?")[0]?.split("/")[0] || rawInput;
+    } else if (rawInput.includes("/")) {
+      const parts = rawInput.split("/").filter(Boolean);
+      code = parts[parts.length - 1] || rawInput;
+    }
+
+    code = code.trim().toUpperCase();
+    setIsJoining(true);
+    try {
+      const res = await api.post(`/trips/join/${code}`);
+      if (res.data?.success === 1 && res.data.trip) {
+        toast.success(res.data.message || "Joined trip successfully!");
+        setTrips((prev) => {
+          const exists = prev.some((t) => t._id === res.data.trip._id);
+          if (exists) {
+            return prev.map((t) => (t._id === res.data.trip._id ? res.data.trip : t));
+          }
+          return [res.data.trip, ...prev];
+        });
+        setActiveTrip(res.data.trip);
+        setActiveTripTab("group");
+        setShowJoinModal(false);
+        setInputInviteCode("");
+      }
+    } catch (err) {
+      console.error("join code error:", err);
+      toast.error(err.response?.data?.error || "Invalid or expired trip invite code");
+    } finally {
+      setIsJoining(false);
+    }
   };
 
   // Add a motel directly to active trip
@@ -701,7 +770,20 @@ const Trips = () => {
   }, [activeTrip?.destinations]);
 
   const totalTripCost = activeTrip?.splitSettings?.totalEstimatedCost || computedMotelCost || 0;
-  const collaborators = activeTrip?.collaborators || [];
+  const collaborators = useMemo(() => {
+    const raw = activeTrip?.collaborators || [];
+    const seen = new Set();
+    const unique = [];
+    for (const c of raw) {
+      const key = (c.userId ? String(c.userId) : c.email || "").trim().toLowerCase();
+      if (key && !seen.has(key)) {
+        seen.add(key);
+        unique.push(c);
+      }
+    }
+    return unique;
+  }, [activeTrip?.collaborators]);
+
   const collaboratorCount = Math.max(1, collaborators.length);
   const perPersonShare = Math.round(totalTripCost / collaboratorCount);
   const paidCount = collaborators.filter((c) => c.hasPaid).length;
@@ -746,19 +828,36 @@ const Trips = () => {
                   Pin destinations, schedule activities &amp; live timers
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  if (!user) {
-                    setShowAuthPopup(true);
-                    return;
-                  }
-                  setShowNewTripModal(true);
-                }}
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#ff385c] hover:bg-[#d90b63] text-white text-xs font-bold shadow-md hover:shadow-lg transition-all cursor-pointer shrink-0"
-              >
-                <FiPlus size={16} /> New Trip
-              </button>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!user) {
+                      setShowAuthPopup(true);
+                      return;
+                    }
+                    setShowJoinModal(true);
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-800 dark:text-neutral-200 text-xs font-bold transition-all cursor-pointer shadow-xs"
+                  title="Paste invite code to join a trip"
+                >
+                  <FiUsers size={14} /> Join Trip
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!user) {
+                      setShowAuthPopup(true);
+                      return;
+                    }
+                    setShowNewTripModal(true);
+                  }}
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#ff385c] hover:bg-[#d90b63] text-white text-xs font-bold shadow-md hover:shadow-lg transition-all cursor-pointer shrink-0"
+                >
+                  <FiPlus size={16} /> New Trip
+                </button>
+              </div>
             </div>
 
             {/* Trip Selector Pills with ample top/bottom margins */}
@@ -977,6 +1076,24 @@ const Trips = () => {
                           )}
                         </button>
                       </form>
+
+                      {/* Paste Other Invite Code Shortcut */}
+                      <div className="mt-3 pt-2.5 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between text-[11px]">
+                        <span className="text-neutral-500">Have another trip's invite code?</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (!user) {
+                              setShowAuthPopup(true);
+                              return;
+                            }
+                            setShowJoinModal(true);
+                          }}
+                          className="font-bold text-[#ff385c] hover:underline cursor-pointer flex items-center gap-1"
+                        >
+                          <FiUsers size={12} /> Join with Code
+                        </button>
+                      </div>
                     </div>
 
                     {/* Group Members List */}
@@ -992,6 +1109,9 @@ const Trips = () => {
                           (String(collab.userId) === String(user._id) ||
                             collab.email === user.emailId);
                         const name = collab.name || collab.email.split("@")[0];
+                        const isTripOwner =
+                          user?._id && String(activeTrip?.userId) === String(user._id);
+                        const canToggle = isTripOwner || isMe;
 
                         return (
                           <div
@@ -1030,25 +1150,49 @@ const Trips = () => {
                               </div>
                             </div>
 
-                            {/* Toggle Payment Status Button */}
-                            <button
-                              type="button"
-                              onClick={() => handleTogglePaidStatus(collab._id, collab.hasPaid)}
-                              className={`px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 transition cursor-pointer ${
-                                collab.hasPaid
-                                  ? "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200"
-                                  : "bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 hover:bg-amber-200"
-                              }`}
-                            >
-                              {collab.hasPaid ? (
-                                <>
-                                  <FiCheck size={13} />
-                                  <span>Paid</span>
-                                </>
-                              ) : (
-                                <span>Pending</span>
+                            {/* Action Buttons: Toggle Payment & Remove Member */}
+                            <div className="flex items-center gap-2 shrink-0">
+                              <button
+                                type="button"
+                                disabled={!canToggle}
+                                title={
+                                  canToggle
+                                    ? "Click to toggle payment status"
+                                    : "Only this member or the trip leader can update payment status"
+                                }
+                                onClick={() =>
+                                  canToggle &&
+                                  handleTogglePaidStatus(collab._id, collab.hasPaid)
+                                }
+                                className={`px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 transition ${
+                                  canToggle ? "cursor-pointer" : "cursor-default opacity-85"
+                                } ${
+                                  collab.hasPaid
+                                    ? "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200"
+                                    : "bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 hover:bg-amber-200"
+                                }`}
+                              >
+                                {collab.hasPaid ? (
+                                  <>
+                                    <FiCheck size={13} />
+                                    <span>Paid</span>
+                                  </>
+                                ) : (
+                                  <span>Pending</span>
+                                )}
+                              </button>
+
+                              {collab.role !== "owner" && (isTripOwner || isMe) && (
+                                <button
+                                  type="button"
+                                  title={isMe ? "Leave trip" : "Remove member"}
+                                  onClick={() => handleRemoveCollaborator(collab._id)}
+                                  className="p-1.5 rounded-lg text-neutral-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer"
+                                >
+                                  <FiTrash2 size={13} />
+                                </button>
                               )}
-                            </button>
+                            </div>
                           </div>
                         );
                       })}
@@ -1202,8 +1346,7 @@ const Trips = () => {
                                     </p>
                                   </div>
                                   <Link
-                                    to={`/house/${dest.motelId._id}`}
-                                    target="_blank"
+                                    to={`/rooms/${dest.motelId._id}`}
                                     className="px-2.5 py-1.5 text-xs font-bold rounded-lg bg-[#111827] dark:bg-white text-white dark:text-[#111827] hover:opacity-90 shrink-0"
                                   >
                                     View Stay
@@ -1556,6 +1699,77 @@ const Trips = () => {
                   className="px-5 py-2.5 rounded-xl bg-[#ff385c] hover:bg-[#d90b63] text-white text-sm font-bold shadow-md transition-all cursor-pointer"
                 >
                   Create Trip
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Join Trip by Invite Code or Link */}
+      {showJoinModal && (
+        <div className="fixed inset-0 z-[1500] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-[#1e1e1e] rounded-3xl max-w-md w-full p-6 shadow-2xl border border-neutral-200 dark:border-neutral-800 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-[#111827] dark:text-white flex items-center gap-2">
+                <FiUsers className="text-[#ff385c]" /> Join a Group Trip
+              </h3>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowJoinModal(false);
+                  setInputInviteCode("");
+                }}
+                className="p-2 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500 cursor-pointer"
+              >
+                <FiX size={20} />
+              </button>
+            </div>
+
+            <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-4 leading-relaxed">
+              Paste the invite code or share link provided by your group trip leader to get full access to the itinerary, motel voting, and split expenses.
+            </p>
+
+            <form onSubmit={handleJoinByCode} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-[#111827] dark:text-white mb-1.5">
+                  Invite Code or Share URL *
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. TRIP_5HPJ62R or https://.../trips/join/TRIP_..."
+                  value={inputInviteCode}
+                  onChange={(e) => setInputInviteCode(e.target.value)}
+                  required
+                  autoFocus
+                  className="w-full p-3 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-[#2a2a2a] text-sm text-[#111827] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#ff385c] font-mono"
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowJoinModal(false);
+                    setInputInviteCode("");
+                  }}
+                  className="px-4 py-2.5 rounded-xl border border-neutral-300 dark:border-neutral-700 text-sm font-semibold text-[#111827] dark:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={!inputInviteCode.trim() || isJoining}
+                  className="px-5 py-2.5 rounded-xl bg-[#ff385c] hover:bg-[#d90b63] disabled:opacity-50 text-white text-sm font-bold shadow-md transition-all cursor-pointer flex items-center gap-2"
+                >
+                  {isJoining ? (
+                    <PulseLoader size={6} color="#fff" />
+                  ) : (
+                    <>
+                      <FiCheck size={16} />
+                      <span>Join Trip</span>
+                    </>
+                  )}
                 </button>
               </div>
             </form>

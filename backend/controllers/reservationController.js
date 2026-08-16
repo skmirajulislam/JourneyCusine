@@ -46,6 +46,12 @@ exports.createRazorpayOrder = async (req, res) => {
     } else if (payload.listingId && typeof payload.listingId === "string" && mongoose.Types.ObjectId.isValid(payload.listingId) && payload.nightStaying) {
       try {
         const listing = await House.findById(new mongoose.Types.ObjectId(payload.listingId));
+        if (listing && req.user && String(listing.author) === String(req.user)) {
+          return res.status(400).json({
+            success: 0,
+            error: "Hosts cannot reserve their own property listings.",
+          });
+        }
         if (listing && listing.basePrice) {
           const baseUSD = parseInt(listing.basePrice, 10);
           const nights = parseInt(payload.nightStaying, 10) || 1;
@@ -161,6 +167,12 @@ exports.verifyRazorpayPayment = async (req, res) => {
     }
 
     const guestId = req.user || req.body.guestId;
+    if (guestId && String(listingDetails.author) === String(guestId)) {
+      return res.status(400).json({
+        success: 0,
+        error: "Hosts cannot reserve their own property listings.",
+      });
+    }
     let guestEmail = "";
     let guestName = "Guest";
     let guestCountry = "India";

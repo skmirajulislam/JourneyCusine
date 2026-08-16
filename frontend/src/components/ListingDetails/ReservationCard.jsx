@@ -15,7 +15,13 @@ import { useAuth } from "../../hooks/useAuth";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 
-const ReservationCard = ({ listingData, selectedCuisineAddons = [], onToggleCuisineAddon }) => {
+const ReservationCard = ({
+  listingData,
+  selectedCuisineAddons = [],
+  onToggleCuisineAddon,
+  isHost = false,
+  onOpenHostEdit,
+}) => {
   // refs
   const calendarRef = useRef();
   const dropdownRef = useRef();
@@ -101,6 +107,10 @@ const ReservationCard = ({ listingData, selectedCuisineAddons = [], onToggleCuis
 
   // booking action
   const handleBooking = () => {
+    if (isHost) {
+      toast.error("You cannot reserve your own property!");
+      return;
+    }
     if (!user) {
       toast.error("Please log in or sign up to reserve a motel!");
       window.dispatchEvent(new Event("open-auth-popup"));
@@ -140,6 +150,66 @@ const ReservationCard = ({ listingData, selectedCuisineAddons = [], onToggleCuis
       return dates;
     }, []);
   }, [reservations]);
+
+  // If viewing own property, render host action controls instead of booking box
+  if (isHost) {
+    return (
+      <div className="w-full rounded-2xl border border-neutral-200 dark:border-neutral-800 sticky top-32 shadow-xl p-6 bg-white dark:bg-[#1e1e1e] space-y-5 animate-in fade-in">
+        <div className="flex items-start justify-between border-b border-neutral-100 dark:border-neutral-800 pb-4">
+          <div>
+            <span className="px-3 py-1 rounded-full bg-rose-100 dark:bg-rose-950/60 text-[#ff385c] font-bold text-xs inline-flex items-center gap-1.5 mb-2">
+              <span>🏠</span>
+              <span>Your Motel Property</span>
+            </span>
+            <div className="flex items-baseline gap-1 mt-1">
+              <span className="text-2xl font-extrabold text-[#111827] dark:text-white">
+                {formatPrice(listingData?.basePrice || 50)}
+              </span>
+              <span className="text-xs text-neutral-500">/ night</span>
+            </div>
+          </div>
+          <div className="text-right">
+            <span className="text-[11px] font-semibold px-2.5 py-1 rounded-md bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300">
+              ● Published &amp; Live
+            </span>
+          </div>
+        </div>
+
+        <div className="bg-neutral-50 dark:bg-[#282828] rounded-2xl p-4 border border-neutral-200/80 dark:border-neutral-700/60 space-y-2">
+          <h4 className="text-xs font-bold text-neutral-900 dark:text-white flex items-center gap-1.5">
+            <span>ℹ️ Host Controls</span>
+          </h4>
+          <p className="text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed">
+            You cannot reserve your own property. Use the quick controls below to update your motel details, edit dining options, or review guest bookings.
+          </p>
+        </div>
+
+        <div className="space-y-2.5 pt-1">
+          <button
+            type="button"
+            onClick={onOpenHostEdit}
+            className="w-full py-3.5 px-4 rounded-xl bg-[#ff385c] hover:bg-[#d90b63] text-white text-xs sm:text-sm font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <span>✏️ Edit Property &amp; Pricing</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => navigate(`/users/dashboard/${user?._id || ""}/listing=true`)}
+            className="w-full py-3 px-4 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-[#252525] hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-900 dark:text-white text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <span>📊 Manage All Host Listings</span>
+          </button>
+        </div>
+
+        <div className="text-center pt-2 border-t border-neutral-100 dark:border-neutral-800">
+          <p className="text-[11px] text-neutral-400">
+            Guest reservations and earnings appear in your host dashboard.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
