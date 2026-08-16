@@ -31,49 +31,26 @@ export async function uploadToUploadThingDirect(file) {
   const ext = (file.name?.split(".").pop() || "jpg").toLowerCase();
   const safeFileName = `profile_${Date.now()}.${ext}`;
   const mimeType = file.type || "image/jpeg";
-
-  // 1. Request presigned URL from backend route
-  const presignRes = await fetch(
-    `${uploadthingUrl}?actionType=upload&slug=imageUploader`,
-    {
-      method: "POST",
-      headers: {
-        "x-uploadthing-version": "7.7.4",
-        "x-uploadthing-package": "@uploadthing/react",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        files: [
-          {
-            name: safeFileName,
-            size: file.size,
-            type: mimeType,
-          },
-        ],
-      }),
-    }
-  );
-
-  if (!presignRes.ok) {
-    throw new Error(`UploadThing presign HTTP error: ${presignRes.status}`);
-  }
-
-  const presignedList = await presignRes.json();
-  const presigned = presignedList?.[0];
-  if (!presigned || !presigned.key) {
-    throw new Error("Invalid presigned URL from UploadThing");
-  }
-
-  // 2. Perform the actual file upload using UploadThing client
   const cleanFile = new File([file], safeFileName, { type: mimeType });
-  try {
-    await uploadFiles("imageUploader", {
-      files: [cleanFile],
-    });
-  } catch (clientErr) {
-    console.warn("UploadThing client callback notice:", clientErr);
+
+  const res = await uploadFiles("imageUploader", {
+    files: [cleanFile],
+  });
+
+  if (!res || !res[0]) {
+    throw new Error("No response from UploadThing");
   }
 
-  // 3. Return canonical public CDN link
-  return `https://utfs.io/f/${presigned.key}`;
+  const item = res[0];
+  const url =
+    item.ufsUrl ||
+    item.url ||
+    item.appUrl ||
+    (item.key ? `https://utfs.io/f/${item.key}` : null);
+
+  if (!url) {
+    throw new Error("Failed to extract image URL from upload response");
+  }
+
+  return url;
 }
