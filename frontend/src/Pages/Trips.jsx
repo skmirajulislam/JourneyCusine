@@ -788,7 +788,7 @@ const Trips = () => {
   const perPersonShare = Math.round(totalTripCost / collaboratorCount);
   const paidCount = collaborators.filter((c) => c.hasPaid).length;
   const totalCollected = collaborators.reduce(
-    (sum, c) => sum + (c.hasPaid ? c.shareAmount || perPersonShare : 0),
+    (sum, c) => sum + (c.hasPaid ? perPersonShare : 0),
     0
   );
   const paidPercent =

@@ -33,6 +33,7 @@ const io = new Server(server, {
     methods: ["GET", "POST", "PUT", "DELETE"],
   },
 });
+app.set("io", io);
 
 const { apiLimiter } = require("./middleware/rateLimiter.js");
 

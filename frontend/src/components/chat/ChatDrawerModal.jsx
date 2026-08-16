@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useChat } from "../../context/ChatContext";
 import { useAuth } from "../../hooks/useAuth";
@@ -46,10 +46,26 @@ const ChatDrawerModal = () => {
 
   // Auto-scroll to bottom of messages
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isTyping]);
+    if (isChatOpen) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, isTyping, isChatOpen]);
 
-  if (!isChatOpen) return null;
+  const otherParticipant = useMemo(() => {
+    if (!activeConversation?.participants) return null;
+    const found = activeConversation.participants.find(
+      (p) => String(p?._id || p) !== String(user?._id)
+    );
+    if (typeof found === "object" && found !== null && found.name) {
+      return found;
+    }
+    // Fallback: lookup in conversations cache
+    const matchedConv = conversations.find((c) => c._id === activeConversation._id);
+    const populatedFromConv = matchedConv?.participants?.find(
+      (p) => typeof p === "object" && String(p?._id) !== String(user?._id)
+    );
+    return populatedFromConv || (typeof found === "object" ? found : null);
+  }, [activeConversation, conversations, user?._id]);
 
   const handleSend = (e) => {
     if (e) e.preventDefault();
@@ -87,21 +103,7 @@ const ChatDrawerModal = () => {
     }
   };
 
-  const otherParticipant = useMemo(() => {
-    if (!activeConversation?.participants) return null;
-    const found = activeConversation.participants.find(
-      (p) => String(p?._id || p) !== String(user?._id)
-    );
-    if (typeof found === "object" && found !== null && found.name) {
-      return found;
-    }
-    // Fallback: lookup in conversations cache
-    const matchedConv = conversations.find((c) => c._id === activeConversation._id);
-    const populatedFromConv = matchedConv?.participants?.find(
-      (p) => typeof p === "object" && String(p?._id) !== String(user?._id)
-    );
-    return populatedFromConv || (typeof found === "object" ? found : null);
-  }, [activeConversation, conversations, user?._id]);
+  if (!isChatOpen) return null;
 
   return (
     <div

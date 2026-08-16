@@ -1,8 +1,8 @@
 /* eslint-disable react-refresh/only-export-components */
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Check } from "lucide-react";
-import { AiFillStar } from "react-icons/ai";
+import { X, Check, Sparkles, SlidersHorizontal } from "lucide-react";
+import { AiFillStar, AiOutlineStar } from "react-icons/ai";
 import { HiOutlineWifi } from "react-icons/hi";
 import { PiTelevisionSimple } from "react-icons/pi";
 import { MdOutlineKitchen, MdOutlinePool } from "react-icons/md";
@@ -14,21 +14,18 @@ import { CiDumbbell } from "react-icons/ci";
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { useCurrency } from "@/context/CurrencyContext";
 
-export const PRICE_OPTIONS = [
-  { id: "all", label: "Any price", min: 0, max: Infinity },
-  { id: "under100", label: "Under $100 / night", min: 0, max: 100 },
-  { id: "100to250", label: "$100 - $250 / night", min: 100, max: 250 },
-  { id: "250to500", label: "$250 - $500 / night", min: 250, max: 500 },
-  { id: "500plus", label: "$500+ / night", min: 500, max: Infinity },
-];
+export const PRICE_OPTIONS = [];
 
-export const RATING_OPTIONS = [
-  { id: "all", label: "Any rating", minRating: 0 },
-  { id: "4.5", label: "4.5 & above", minRating: 4.5, desc: "Top rated stays" },
-  { id: "4.0", label: "4.0 & above", minRating: 4.0, desc: "Very good" },
-  { id: "3.5", label: "3.5 & above", minRating: 3.5, desc: "Good quality" },
+export const RATING_PRESETS = [
+  { id: "0", label: "Any rating", minRating: 0 },
+  { id: "3.5", label: "★ 3.5+", minRating: 3.5, desc: "Good" },
+  { id: "4.0", label: "★ 4.0+", minRating: 4.0, desc: "Very Good" },
+  { id: "4.5", label: "★ 4.5+", minRating: 4.5, desc: "Top Rated" },
+  { id: "4.8", label: "★ 4.8+", minRating: 4.8, desc: "Exceptional" },
 ];
+export const RATING_OPTIONS = RATING_PRESETS;
 
 export const AMENITIES_OPTIONS = [
   { id: "Host Meals", label: "🍲 Host Meals & Dining", icon: MdOutlineKitchen },
@@ -48,32 +45,66 @@ export const AMENITIES_OPTIONS = [
 const staggerContainer = {
   hidden: {},
   visible: {
-    transition: { staggerChildren: 0.03 },
+    transition: { staggerChildren: 0.02 },
   },
 };
 
 const staggerItem = {
-  hidden: { opacity: 0, y: 8 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.2 } },
+  hidden: { opacity: 0, y: 6 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.15 } },
 };
 
 const FilterPopUp = ({
   isOpen,
   onClose,
-  activeFilters,
+  activeFilters = {},
   onApplyFilters,
+  totalMatchingCount,
+  maxPossiblePrice = 1000,
 }) => {
-  const [selectedPrice, setSelectedPrice] = useState(activeFilters.price || "all");
-  const [selectedRating, setSelectedRating] = useState(activeFilters.rating || "all");
+  const { formatPrice, currency } = useCurrency();
+
+  const ceilingPrice = Math.max(10, Math.ceil(maxPossiblePrice));
+
+  // Parse Initial Price State
+  const initialMinPrice = () => {
+    if (activeFilters.minPrice !== undefined && activeFilters.minPrice !== "") {
+      return Math.min(Number(activeFilters.minPrice) || 0, ceilingPrice);
+    }
+    return 0;
+  };
+
+  const initialMaxPrice = () => {
+    if (activeFilters.maxPrice !== undefined && activeFilters.maxPrice !== "") {
+      const parsed = Number(activeFilters.maxPrice);
+      return isNaN(parsed) || parsed >= ceilingPrice ? ceilingPrice : parsed;
+    }
+    return ceilingPrice;
+  };
+
+  const initialRating = () => {
+    if (activeFilters.minRating !== undefined && activeFilters.minRating !== "") {
+      return Number(activeFilters.minRating) || 0;
+    }
+    if (activeFilters.rating && activeFilters.rating !== "all") {
+      return Number(activeFilters.rating) || 0;
+    }
+    return 0;
+  };
+
+  const [minPrice, setMinPrice] = useState(initialMinPrice);
+  const [maxPrice, setMaxPrice] = useState(initialMaxPrice);
+  const [minRating, setMinRating] = useState(initialRating);
   const [selectedAmenities, setSelectedAmenities] = useState(activeFilters.amenities || []);
 
   useEffect(() => {
     if (isOpen) {
-      setSelectedPrice(activeFilters.price || "all");
-      setSelectedRating(activeFilters.rating || "all");
+      setMinPrice(initialMinPrice());
+      setMaxPrice(initialMaxPrice());
+      setMinRating(initialRating());
       setSelectedAmenities(activeFilters.amenities || []);
     }
-  }, [isOpen, activeFilters]);
+  }, [isOpen, activeFilters, ceilingPrice]);
 
   const handleToggleAmenity = (id) => {
     setSelectedAmenities((prev) =>
@@ -82,10 +113,14 @@ const FilterPopUp = ({
   };
 
   const handleClearAll = () => {
-    setSelectedPrice("all");
-    setSelectedRating("all");
+    setMinPrice(0);
+    setMaxPrice(ceilingPrice);
+    setMinRating(0);
     setSelectedAmenities([]);
     onApplyFilters({
+      minPrice: 0,
+      maxPrice: ceilingPrice,
+      minRating: 0,
       price: "all",
       rating: "all",
       amenities: [],
@@ -95,12 +130,24 @@ const FilterPopUp = ({
 
   const handleApply = () => {
     onApplyFilters({
-      price: selectedPrice,
-      rating: selectedRating,
+      minPrice: Number(minPrice) || 0,
+      maxPrice: Number(maxPrice) >= ceilingPrice ? ceilingPrice : Number(maxPrice),
+      minRating: Number(minRating) || 0,
       amenities: selectedAmenities,
     });
     onClose();
   };
+
+  const getRatingDescription = (rating) => {
+    if (rating >= 4.8) return { label: "Exceptional & Superhost", color: "text-amber-500" };
+    if (rating >= 4.5) return { label: "Top Rated Stays", color: "text-amber-500" };
+    if (rating >= 4.0) return { label: "Very Good", color: "text-amber-600 dark:text-amber-400" };
+    if (rating >= 3.5) return { label: "Good Quality", color: "text-neutral-500 dark:text-neutral-400" };
+    if (rating > 0) return { label: "All Rated Stays", color: "text-neutral-500" };
+    return { label: "Any Rating (All Stays Included)", color: "text-neutral-400" };
+  };
+
+  const ratingDesc = getRatingDescription(minRating);
 
   return (
     <AnimatePresence>
@@ -110,204 +157,236 @@ const FilterPopUp = ({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-[2500] flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4"
+          className="fixed inset-0 z-[2500] flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4"
         >
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            initial={{ opacity: 0, scale: 0.95, y: 15 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            exit={{ opacity: 0, scale: 0.95, y: 15 }}
             transition={{ type: "spring", damping: 25, stiffness: 350 }}
-            className="bg-white dark:bg-[#1e1e1e] rounded-3xl max-w-xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-[#eeeeee] dark:border-[#333333] overflow-hidden"
+            className="bg-white dark:bg-[#1a1a1a] rounded-3xl max-w-xl w-full max-h-[92vh] flex flex-col shadow-2xl border border-neutral-200 dark:border-[#2e2e2e] overflow-hidden"
           >
             {/* Header */}
-            <div className="p-5 border-b border-[#eeeeee] dark:border-[#2e2e2e] flex items-center justify-between sticky top-0 bg-white/95 dark:bg-[#1e1e1e]/95 backdrop-blur-md z-10">
+            <div className="p-4 sm:p-5 border-b border-neutral-200 dark:border-[#282828] flex items-center justify-between sticky top-0 bg-white/95 dark:bg-[#1a1a1a]/95 backdrop-blur-md z-10">
               <Button
                 type="button"
                 onClick={onClose}
                 variant="ghost"
                 size="icon"
-                className="rounded-full text-[#717171] dark:text-[#a0a0a0]"
+                className="rounded-full text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white cursor-pointer"
               >
                 <X size={20} />
               </Button>
-              <h2 className="text-lg font-bold text-[#111827] dark:text-white">
-                Filters
+              <h2 className="text-base sm:text-lg font-black text-neutral-900 dark:text-white flex items-center gap-2">
+                <SlidersHorizontal size={18} className="text-[#ff385c]" />
+                <span>Filters</span>
               </h2>
               <button
                 type="button"
                 onClick={handleClearAll}
-                className="text-xs font-semibold text-[#717171] hover:text-[#ff385c] dark:text-[#a0a0a0] dark:hover:text-[#ff385c] underline transition-colors cursor-pointer"
+                className="text-xs font-bold text-neutral-500 hover:text-[#ff385c] dark:text-neutral-400 dark:hover:text-[#ff385c] underline transition-colors cursor-pointer"
               >
                 Clear all
               </button>
             </div>
 
             {/* Scrollable Filters Body */}
-            <div className="p-6 overflow-y-auto space-y-7 flex-1">
-              {/* 1. Price Filter */}
+            <div className="p-5 sm:p-6 overflow-y-auto space-y-6 flex-1">
+              
+              {/* 1. Price Range Slider Section */}
               <div>
-                <h3 className="text-sm font-extrabold text-[#111827] dark:text-white mb-3">
-                  Price Range
-                </h3>
-                <motion.div
-                  variants={staggerContainer}
-                  initial="hidden"
-                  animate="visible"
-                  className="grid grid-cols-1 sm:grid-cols-2 gap-2.5"
-                >
-                  {PRICE_OPTIONS.map((opt) => {
-                    const isSelected = selectedPrice === opt.id;
-                    return (
-                      <motion.label
-                        key={opt.id}
-                        variants={staggerItem}
-                        whileTap={{ scale: 0.98 }}
-                        className={`flex items-center gap-3 p-3.5 rounded-2xl border cursor-pointer transition-all ${
-                          isSelected
-                            ? "border-[#ff385c] bg-[#ff385c]/5 dark:bg-[#ff385c]/10 text-[#111827] dark:text-white font-bold ring-1 ring-[#ff385c]"
-                            : "border-[#e5e7eb] dark:border-[#333333] hover:bg-neutral-50 dark:hover:bg-[#262626] text-[#374151] dark:text-[#d1d5db]"
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          name="priceFilter"
-                          value={opt.id}
-                          checked={isSelected}
-                          onChange={() => setSelectedPrice(opt.id)}
-                          className="accent-[#ff385c] w-4 h-4 cursor-pointer"
-                        />
-                        <span className="text-xs sm:text-sm">{opt.label}</span>
-                      </motion.label>
-                    );
-                  })}
-                </motion.div>
+                <div className="flex items-center justify-between mb-2">
+                  <div>
+                    <h3 className="text-sm font-extrabold text-neutral-900 dark:text-white">
+                      Price Range (Per Night)
+                    </h3>
+                    <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                      Prices dynamically converted to {currency}
+                    </p>
+                  </div>
+                  <div className="px-3 py-1 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-900/60 text-[#ff385c] text-xs font-black">
+                    {maxPrice >= ceilingPrice
+                      ? `Up to ${formatPrice(ceilingPrice)} / night`
+                      : `Up to ${formatPrice(maxPrice)} / night`}
+                  </div>
+                </div>
+
+                {/* Range Slider Track */}
+                <div className="space-y-3 pt-2">
+                  <div className="relative flex items-center">
+                    <input
+                      type="range"
+                      min="0"
+                      max={ceilingPrice}
+                      step={Math.max(1, Math.round(ceilingPrice / 100))}
+                      value={maxPrice}
+                      onChange={(e) => setMaxPrice(Number(e.target.value))}
+                      className="w-full h-2.5 bg-neutral-200 dark:bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-[#ff385c] focus:outline-hidden"
+                    />
+                  </div>
+
+                  {/* Range Boundaries in User's Local Currency */}
+                  <div className="flex items-center justify-between text-xs font-bold text-neutral-500 dark:text-neutral-400 px-0.5">
+                    <span>{formatPrice(0)}</span>
+                    <span className="text-[#ff385c] font-extrabold">
+                      Selected: {formatPrice(maxPrice)}
+                    </span>
+                    <span>{formatPrice(ceilingPrice)}</span>
+                  </div>
+                </div>
               </div>
 
-              <Separator />
+              <Separator className="bg-neutral-200 dark:bg-[#2a2a2a]" />
 
-              {/* 2. Rating Filter */}
+              {/* 2. Rating Range Slider Section */}
               <div>
-                <h3 className="text-sm font-extrabold text-[#111827] dark:text-white mb-3">
-                  Guest Rating
-                </h3>
-                <motion.div
-                  variants={staggerContainer}
-                  initial="hidden"
-                  animate="visible"
-                  className="grid grid-cols-1 sm:grid-cols-2 gap-2.5"
-                >
-                  {RATING_OPTIONS.map((opt) => {
-                    const isSelected = selectedRating === opt.id;
-                    return (
-                      <motion.label
-                        key={opt.id}
-                        variants={staggerItem}
-                        whileTap={{ scale: 0.98 }}
-                        className={`flex items-center justify-between p-3.5 rounded-2xl border cursor-pointer transition-all ${
-                          isSelected
-                            ? "border-[#ff385c] bg-[#ff385c]/5 dark:bg-[#ff385c]/10 text-[#111827] dark:text-white font-bold ring-1 ring-[#ff385c]"
-                            : "border-[#e5e7eb] dark:border-[#333333] hover:bg-neutral-50 dark:hover:bg-[#262626] text-[#374151] dark:text-[#d1d5db]"
-                        }`}
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <input
-                            type="radio"
-                            name="ratingFilter"
-                            value={opt.id}
-                            checked={isSelected}
-                            onChange={() => setSelectedRating(opt.id)}
-                            className="accent-[#ff385c] w-4 h-4 cursor-pointer"
-                          />
-                          <span className="text-xs sm:text-sm flex items-center gap-1">
-                            {opt.minRating > 0 && <AiFillStar className="text-amber-500" size={15} />}
-                            {opt.label}
+                <div className="flex items-center justify-between mb-2">
+                  <div>
+                    <h3 className="text-sm font-extrabold text-neutral-900 dark:text-white">
+                      Guest Rating Slider
+                    </h3>
+                    <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                      Filter by community reviews and verified guest scores
+                    </p>
+                  </div>
+                  <div className="px-3 py-1 rounded-xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-900/60 text-amber-700 dark:text-amber-300 text-xs font-black flex items-center gap-1">
+                    <AiFillStar size={13} className="text-amber-500" />
+                    <span>{minRating > 0 ? `${Number(minRating).toFixed(1)}+` : "Any"}</span>
+                  </div>
+                </div>
+
+                {/* Rating Slider Track */}
+                <div className="space-y-3 pt-2">
+                  <div className="relative">
+                    <input
+                      type="range"
+                      min="0"
+                      max="5"
+                      step="0.1"
+                      value={minRating}
+                      onChange={(e) => setMinRating(Number(e.target.value))}
+                      className="w-full h-2.5 bg-neutral-200 dark:bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-amber-500 focus:outline-hidden"
+                    />
+                  </div>
+
+                  {/* Rating Live Feedback Banner */}
+                  <div className="p-3 rounded-2xl bg-neutral-50 dark:bg-[#222222] border border-neutral-200 dark:border-neutral-800 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-0.5">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <span key={star}>
+                            {minRating >= star ? (
+                              <AiFillStar className="text-amber-400 text-base" />
+                            ) : minRating >= star - 0.5 ? (
+                              <AiFillStar className="text-amber-300 text-base opacity-75" />
+                            ) : (
+                              <AiOutlineStar className="text-neutral-300 dark:text-neutral-600 text-base" />
+                            )}
                           </span>
-                        </div>
-                        {opt.desc && (
-                          <span className="text-[11px] text-[#6b7280] dark:text-[#9ca3af]">
-                            {opt.desc}
-                          </span>
-                        )}
-                      </motion.label>
-                    );
-                  })}
-                </motion.div>
+                        ))}
+                      </div>
+                      <span className="text-xs font-bold text-neutral-900 dark:text-white">
+                        {minRating > 0 ? `${Number(minRating).toFixed(1)} & above` : "Any Star Rating"}
+                      </span>
+                    </div>
+                    <span className={`text-[11px] font-semibold ${ratingDesc.color}`}>
+                      {ratingDesc.label}
+                    </span>
+                  </div>
+
+                  {/* Quick Rating Presets */}
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {RATING_PRESETS.map((preset) => {
+                      const isActive = Number(minRating) === preset.minRating;
+                      return (
+                        <button
+                          key={preset.id}
+                          type="button"
+                          onClick={() => setMinRating(preset.minRating)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 ${
+                            isActive
+                              ? "bg-amber-500 text-white shadow-xs font-bold"
+                              : "bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                          }`}
+                        >
+                          {preset.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
 
-              <Separator />
+              <Separator className="bg-neutral-200 dark:bg-[#2a2a2a]" />
 
-              {/* 3. Amenities */}
+              {/* 3. Amenities & Accessories */}
               <div>
-                <h3 className="text-sm font-extrabold text-[#111827] dark:text-white mb-1">
-                  Amenities &amp; Accessories
+                <h3 className="text-sm font-extrabold text-neutral-900 dark:text-white mb-1">
+                  Amenities &amp; Dining
                 </h3>
-                <p className="text-xs text-[#6b7280] dark:text-[#9ca3af] mb-3">
-                  Select all features you want included in your stay
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-3">
+                  Select all experiences and amenities included in your stay
                 </p>
                 <motion.div
                   variants={staggerContainer}
                   initial="hidden"
                   animate="visible"
-                  className="grid grid-cols-2 sm:grid-cols-3 gap-2.5"
+                  className="grid grid-cols-1 sm:grid-cols-2 gap-2"
                 >
-                  {AMENITIES_OPTIONS.map((opt) => {
-                    const isChecked = selectedAmenities.includes(opt.id);
-                    const IconComponent = opt.icon;
-
+                  {AMENITIES_OPTIONS.map((item) => {
+                    const isSelected = selectedAmenities.includes(item.id);
                     return (
-                      <motion.button
-                        type="button"
-                        key={opt.id}
+                      <motion.div
+                        key={item.id}
                         variants={staggerItem}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.97 }}
-                        onClick={() => handleToggleAmenity(opt.id)}
-                        className={`flex flex-col items-start justify-between p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
-                          isChecked
-                            ? "border-[#ff385c] bg-[#ff385c]/5 dark:bg-[#ff385c]/15 text-[#111827] dark:text-white font-bold ring-1.5 ring-[#ff385c]"
-                            : "border-[#e5e7eb] dark:border-[#333333] hover:bg-neutral-50 dark:hover:bg-[#262626] text-[#374151] dark:text-[#d1d5db]"
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => handleToggleAmenity(item.id)}
+                        className={`flex items-center justify-between p-3 rounded-2xl border cursor-pointer transition-all ${
+                          isSelected
+                            ? "border-[#ff385c] bg-[#ff385c]/5 dark:bg-[#ff385c]/10 text-neutral-900 dark:text-white font-bold ring-1 ring-[#ff385c]"
+                            : "border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-[#242424] text-neutral-700 dark:text-neutral-300"
                         }`}
                       >
-                        <div className="flex items-center justify-between w-full mb-2">
-                          <IconComponent size={20} className={isChecked ? "text-[#ff385c]" : "text-[#6b7280]"} />
-                          <motion.div
-                            animate={isChecked ? { scale: [0.8, 1.1, 1] } : { scale: 1 }}
-                            transition={{ duration: 0.2 }}
-                            className={`w-5 h-5 rounded-md flex items-center justify-center transition-colors ${
-                              isChecked
-                                ? "bg-[#ff385c] text-white"
-                                : "border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800"
-                            }`}
-                          >
-                            {isChecked && <Check size={13} />}
-                          </motion.div>
+                        <span className="text-xs font-semibold">{item.label}</span>
+                        <div
+                          className={`w-5 h-5 rounded-lg flex items-center justify-center transition-all ${
+                            isSelected
+                              ? "bg-[#ff385c] text-white"
+                              : "border border-neutral-300 dark:border-neutral-700"
+                          }`}
+                        >
+                          {isSelected && <Check size={12} strokeWidth={3} />}
                         </div>
-                        <span className="text-xs font-semibold">{opt.label}</span>
-                      </motion.button>
+                      </motion.div>
                     );
                   })}
                 </motion.div>
               </div>
+
             </div>
 
-            {/* Footer Actions */}
-            <div className="p-4 sm:p-5 border-t border-[#eeeeee] dark:border-[#2e2e2e] flex items-center justify-between bg-white dark:bg-[#1e1e1e] sticky bottom-0 z-10">
-              <Button
+            {/* Footer / Apply Action */}
+            <div className="p-4 sm:p-5 border-t border-neutral-200 dark:border-[#282828] bg-white/95 dark:bg-[#1a1a1a]/95 backdrop-blur-md flex items-center justify-between gap-3">
+              <button
                 type="button"
                 onClick={handleClearAll}
-                variant="ghost"
-                className="font-semibold"
+                className="text-xs sm:text-sm font-bold text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white underline cursor-pointer"
               >
                 Clear all
-              </Button>
-              <Button
+              </button>
+
+              <button
                 type="button"
                 onClick={handleApply}
-                variant="journey"
-                className="px-6 py-3 rounded-2xl shadow-md hover:shadow-lg"
+                className="px-6 py-3 rounded-2xl bg-[#ff385c] hover:bg-[#e00b41] text-white font-bold text-xs sm:text-sm shadow-md transition-all cursor-pointer flex items-center gap-2"
               >
-                Apply Filters
-              </Button>
+                <Sparkles size={15} />
+                <span>
+                  {typeof totalMatchingCount === "number"
+                    ? `Show ${totalMatchingCount} Motel${totalMatchingCount === 1 ? "" : "s"}`
+                    : "Apply Filters"}
+                </span>
+              </button>
             </div>
           </motion.div>
         </motion.div>

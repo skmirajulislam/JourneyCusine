@@ -5,6 +5,7 @@ const House = require("../models/house.model.js");
 const User = require("../models/user.model.js");
 const reservationDB = require("../models/reservation.model.js");
 const Coupon = require("../models/coupon.model.js");
+const { sendNotification } = require("./notificationController.js");
 const {
   getCurrencyForCountry,
   convertPrice,
@@ -320,6 +321,31 @@ exports.verifyRazorpayPayment = async (req, res) => {
 
     const savedReservation = await new reservationDB(newReservation).save();
 
+    // Send real-time notifications to Guest and Host
+    const io = req.app.get("io");
+    if (io) {
+      // Guest notification
+      if (guestId) {
+        await sendNotification(io, {
+          userId: guestId,
+          title: "Booking Confirmed! 🏨",
+          message: `Your reservation at "${listingDetails.title || "Motel"}" (${nights} night(s)) has been confirmed.`,
+          type: "booking",
+          link: "/trips",
+        });
+      }
+      // Host notification
+      if (resolvedAuthorId) {
+        await sendNotification(io, {
+          userId: resolvedAuthorId,
+          title: "New Reservation Received! 🎉",
+          message: `${guestName} booked "${listingDetails.title || "Motel"}" for ${nights} night(s).`,
+          type: "booking",
+          link: "/dashboard",
+        });
+      }
+    }
+
     return res.status(200).json({
       success: 1,
       message: "Razorpay payment verified and reservation created successfully.",
@@ -446,6 +472,30 @@ exports.newReservation = async (req, res) => {
     };
 
     const savedReservation = await new reservationDB(newReservation).save();
+
+    // Send real-time notifications to Guest and Host
+    const io = req.app.get("io");
+    if (io) {
+      if (guestId) {
+        await sendNotification(io, {
+          userId: guestId,
+          title: "Booking Confirmed! 🏨",
+          message: `Your reservation at "${listingDetails.title || "Motel"}" (${nightStaying} night(s)) has been confirmed.`,
+          type: "booking",
+          link: "/trips",
+        });
+      }
+      if (authorId) {
+        await sendNotification(io, {
+          userId: authorId,
+          title: "New Reservation Received! 🎉",
+          message: `${guestName} booked "${listingDetails.title || "Motel"}" for ${nightStaying} night(s).`,
+          type: "booking",
+          link: "/dashboard",
+        });
+      }
+    }
+
     return res.status(200).json({
       message: "Reservation confirmed successfully.",
       reservation: savedReservation,

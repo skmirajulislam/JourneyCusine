@@ -49,29 +49,51 @@ const Navbar = () => {
   const [popup, setPopup] = useState(false);
 
   // Active filters count
+  const minPriceParam = searchParams.get("minPrice") ? Number(searchParams.get("minPrice")) : 0;
+  const maxPriceParam = searchParams.get("maxPrice") ? Number(searchParams.get("maxPrice")) : 1000;
+  const minRatingParam = searchParams.get("minRating")
+    ? Number(searchParams.get("minRating"))
+    : searchParams.get("rating") && searchParams.get("rating") !== "all"
+    ? Number(searchParams.get("rating"))
+    : 0;
+
+  const legacyPriceParam = searchParams.get("price");
+  const hasPriceActive = minPriceParam > 0 || maxPriceParam < 1000 || (legacyPriceParam && legacyPriceParam !== "all");
+  const hasRatingActive = minRatingParam > 0;
+
   const activeFilters = {
-    price: searchParams.get("price") || "all",
-    rating: searchParams.get("rating") || "all",
+    minPrice: minPriceParam,
+    maxPrice: maxPriceParam,
+    minRating: minRatingParam,
+    price: legacyPriceParam || "all",
+    rating: minRatingParam > 0 ? String(minRatingParam) : "all",
     amenities: searchParams.get("amenities") ? searchParams.get("amenities").split(",").filter(Boolean) : [],
   };
 
   const activeFilterCount =
-    (activeFilters.price !== "all" ? 1 : 0) +
-    (activeFilters.rating !== "all" ? 1 : 0) +
+    (hasPriceActive ? 1 : 0) +
+    (hasRatingActive ? 1 : 0) +
     activeFilters.amenities.length;
 
   const handleApplyFilters = (newFilters) => {
     const params = new URLSearchParams(searchParams);
-    if (newFilters.price && newFilters.price !== "all") {
-      params.set("price", newFilters.price);
+
+    if (newFilters.minPrice !== undefined && Number(newFilters.minPrice) > 0) {
+      params.set("minPrice", newFilters.minPrice);
     } else {
-      params.delete("price");
+      params.delete("minPrice");
     }
 
-    if (newFilters.rating && newFilters.rating !== "all") {
-      params.set("rating", newFilters.rating);
+    if (newFilters.maxPrice !== undefined && Number(newFilters.maxPrice) < 1000) {
+      params.set("maxPrice", newFilters.maxPrice);
     } else {
-      params.delete("rating");
+      params.delete("maxPrice");
+    }
+
+    if (newFilters.minRating !== undefined && Number(newFilters.minRating) > 0) {
+      params.set("minRating", newFilters.minRating);
+    } else {
+      params.delete("minRating");
     }
 
     if (newFilters.amenities && newFilters.amenities.length > 0) {
@@ -79,6 +101,9 @@ const Navbar = () => {
     } else {
       params.delete("amenities");
     }
+
+    params.delete("price");
+    params.delete("rating");
 
     navigate(`/?${params.toString()}`);
   };

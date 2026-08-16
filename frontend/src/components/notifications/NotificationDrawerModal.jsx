@@ -60,6 +60,9 @@ const NotificationDrawerModal = () => {
 
   const filteredNotifications = notifications.filter((n) => {
     if (filter === "all") return true;
+    if (filter === "booking") return n.type === "booking" || n.type === "stay" || n.type === "reservation";
+    if (filter === "trip") return n.type === "trip" || n.type === "trips" || n.type === "travel";
+    if (filter === "reward") return n.type === "reward" || n.type === "coupon" || n.type === "loyalty" || n.type === "points";
     return n.type === filter;
   });
 

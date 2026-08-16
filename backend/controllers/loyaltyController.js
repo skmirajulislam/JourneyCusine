@@ -1,5 +1,6 @@
 const User = require("../models/user.model.js");
 const Coupon = require("../models/coupon.model.js");
+const { sendNotification } = require("./notificationController.js");
 
 const ALL_PASSPORT_BADGES = [
   {
@@ -252,6 +253,18 @@ exports.redeemVoucher = async (req, res) => {
     });
 
     await newCoupon.save();
+
+    // Send real-time notification to user
+    const io = req.app.get("io");
+    if (io && userId) {
+      await sendNotification(io, {
+        userId,
+        title: "Promo Code Redeemed! 🎁",
+        message: `You redeemed ${selected.points} Loyalty Points for voucher code "${selected.code}" ($${selected.discount} OFF)!`,
+        type: "reward",
+        link: "/users/profile",
+      });
+    }
 
     res.status(200).json({
       success: 1,

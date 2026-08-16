@@ -1,6 +1,7 @@
 const Trip = require("../models/trip.model.js");
 const User = require("../models/user.model.js");
 const mongoose = require("mongoose");
+const { sendNotification } = require("./notificationController.js");
 
 exports.getUserTrips = async (req, res) => {
   try {
@@ -368,6 +369,18 @@ exports.inviteCollaborator = async (req, res) => {
       .populate({ path: "destinations.motelId", model: "House" })
       .populate({ path: "shortlist.houseId", model: "House" });
 
+    // Send real-time notification to invited user if they exist in DB
+    const io = req.app.get("io");
+    if (io && foundUser?._id) {
+      await sendNotification(io, {
+        userId: foundUser._id,
+        title: "Trip Invitation Received! 💌",
+        message: `You've been invited to join group trip "${trip.name || "Trip"}". Code: ${trip.inviteCode}`,
+        type: "trip",
+        link: "/trips",
+      });
+    }
+
     res.status(200).json({
       success: 1,
       message: `Invited ${normalizedEmail} to trip!`,
@@ -440,6 +453,33 @@ exports.joinTripByInvite = async (req, res) => {
     const populatedTrip = await Trip.findById(trip._id)
       .populate({ path: "destinations.motelId", model: "House" })
       .populate({ path: "shortlist.houseId", model: "House" });
+
+    // Send notification to Trip Leader
+    const io = req.app.get("io");
+    if (io && trip.userId && String(trip.userId) !== String(userId)) {
+      const joinerName = user?.name?.firstName
+        ? `${user.name.firstName} ${user.name.lastName || ""}`.trim()
+        : user?.emailId || "A co-traveler";
+
+      await sendNotification(io, {
+        userId: trip.userId,
+        title: "New Co-Traveler Joined! 🎒",
+        message: `${joinerName} has joined your group trip "${trip.name || "Trip"}"!`,
+        type: "trip",
+        link: "/trips",
+      });
+    }
+
+    // Send confirmation notification to the joining user
+    if (io && userId) {
+      await sendNotification(io, {
+        userId,
+        title: "You've Joined a Trip! 🗺️",
+        message: `You are now connected to "${trip.name || "Trip"}". All scheduled activities and split budget are synced.`,
+        type: "trip",
+        link: "/trips",
+      });
+    }
 
     res.status(200).json({
       success: 1,
@@ -557,6 +597,21 @@ exports.updateSplitStatus = async (req, res) => {
     const populatedTrip = await Trip.findById(trip._id)
       .populate({ path: "destinations.motelId", model: "House" })
       .populate({ path: "shortlist.houseId", model: "House" });
+
+    // Send real-time notification to Trip Owner if a collaborator updated their payment
+    const io = req.app.get("io");
+    if (io && collaboratorId) {
+      const collab = trip.collaborators.id(collaboratorId);
+      if (collab && trip.userId && String(trip.userId) !== String(userId)) {
+        await sendNotification(io, {
+          userId: trip.userId,
+          title: "Payment Status Updated! 💳",
+          message: `${collab.name || collab.email} marked their split payment as ${collab.hasPaid ? "Paid ✅" : "Pending ⏳"} for "${trip.name || "Trip"}".`,
+          type: "trip",
+          link: "/trips",
+        });
+      }
+    }
 
     res.status(200).json({
       success: 1,

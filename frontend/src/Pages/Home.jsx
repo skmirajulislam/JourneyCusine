@@ -14,12 +14,10 @@ import { FadeLoader } from "react-spinners";
 import { fuzzySearchListings } from "../utils/fuzzySearch";
 import { FiSearch, FiX, FiSliders } from "react-icons/fi";
 import { AiFillStar } from "react-icons/ai";
-import FilterPopUp, {
-  PRICE_OPTIONS,
-  RATING_OPTIONS,
-} from "../components/popUp/FilterPopUp/FilterPopUp";
+import FilterPopUp from "../components/popUp/FilterPopUp/FilterPopUp";
 import AiChatWidget from "../components/AiAssistant/AiChatWidget";
 import { Button } from "@/components/ui/button";
+import { useCurrency } from "../context/CurrencyContext";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -38,7 +36,7 @@ const itemVariants = {
     opacity: 1,
     y: 0,
     transition: {
-      duration: 0.3,
+      duration: 0.25,
       ease: "easeOut",
     },
   },
@@ -46,28 +44,13 @@ const itemVariants = {
 
 const Home = () => {
   const { user } = useAuth();
+  const { formatPrice } = useCurrency();
   const location = useLocation();
   const navigate = useNavigate();
 
   const [hasScroll, setHasScroll] = useState(false);
   const [showBeforeTaxPrice, setShowBeforeTaxPrice] = useState(false);
   const [showFilterPopup, setShowFilterPopup] = useState(false);
-
-  // Extract search and filter parameters from URL
-  const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
-  const searchQuery = searchParams.get("search") || "";
-  const categoryParam = searchParams.get("category") || "House";
-  const priceFilter = searchParams.get("price") || "all";
-  const ratingFilter = searchParams.get("rating") || "all";
-  const amenitiesFilter = useMemo(
-    () => (searchParams.get("amenities") ? searchParams.get("amenities").split(",").filter(Boolean) : []),
-    [searchParams]
-  );
-
-  const activeFilterCount =
-    (priceFilter !== "all" ? 1 : 0) +
-    (ratingFilter !== "all" ? 1 : 0) +
-    amenitiesFilter.length;
 
   // TanStack Queries in fixed top-level order
   const allListingData = useQuery({
@@ -79,6 +62,41 @@ const Home = () => {
     staleTime: 5 * 60 * 1000,
     gcTime: 15 * 60 * 1000,
   });
+
+  const maxDbPrice = useMemo(() => {
+    const raw = allListingData.data || [];
+    if (!raw.length) return 500;
+    const maxVal = Math.max(...raw.map((l) => Number(l.basePrice) || 0), 50);
+    return Math.ceil(maxVal);
+  }, [allListingData.data]);
+
+  // Extract search and filter parameters from URL
+  const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const searchQuery = searchParams.get("search") || "";
+  const categoryParam = searchParams.get("category") || "House";
+  
+  // Range Filter State from URL
+  const minPriceFilter = searchParams.get("minPrice") ? Number(searchParams.get("minPrice")) : 0;
+  const maxPriceFilter = searchParams.get("maxPrice") ? Number(searchParams.get("maxPrice")) : maxDbPrice;
+  const minRatingFilter = searchParams.get("minRating")
+    ? Number(searchParams.get("minRating"))
+    : searchParams.get("rating") && searchParams.get("rating") !== "all"
+    ? Number(searchParams.get("rating"))
+    : 0;
+
+  const legacyPrice = searchParams.get("price");
+  const amenitiesFilter = useMemo(
+    () => (searchParams.get("amenities") ? searchParams.get("amenities").split(",").filter(Boolean) : []),
+    [searchParams]
+  );
+
+  const hasPriceFilter = minPriceFilter > 0 || (maxPriceFilter > 0 && maxPriceFilter < maxDbPrice) || (legacyPrice && legacyPrice !== "all");
+  const hasRatingFilter = minRatingFilter > 0;
+
+  const activeFilterCount =
+    (hasPriceFilter ? 1 : 0) +
+    (hasRatingFilter ? 1 : 0) +
+    amenitiesFilter.length;
 
   const { isLoading: isCategoryLoading, data: categoryData = [] } = useGetSubCatListing(categoryParam);
 
@@ -125,26 +143,28 @@ const Home = () => {
       }
     }
 
-    // 2. Apply Price Filter (Radio Basis)
-    if (priceFilter && priceFilter !== "all") {
-      const priceOpt = PRICE_OPTIONS.find((p) => p.id === priceFilter);
+    // 2. Apply Price Range Slider Filter
+    if (minPriceFilter > 0 || maxPriceFilter < 1000) {
+      candidates = candidates.filter((item) => {
+        const price = Number(item.basePrice) || 0;
+        return price >= minPriceFilter && (maxPriceFilter >= 1000 ? true : price <= maxPriceFilter);
+      });
+    } else if (legacyPrice && legacyPrice !== "all") {
+      const priceOpt = PRICE_PRESETS.find((p) => p.id === legacyPrice);
       if (priceOpt) {
         candidates = candidates.filter((item) => {
           const price = Number(item.basePrice) || 0;
-          return price >= priceOpt.min && price <= priceOpt.max;
+          return price >= priceOpt.min && (priceOpt.max >= 1000 ? true : price <= priceOpt.max);
         });
       }
     }
 
-    // 3. Apply Rating Filter (Radio Basis)
-    if (ratingFilter && ratingFilter !== "all") {
-      const minRate = parseFloat(ratingFilter);
-      if (!isNaN(minRate)) {
-        candidates = candidates.filter((item) => {
-          const r = parseFloat(item.ratings);
-          return !isNaN(r) && r >= minRate;
-        });
-      }
+    // 3. Apply Rating Range Slider Filter
+    if (minRatingFilter > 0) {
+      candidates = candidates.filter((item) => {
+        const r = parseFloat(item.ratings);
+        return !isNaN(r) && r >= minRatingFilter;
+      });
     }
 
     // 4. Apply Amenities / Accessories Filter (Checkmark Basis)
@@ -176,7 +196,7 @@ const Home = () => {
     }
 
     return candidates;
-  }, [searchQuery, allListingData.data, categoryData, searchParams, priceFilter, ratingFilter, amenitiesFilter]);
+  }, [searchQuery, allListingData.data, categoryData, searchParams, minPriceFilter, maxPriceFilter, minRatingFilter, legacyPrice, amenitiesFilter]);
 
   const handleClearSearch = () => {
     const newParams = new URLSearchParams(searchParams);
@@ -186,16 +206,23 @@ const Home = () => {
 
   const handleApplyFilters = (newFilters) => {
     const params = new URLSearchParams(searchParams);
-    if (newFilters.price && newFilters.price !== "all") {
-      params.set("price", newFilters.price);
+
+    if (newFilters.minPrice !== undefined && Number(newFilters.minPrice) > 0) {
+      params.set("minPrice", newFilters.minPrice);
     } else {
-      params.delete("price");
+      params.delete("minPrice");
     }
 
-    if (newFilters.rating && newFilters.rating !== "all") {
-      params.set("rating", newFilters.rating);
+    if (newFilters.maxPrice !== undefined && Number(newFilters.maxPrice) < 1000) {
+      params.set("maxPrice", newFilters.maxPrice);
     } else {
-      params.delete("rating");
+      params.delete("maxPrice");
+    }
+
+    if (newFilters.minRating !== undefined && Number(newFilters.minRating) > 0) {
+      params.set("minRating", newFilters.minRating);
+    } else {
+      params.delete("minRating");
     }
 
     if (newFilters.amenities && newFilters.amenities.length > 0) {
@@ -204,14 +231,20 @@ const Home = () => {
       params.delete("amenities");
     }
 
+    params.delete("price");
+    params.delete("rating");
+
     navigate(`/?${params.toString()}`);
   };
 
   const handleRemoveSingleFilter = (type, value) => {
     const params = new URLSearchParams(searchParams);
     if (type === "price") {
+      params.delete("minPrice");
+      params.delete("maxPrice");
       params.delete("price");
     } else if (type === "rating") {
+      params.delete("minRating");
       params.delete("rating");
     } else if (type === "amenity") {
       const remaining = amenitiesFilter.filter((a) => a !== value);
@@ -250,9 +283,6 @@ const Home = () => {
       return <HomePageSkeleton />;
     }
   }
-
-  const selectedPriceLabel = PRICE_OPTIONS.find((p) => p.id === priceFilter)?.label;
-  const selectedRatingLabel = RATING_OPTIONS.find((r) => r.id === ratingFilter)?.label;
 
   return (
     <main className="max-w-screen-2xl xl:px-10 px-5 sm:px-16 mx-auto pb-16">
@@ -296,9 +326,9 @@ const Home = () => {
                 </span>
               )}
 
-              {priceFilter !== "all" && (
+              {hasPriceFilter && (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white dark:bg-[#2a2a2a] text-xs font-bold text-[#111827] dark:text-white border border-neutral-200 dark:border-neutral-700 shadow-xs">
-                  Price: {selectedPriceLabel}
+                  Price: Up to {formatPrice(maxPriceFilter)}
                   <button
                     type="button"
                     onClick={() => handleRemoveSingleFilter("price")}
@@ -309,10 +339,10 @@ const Home = () => {
                 </span>
               )}
 
-              {ratingFilter !== "all" && (
+              {hasRatingFilter && (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white dark:bg-[#2a2a2a] text-xs font-bold text-[#111827] dark:text-white border border-neutral-200 dark:border-neutral-700 shadow-xs">
                   <AiFillStar className="text-amber-500" size={13} />
-                  {selectedRatingLabel}
+                  {minRatingFilter.toFixed(1)}+ Stars
                   <button
                     type="button"
                     onClick={() => handleRemoveSingleFilter("rating")}
@@ -397,7 +427,7 @@ const Home = () => {
             </motion.div>
           ) : (
             <motion.section
-              key={`${categoryParam}-${searchQuery}-${priceFilter}-${ratingFilter}-${amenitiesFilter.join(",")}`}
+              key={`${categoryParam}-${searchQuery}-${minPriceFilter}-${maxPriceFilter}-${minRatingFilter}-${amenitiesFilter.join(",")}`}
               variants={containerVariants}
               initial="hidden"
               animate="visible"
@@ -432,12 +462,16 @@ const Home = () => {
         isOpen={showFilterPopup}
         onClose={() => setShowFilterPopup(false)}
         activeFilters={{
-          price: priceFilter,
-          rating: ratingFilter,
+          minPrice: minPriceFilter,
+          maxPrice: maxPriceFilter,
+          minRating: minRatingFilter,
+          price: legacyPrice || "all",
+          rating: minRatingFilter > 0 ? String(minRatingFilter) : "all",
           amenities: amenitiesFilter,
         }}
         onApplyFilters={handleApplyFilters}
         totalMatchingCount={displayedListings.length}
+        maxPossiblePrice={maxDbPrice}
       />
 
       {/* AI Assistant Concierge Widget */}

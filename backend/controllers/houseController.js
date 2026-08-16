@@ -539,7 +539,19 @@ exports.publishList = async (req, res) => {
 
 exports.getAllListing = async (req, res) => {
     try {
-        const data = await House.find({}).lean();
+        const { minPrice, maxPrice, minRating } = req.query;
+        let query = {};
+        if ((minPrice !== undefined && minPrice !== "" && minPrice !== "all") || (maxPrice !== undefined && maxPrice !== "" && maxPrice !== "all")) {
+            query.basePrice = {};
+            if (minPrice !== undefined && minPrice !== "" && minPrice !== "all") {
+                query.basePrice.$gte = Number(minPrice);
+            }
+            if (maxPrice !== undefined && maxPrice !== "" && maxPrice !== "all" && Number(maxPrice) < 1000) {
+                query.basePrice.$lte = Number(maxPrice);
+            }
+        }
+
+        const data = await House.find(query).lean();
 
         // Dynamically compute average ratings from Review collection
         const reviewStats = await Review.aggregate([
@@ -560,7 +572,7 @@ exports.getAllListing = async (req, res) => {
             };
         });
 
-        const allListingData = data
+        let allListingData = data
             .filter((listing) => listing.status === "Complete" && listing.photos?.length !== 0)
             .map((listing) => {
                 const stats = ratingsMap[String(listing._id)];
@@ -571,6 +583,14 @@ exports.getAllListing = async (req, res) => {
                     reviewsCount: stats ? stats.reviewsCount : 0,
                 };
             });
+
+        if (minRating && Number(minRating) > 0) {
+            const parsedMinRate = Number(minRating);
+            allListingData = allListingData.filter((item) => {
+                const r = parseFloat(item.ratings);
+                return !isNaN(r) && r >= parsedMinRate;
+            });
+        }
 
         let response = {
             succeed: 1,
@@ -589,10 +609,23 @@ exports.getListingDataWithCat = async (req, res) => {
     try {
         const payload = req.body;
         const category = payload.category;
+        const { minPrice, maxPrice, minRating } = req.query || {};
 
-        const data = await House.find({
+        let query = {
             houseType: { $eq: category }
-        }).lean();
+        };
+
+        if ((minPrice !== undefined && minPrice !== "" && minPrice !== "all") || (maxPrice !== undefined && maxPrice !== "" && maxPrice !== "all")) {
+            query.basePrice = {};
+            if (minPrice !== undefined && minPrice !== "" && minPrice !== "all") {
+                query.basePrice.$gte = Number(minPrice);
+            }
+            if (maxPrice !== undefined && maxPrice !== "" && maxPrice !== "all" && Number(maxPrice) < 1000) {
+                query.basePrice.$lte = Number(maxPrice);
+            }
+        }
+
+        const data = await House.find(query).lean();
 
         // Dynamically compute average ratings
         const reviewStats = await Review.aggregate([
@@ -613,7 +646,7 @@ exports.getListingDataWithCat = async (req, res) => {
             };
         });
 
-        const catBasedListing = data.map((listing) => {
+        let catBasedListing = data.map((listing) => {
             const stats = ratingsMap[String(listing._id)];
             return {
                 ...listing,
@@ -623,9 +656,17 @@ exports.getListingDataWithCat = async (req, res) => {
             };
         });
 
+        if (minRating && Number(minRating) > 0) {
+            const parsedMinRate = Number(minRating);
+            catBasedListing = catBasedListing.filter((item) => {
+                const r = parseFloat(item.ratings);
+                return !isNaN(r) && r >= parsedMinRate;
+            });
+        }
+
         const response = {
             succeed: 1,
-            success: 200,
+            status: 200,
             catBasedListing
         };
 
