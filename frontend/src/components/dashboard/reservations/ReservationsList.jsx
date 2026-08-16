@@ -1,13 +1,11 @@
 /* eslint-disable react/prop-types */
-import { useSelector } from "react-redux";
 import { useMemo } from "react";
 import { reservationListItems } from "./reservationsListName";
 import { removeDuplicates } from "../../../hooks/useRemoveDuplicates";
+import { useHostData } from "../../../hooks/useHostData";
 
 const ReservationsList = ({ active, setActivePage }) => {
-  const authorReservations = useSelector(
-    (state) => state.reservations?.authorReservations || []
-  );
+  const { authorReservations = [] } = useHostData();
 
   const uniqueReservations = useMemo(() => {
     return removeDuplicates(authorReservations, "_id");

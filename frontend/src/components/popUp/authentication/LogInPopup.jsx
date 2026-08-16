@@ -5,8 +5,7 @@ import { useForm } from "react-hook-form";
 import { Link } from "react-router-dom";
 import { PulseLoader } from "react-spinners";
 import { API } from "../../../backend";
-import { useDispatch, useSelector } from "react-redux";
-import { userLogIn } from "../../../redux/actions/userActions";
+import { useAuth } from "../../../hooks/useAuth";
 import { toast } from "react-hot-toast";
 import errorIcon from "../../../assets/basicIcon/errorIcon.png";
 import errorMessageIcon from "../../../assets/basicIcon/errorIcon2.png";
@@ -27,9 +26,7 @@ const LogInPopup = ({
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const user = useSelector((state) => state.user);
-  console.log(user);
-  const dispatch = useDispatch();
+  const { setUser } = useAuth();
 
   const togglePasswordVisibility = () => {
     setPasswordVisible(!passwordVisible);
@@ -53,7 +50,7 @@ const LogInPopup = ({
       if (userData?.success === 0) {
         setShowErrorMessage(true);
       } else if (userData?.success === 1) {
-        dispatch(userLogIn(userData));
+        setUser(userData);
         let accessToken = localStorage.getItem("accessToken");
         let refreshToken = localStorage.getItem("refreshToken");
 
@@ -73,13 +70,12 @@ const LogInPopup = ({
           );
         } else if (refreshToken) {
           refreshToken = userData?.refreshToken;
-          console.log(refreshToken);
           localStorage.setItem("refreshToken", JSON.stringify(refreshToken));
         }
-        window.location.reload();
         setShowLoginPopup(false);
         setDefaultPopup(true);
         setPopup(false);
+        toast.success("Welcome back!");
       }
     } catch (error) {
       console.log(error);

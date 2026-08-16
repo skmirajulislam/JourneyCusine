@@ -1,7 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 /* eslint-disable react/prop-types */
 import { createContext, useContext, useEffect, useState, useMemo } from "react";
-import { useSelector } from "react-redux";
+import { useAuth } from "../hooks/useAuth";
 import {
   CURRENCY_SYMBOLS,
   EXCHANGE_RATES,
@@ -15,7 +15,7 @@ import {
 const CurrencyContext = createContext(null);
 
 export const CurrencyProvider = ({ children }) => {
-  const user = useSelector((state) => state.user?.userDetails);
+  const { user } = useAuth();
 
   // Initialize from user details, localStorage, or default to India (INR)
   const [currency, setCurrencyState] = useState(() => {
@@ -102,7 +102,6 @@ export const CurrencyProvider = ({ children }) => {
 export const useCurrency = () => {
   const context = useContext(CurrencyContext);
   if (!context) {
-    // Fallback if rendered outside provider
     return {
       currency: "INR",
       symbol: "₹",

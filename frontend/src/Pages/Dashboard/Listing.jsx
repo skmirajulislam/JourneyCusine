@@ -1,21 +1,14 @@
-import { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { HiPlus } from "react-icons/hi";
 import RoomFilterCard from "../../components/dashboard/listing/RoomFilterCard";
 import AmenitiesFilterCard from "../../components/dashboard/listing/AmenitiesFilterCard";
 import ListingStatus from "../../components/dashboard/listing/ListingStatus";
 import ListingTable from "../../components/dashboard/listing/ListingTable";
-import { getUser } from "../../redux/actions/userActions";
+import { useHostData } from "../../hooks/useHostData";
 
 const Listing = () => {
-  const dispatch = useDispatch();
-  const allListingsData = useSelector((state) => state.house.housesData) || [];
+  const { hostHouses: allListingsData = [] } = useHostData();
   const isSmallDevice = window.innerWidth < 640;
-
-  useEffect(() => {
-    dispatch(getUser(true));
-  }, [dispatch]);
 
   return (
     <main className="max-w-screen-xl mx-auto px-4 sm:px-8 md:px-10 xl:px-20 pb-10">

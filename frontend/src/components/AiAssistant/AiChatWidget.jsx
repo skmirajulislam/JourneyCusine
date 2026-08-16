@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import { useState, useRef, useEffect } from "react";
-import { useSelector } from "react-redux";
+import { useAuth } from "../../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import {
   FiSend,
@@ -94,7 +94,7 @@ const FormattedMessage = ({ content, isUser }) => {
 };
 
 const AiChatWidget = () => {
-  const user = useSelector((state) => state.user.userDetails);
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   const [isOpen, setIsOpen] = useState(false);

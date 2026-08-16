@@ -1,15 +1,12 @@
 import { useState } from "react";
 import { AiFillStar, AiOutlineHeart, AiFillHeart } from "react-icons/ai";
-import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-hot-toast";
-import api from "../../backend";
-import { updateWishlist } from "../../redux/actions/userActions";
+import { useAuth } from "../../hooks/useAuth";
 import AuthenticationPopUp from "../popUp/authentication/AuthenticationPopUp";
 
 /* eslint-disable react/prop-types */
 const ListingTitle = ({ listingData }) => {
-  const dispatch = useDispatch();
-  const user = useSelector((state) => state.user?.userDetails);
+  const { user, toggleWishlist } = useAuth();
   const [showAuthPopup, setShowAuthPopup] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -27,14 +24,9 @@ const ListingTitle = ({ listingData }) => {
 
     try {
       setIsUpdating(true);
-      const res = await api.post(
-        "/auth/wishlist/toggle",
-        { houseId },
-        { headers: { "Content-Type": "application/json" } }
-      );
-      if (res.data?.success === 1) {
-        dispatch(updateWishlist(res.data.wishlist));
-        toast.success(res.data.message);
+      const res = await toggleWishlist(houseId);
+      if (res?.success === 1) {
+        toast.success(res.message);
       }
     } catch (error) {
       console.error("Wishlist error:", error);

@@ -1,63 +1,70 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
+import { motion, AnimatePresence } from "framer-motion";
 import { FadeLoader } from "react-spinners";
 import { AiFillStar, AiFillHeart } from "react-icons/ai";
-import { FiHeart } from "react-icons/fi";
+import { FiHeart, FiMapPin } from "react-icons/fi";
 import { toast } from "react-hot-toast";
 import api from "../backend";
-import { updateWishlist } from "../redux/actions/userActions";
+import { useAuth } from "../hooks/useAuth";
 import { useCurrency } from "../context/CurrencyContext";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
 
 const Wishlist = () => {
-  const [wishlistItems, setWishlistItems] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const user = useSelector((state) => state.user?.userDetails);
+  const [removingId, setRemovingId] = useState(null);
+  const { user, toggleWishlist } = useAuth();
   const { formatPrice } = useCurrency();
-  const dispatch = useDispatch();
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    async function fetchWishlist() {
-      if (!user) {
-        setIsLoading(false);
-        return;
-      }
-
+  const { data: wishlistItems = [], isLoading } = useQuery({
+    queryKey: ["wishlist", user?._id],
+    queryFn: async () => {
+      if (!user?._id) return [];
       try {
-        setIsLoading(true);
         const res = await api.get("/auth/wishlist");
-        if (res.data?.success === 1) {
-          setWishlistItems(res.data.wishlist || []);
-        }
+        return Array.isArray(res.data?.wishlist) ? res.data.wishlist : [];
       } catch (error) {
         console.error("Failed to fetch wishlist:", error);
-        toast.error("Could not load your wishlist.");
-      } finally {
-        setIsLoading(false);
+        return [];
       }
-    }
-
-    fetchWishlist();
-  }, [user]);
+    },
+    enabled: Boolean(user?._id),
+    staleTime: 3 * 60 * 1000,
+  });
 
   const handleRemoveFromWishlist = async (e, houseId) => {
     e.preventDefault();
     e.stopPropagation();
 
+    if (removingId === houseId) return;
+    setRemovingId(houseId);
+
     try {
-      const res = await api.post(
-        "/auth/wishlist/toggle",
-        { houseId },
-        { headers: { "Content-Type": "application/json" } }
+      // Optimistically remove from cache for instantaneous UI feedback
+      queryClient.setQueryData(["wishlist", user?._id], (old) =>
+        (old || []).filter((item) => item._id !== houseId)
       );
-      if (res.data?.success === 1) {
-        dispatch(updateWishlist(res.data.wishlist));
-        setWishlistItems((prev) => prev.filter((item) => item._id !== houseId));
-        toast.success("Removed from wishlist");
+
+      const res = await toggleWishlist(houseId);
+      if (res?.success === 1) {
+        toast.success("Removed from wishlist", {
+          icon: "💔",
+          style: {
+            borderRadius: "12px",
+            background: "#333",
+            color: "#fff",
+            fontSize: "13px",
+            fontWeight: "600",
+          },
+        });
       }
     } catch (error) {
       console.error(error);
       toast.error("Failed to remove item");
+      queryClient.invalidateQueries({ queryKey: ["wishlist", user?._id] });
+    } finally {
+      setRemovingId(null);
     }
   };
 
@@ -71,96 +78,154 @@ const Wishlist = () => {
 
   return (
     <div className="max-w-[1280px] mx-auto px-5 sm:px-8 md:px-10 py-10 min-h-[75vh]">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-[#222222] dark:text-white">
+          <motion.h1
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#222222] dark:text-white tracking-tight"
+          >
             Wishlists
-          </h1>
-          <p className="text-sm sm:text-base text-[#717171] dark:text-[#a0a0a0] mt-1">
-            {wishlistItems.length === 1
-              ? "1 saved motel"
-              : `${wishlistItems.length} saved motels`}
-          </p>
+          </motion.h1>
+          <motion.p
+            key={wishlistItems.length}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-sm sm:text-base text-[#717171] dark:text-[#a0a0a0] mt-1"
+          >
+            {wishlistItems.length} {wishlistItems.length === 1 ? "stay" : "stays"} saved for your next trip
+          </motion.p>
         </div>
-        <Link
-          to="/trips"
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#222222] dark:bg-neutral-800 text-white dark:text-white hover:bg-black dark:hover:bg-neutral-700 font-semibold text-sm transition-colors self-start sm:self-auto shadow-sm border border-transparent dark:border-neutral-700"
-        >
-          🗺️ Open Trips Map Planner
-        </Link>
       </div>
 
-      {wishlistItems.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center rounded-2xl border border-dashed border-[#dddddd] dark:border-[#333333] bg-[#fafafa] dark:bg-[#1a1a1a] px-4">
-          <div className="p-4 rounded-full bg-[#ff385c]/10 text-[#ff385c] mb-4">
-            <FiHeart size={40} />
-          </div>
-          <h2 className="text-xl font-semibold text-[#222222] dark:text-white">
-            Your wishlist is empty
-          </h2>
-          <p className="text-sm text-[#717171] dark:text-[#a0a0a0] max-w-sm mt-2 mb-6">
-            As you search, tap the heart icon on any motel to save your favorite
-            stays and experiences here.
-          </p>
-          <Link
-            to="/"
-            className="px-6 py-3 rounded-lg bg-[#ff385c] hover:bg-[#d90b63] text-white font-medium transition-colors shadow-sm"
+      {/* Grid of Wishlist Items */}
+      <AnimatePresence mode="popLayout">
+        {wishlistItems.length === 0 ? (
+          <motion.div
+            key="empty-wishlist"
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.96 }}
+            transition={{ duration: 0.3 }}
+            className="flex flex-col items-center justify-center py-20 px-4 text-center bg-neutral-50 dark:bg-[#181818] rounded-3xl border border-neutral-200 dark:border-neutral-800"
           >
-            Start exploring
-          </Link>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {wishlistItems.map((house) => (
-            <Link
-              key={house._id}
-              to={`/rooms/${house._id}`}
-              className="flex flex-col group cursor-pointer"
-            >
-              <div className="relative h-[280px] overflow-hidden rounded-xl bg-neutral-100 dark:bg-neutral-800">
-                <img
-                  src={house.photos?.[0]}
-                  alt={house.title || "Motel image"}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 rounded-xl"
-                />
-                <button
-                  type="button"
-                  onClick={(e) => handleRemoveFromWishlist(e, house._id)}
-                  aria-label="Remove from wishlist"
-                  className="absolute top-3 right-3 p-2 rounded-full bg-black/30 hover:bg-black/50 text-white backdrop-blur-sm transition-all z-10"
-                >
-                  <AiFillHeart size={20} className="text-[#ff385c]" />
-                </button>
-              </div>
-
-              <div className="flex flex-row justify-between items-start mt-3">
-                <div className="flex flex-col gap-0.5 max-w-[75%]">
-                  <p className="font-semibold text-sm text-[#222222] dark:text-white truncate">
-                    {house.location?.city?.name || house.title || "Motel stay"}
-                    {house.location?.country?.name
-                      ? `, ${house.location.country.name}`
-                      : ""}
-                  </p>
-                  <p className="text-xs text-[#717171] dark:text-[#a0a0a0] truncate">
-                    {house.houseType || "Entire place"}
-                  </p>
-                  <p className="text-sm font-semibold text-[#222222] dark:text-white mt-1">
-                    {formatPrice(house.basePrice)}{" "}
-                    <span className="font-normal text-xs text-[#717171] dark:text-[#a0a0a0]">
-                      night
-                    </span>
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-1 text-xs font-medium">
-                  <AiFillStar size={14} className="text-amber-500" />
-                  <span>{house.ratings || "New"}</span>
-                </div>
-              </div>
+            <div className="w-16 h-16 rounded-full bg-rose-50 dark:bg-rose-950/40 text-[#ff385c] flex items-center justify-center mb-4 shadow-xs">
+              <FiHeart size={28} />
+            </div>
+            <h3 className="text-xl font-bold text-[#111827] dark:text-white">
+              Your wishlist is empty
+            </h3>
+            <p className="text-sm text-[#717171] dark:text-[#a0a0a0] mt-2 max-w-sm">
+              As you search, tap the heart icon on any motel stay to save your favorite places here.
+            </p>
+            <Link to="/" className="mt-6">
+              <Button className="rounded-xl px-6 py-2.5 font-bold shadow-md bg-[#ff385c] hover:bg-[#d90b63] text-white">
+                Explore stays
+              </Button>
             </Link>
-          ))}
-        </div>
-      )}
+          </motion.div>
+        ) : (
+          <motion.div
+            layout
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
+          >
+            {wishlistItems.map((house) => {
+              const photo = house?.photos?.[0];
+              const locationStr =
+                house?.location?.city?.name ||
+                house?.location?.country?.name ||
+                house?.location?.addressLineOne ||
+                "Global Destination";
+
+              return (
+                <motion.div
+                  layout
+                  key={house._id}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{
+                    opacity: 0,
+                    scale: 0.8,
+                    y: 20,
+                    transition: { duration: 0.35, ease: "easeInOut" },
+                  }}
+                  transition={{
+                    layout: { type: "spring", stiffness: 350, damping: 28 },
+                  }}
+                  className="group relative flex flex-col rounded-2xl overflow-hidden bg-white dark:bg-[#1a1a1a] border border-neutral-200 dark:border-neutral-800 shadow-sm hover:shadow-md transition-all duration-300"
+                >
+                  <Link
+                    to={`/rooms/${house._id}`}
+                    className="block relative aspect-square overflow-hidden bg-neutral-100 dark:bg-neutral-800"
+                  >
+                    {photo ? (
+                      <img
+                        src={photo}
+                        alt={house.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-xs text-neutral-400">
+                        No image
+                      </div>
+                    )}
+
+                    {/* Remove Wishlist Button with Heart Beat Animation */}
+                    <button
+                      type="button"
+                      onClick={(e) => handleRemoveFromWishlist(e, house._id)}
+                      disabled={removingId === house._id}
+                      className="absolute top-3 right-3 p-2 rounded-full bg-white/90 dark:bg-black/80 backdrop-blur-xs text-[#ff385c] hover:scale-115 active:scale-95 transition-all duration-200 shadow-md cursor-pointer z-10"
+                      aria-label="Remove from wishlist"
+                      title="Remove from wishlist"
+                    >
+                      <motion.div
+                        whileHover={{ scale: 1.2 }}
+                        whileTap={{ scale: 0.8 }}
+                      >
+                        <AiFillHeart size={18} />
+                      </motion.div>
+                    </button>
+                  </Link>
+
+                  <div className="p-4 flex flex-col flex-1 justify-between">
+                    <div>
+                      <div className="flex items-center justify-between gap-2">
+                        <h4 className="font-bold text-sm text-[#111827] dark:text-white truncate flex-1">
+                          {house.title}
+                        </h4>
+                        <div className="flex items-center gap-1 text-xs font-semibold text-[#111827] dark:text-white shrink-0">
+                          <AiFillStar className="text-amber-500" size={14} />
+                          <span>{house.ratings || "New"}</span>
+                        </div>
+                      </div>
+
+                      <p className="text-xs text-[#717171] dark:text-[#a0a0a0] flex items-center gap-1 mt-1 truncate">
+                        <FiMapPin size={12} className="shrink-0" />
+                        {locationStr}
+                      </p>
+                    </div>
+
+                    <div className="mt-3 pt-3 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
+                      <span className="text-xs text-[#717171] dark:text-[#a0a0a0]">
+                        {house.houseType || "Motel"}
+                      </span>
+                      <div className="text-sm font-bold text-[#111827] dark:text-white">
+                        {formatPrice(house.basePrice)}{" "}
+                        <span className="text-xs font-normal text-[#717171] dark:text-[#a0a0a0]">
+                          / night
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

@@ -19,45 +19,32 @@ import { FaShower } from "react-icons/fa";
 import { TbBrandCarbon } from "react-icons/tb";
 import { GiBathtub, GiTennisCourt, GiSkier } from "react-icons/gi";
 import { BsSpeedometer2, BsSnow, BsPersonWorkspace } from "react-icons/bs";
-import { useDispatch, useSelector } from "react-redux";
+import { useListingFlow } from "../../context/ListingFlowContext";
 import { useEffect, useState } from "react";
-import { createNewHouse } from "../../redux/actions/houseActions";
 
 const Amenities = () => {
-  const newHouseData = useSelector((state) => state.house.newHouse);
-  const [storedCardData, setStoredCardData] = useState([]);
-  const dispatch = useDispatch();
+  const { newHouse, currentListingHouse, setNewHouse } = useListingFlow();
+  const initialAmenities = newHouse?.amenities || currentListingHouse?.amenities || [];
+  const [storedCardData, setStoredCardData] = useState(
+    Array.isArray(initialAmenities) ? initialAmenities : []
+  );
   const svgSize = window.innerWidth < 768 ? 28 : 40;
 
   const handleStoreCardData = (name) => {
     if (storedCardData.includes(name)) {
-      storedCardData.pop(name);
-      setStoredCardData([...storedCardData]);
+      setStoredCardData(storedCardData.filter((item) => item !== name));
     } else {
       setStoredCardData([...storedCardData, name]);
     }
   };
 
   useEffect(() => {
-    dispatch(
-      createNewHouse(
-        newHouseData?.houseType,
-        newHouseData?.privacyType,
-        newHouseData?.location,
-        newHouseData?.floorPlan,
-        storedCardData
-      )
-    );
-  }, [
-    dispatch,
-    newHouseData?.floorPlan,
-    newHouseData?.houseType,
-    newHouseData?.location,
-    newHouseData?.privacyType,
-    storedCardData,
-  ]);
+    setNewHouse((prev) => ({
+      ...prev,
+      amenities: storedCardData,
+    }));
+  }, [storedCardData]);
 
-  console.log(storedCardData, "amenities");
   return (
     <div className="flex flex-col gap-10 max-w-screen-md mx-auto my-6">
       <div>

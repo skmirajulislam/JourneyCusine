@@ -1,40 +1,43 @@
 import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { userRole } from "../../redux/actions/userActions";
 import { PulseLoader } from "react-spinners";
 import toast from "react-hot-toast";
-import {
-  getHouseDetails,
-  publishListing,
-  saveAmenities,
-  saveDescription,
-  saveFloorPlan,
-  saveGuestType,
-  saveHighlight,
-  saveLocation,
-  savePhotos,
-  savePrices,
-  savePrivacyType,
-  saveSecurity,
-  saveStructure,
-  saveTitle,
-} from "../../redux/actions/houseActions";
+import api from "../../backend";
+import { useAuth } from "../../hooks/useAuth";
+import { useListingFlow } from "../../context/ListingFlowContext";
 
 const ListingFooter = () => {
-  const user = useSelector((state) => state.user.userDetails);
-  const createHouseData = useSelector((state) => state.house);
+  const { user } = useAuth();
+  const {
+    newHouse,
+    currentListingHouse,
+    getHouseDetails,
+    saveStructure,
+    savePrivacyType,
+    saveLocation,
+    saveFloorPlan,
+    saveAmenities,
+    savePhotos,
+    saveHouseTitle,
+    saveHouseHighlights,
+    saveHouseDescription,
+    saveHousePrices,
+    saveSecurity,
+    publishListing,
+  } = useListingFlow();
+
   const [loading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState(0);
 
   const url = window.location.pathname;
   const navigate = useNavigate();
-  const dispatch = useDispatch();
   const currentHouseId = localStorage.getItem("currentHouseId");
 
   useEffect(() => {
-    dispatch(getHouseDetails(currentHouseId));
-  }, [currentHouseId, dispatch]);
+    if (currentHouseId) {
+      getHouseDetails(currentHouseId);
+    }
+  }, [currentHouseId]);
 
   const steps = [
     "/become-a-host",
@@ -63,9 +66,7 @@ const ListingFooter = () => {
   const validateCurrentStep = () => {
     // 1. Validate Location / Address (Step 4)
     if (url.includes("/location")) {
-      const loc =
-        createHouseData?.newHouse?.location ||
-        createHouseData?.currentListingHouse?.location;
+      const loc = newHouse?.location || currentListingHouse?.location;
       const countryName = loc?.country?.name || loc?.country;
       const cityName = loc?.city?.name || loc?.city;
       const address = loc?.addressLineOne?.trim();
@@ -80,9 +81,7 @@ const ListingFooter = () => {
 
     // 2. Validate Photos / Image Upload (Step 8)
     if (url.includes("/photos")) {
-      const photos =
-        createHouseData?.newHouse?.photos ||
-        createHouseData?.currentListingHouse?.photos;
+      const photos = newHouse?.photos || currentListingHouse?.photos;
       if (!Array.isArray(photos) || photos.length === 0) {
         toast.error("Please upload at least one image of your stay to proceed.", {
           id: "host-validation",
@@ -93,9 +92,7 @@ const ListingFooter = () => {
 
     // 3. Validate Title (Step 9)
     if (url.includes("/title")) {
-      const title =
-        createHouseData?.newHouse?.title ||
-        createHouseData?.currentListingHouse?.title;
+      const title = newHouse?.title || currentListingHouse?.title;
       if (!title || title.trim().length < 3) {
         toast.error("Please provide a title (at least 3 characters) for your stay.", {
           id: "host-validation",
@@ -106,9 +103,7 @@ const ListingFooter = () => {
 
     // 4. Validate Description (Step 11)
     if (url.includes("/description")) {
-      const desc =
-        createHouseData?.newHouse?.description ||
-        createHouseData?.currentListingHouse?.description;
+      const desc = newHouse?.description || currentListingHouse?.description;
       if (!desc || desc.trim().length < 10) {
         toast.error(
           "Please write a description (at least 10 characters) for your stay.",
@@ -131,86 +126,92 @@ const ListingFooter = () => {
 
       try {
         if (currentStepIndex === 0) {
-          await dispatch(userRole());
+          const response = await api.post("/auth/become_a_host", { role: "host" });
+          const newId = response.data?.house?._id;
+          if (newId) {
+            localStorage.setItem("currentHouseId", newId);
+          }
         } else if (currentStepIndex === 2) {
           const houseData = {
-            houseType: createHouseData?.newHouse?.houseType,
+            houseType: newHouse?.houseType,
             houseId: currentListingHouseId,
           };
-          await dispatch(saveStructure(houseData));
+          await saveStructure(houseData);
         } else if (currentStepIndex === 3) {
           const houseData = {
-            privacyType: createHouseData?.newHouse?.privacyType,
+            privacyType: newHouse?.privacyType,
             houseId: currentListingHouseId,
           };
-          await dispatch(savePrivacyType(houseData));
+          await savePrivacyType(houseData);
         } else if (currentStepIndex === 4) {
           const locationData = {
-            location: createHouseData?.newHouse?.location,
+            location: newHouse?.location,
             houseId: currentListingHouseId,
           };
-          await dispatch(saveLocation(locationData));
+          await saveLocation(locationData);
         } else if (currentStepIndex === 5) {
           const floorPlanData = {
-            floorPlan: createHouseData?.newHouse?.floorPlan,
+            floorPlan: newHouse?.floorPlan,
             houseId: currentListingHouseId,
           };
-          await dispatch(saveFloorPlan(floorPlanData));
+          await saveFloorPlan(floorPlanData);
         } else if (currentStepIndex === 7) {
           const amenitiesData = {
-            amenities: createHouseData?.newHouse?.amenities,
+            amenities: newHouse?.amenities,
             houseId: currentListingHouseId,
           };
-          await dispatch(saveAmenities(amenitiesData));
+          await saveAmenities(amenitiesData);
         } else if (currentStepIndex === 8) {
           const photosData = {
-            photos: createHouseData?.newHouse?.photos,
+            photos: newHouse?.photos,
             houseId: currentListingHouseId,
           };
-          await dispatch(savePhotos(photosData));
+          await savePhotos(photosData);
         } else if (currentStepIndex === 9) {
           const titleData = {
-            title: createHouseData?.newHouse?.title,
+            title: newHouse?.title,
             houseId: currentListingHouseId,
           };
-          await dispatch(saveTitle(titleData));
+          await saveHouseTitle(titleData);
         } else if (currentStepIndex === 10) {
           const highlightData = {
-            highlight: createHouseData?.newHouse?.highlights,
+            highlight: newHouse?.highlights,
             houseId: currentListingHouseId,
           };
-          await dispatch(saveHighlight(highlightData));
+          await saveHouseHighlights(highlightData);
         } else if (currentStepIndex === 11) {
           const descriptionData = {
-            description: createHouseData?.newHouse?.description,
+            description: newHouse?.description,
             houseId: currentListingHouseId,
           };
-          await dispatch(saveDescription(descriptionData));
+          await saveHouseDescription(descriptionData);
         } else if (currentStepIndex === 13) {
           const visibilityData = {
-            guestType: createHouseData?.newHouse?.guestType,
+            guestType: newHouse?.guestType,
             houseId: currentListingHouseId,
           };
-          await dispatch(saveGuestType(visibilityData));
+          await api.post("/house/save_guest_type", visibilityData, {
+            headers: { "Content-Type": "application/json" },
+          });
         } else if (currentStepIndex === 14) {
           const PriceData = {
-            priceBeforeTaxes: createHouseData?.newHouse?.priceBeforeTaxes,
-            authorEarnedPrice: createHouseData?.newHouse?.authorEarnedPrice,
-            basePrice: createHouseData?.newHouse?.basePrice,
+            priceBeforeTaxes: newHouse?.priceBeforeTaxes,
+            authorEarnedPrice: newHouse?.authorEarnedPrice,
+            basePrice: newHouse?.basePrice,
             houseId: currentListingHouseId,
           };
-          await dispatch(savePrices(PriceData));
+          await saveHousePrices(PriceData);
         } else if (currentStepIndex === 15) {
           const securityData = {
-            security: createHouseData?.newHouse?.security,
+            security: newHouse?.security,
             houseId: currentListingHouseId,
           };
-          await dispatch(saveSecurity(securityData));
+          await saveSecurity(securityData);
         } else if (currentStepIndex === 16) {
           const publishList = {
             houseId: currentListingHouseId,
           };
-          await dispatch(publishListing(publishList));
+          await publishListing(publishList);
         }
 
         navigate(steps[currentStepIndex + 1]);

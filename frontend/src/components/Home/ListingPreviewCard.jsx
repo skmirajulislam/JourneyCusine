@@ -1,20 +1,17 @@
 /* eslint-disable react/prop-types */
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { AiFillStar, AiOutlineHeart, AiFillHeart } from "react-icons/ai";
 import { Check } from "lucide-react";
-import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-hot-toast";
-import api from "../../backend";
-import { updateWishlist } from "../../redux/actions/userActions";
+import { useAuth } from "../../hooks/useAuth";
 import AuthenticationPopUp from "../popUp/authentication/AuthenticationPopUp";
 import { useCurrency } from "../../context/CurrencyContext";
 import { useActiveReservations } from "../../hooks/useActiveReservations";
 import { Badge } from "@/components/ui/badge";
 
 const ListingPreviewCard = ({ listingData, showBeforeTaxPrice }) => {
-  const dispatch = useDispatch();
-  const user = useSelector((state) => state.user?.userDetails);
+  const { user, toggleWishlist } = useAuth();
   const { formatPrice } = useCurrency();
   const { isListingReserved } = useActiveReservations();
   const [showAuthPopup, setShowAuthPopup] = useState(false);
@@ -43,14 +40,9 @@ const ListingPreviewCard = ({ listingData, showBeforeTaxPrice }) => {
 
     try {
       setIsUpdating(true);
-      const res = await api.post(
-        "/auth/wishlist/toggle",
-        { houseId },
-        { headers: { "Content-Type": "application/json" } }
-      );
-      if (res.data?.success === 1) {
-        dispatch(updateWishlist(res.data.wishlist));
-        toast.success(res.data.message);
+      const res = await toggleWishlist(houseId);
+      if (res?.success === 1) {
+        toast.success(res.message);
       }
     } catch (error) {
       console.error("Wishlist toggle error:", error);
@@ -98,23 +90,34 @@ const ListingPreviewCard = ({ listingData, showBeforeTaxPrice }) => {
               onClick={handleToggleWishlist}
               disabled={isUpdating}
               aria-label={isSaved ? "Remove from wishlist" : "Save to wishlist"}
-              whileHover={{ scale: 1.12 }}
-              whileTap={{ scale: 0.9 }}
-              className="absolute top-3 right-3 p-2 rounded-full bg-black/30 hover:bg-black/50 text-white backdrop-blur-md transition-all duration-200 cursor-pointer z-10"
+              whileHover={{ scale: 1.15 }}
+              whileTap={{ scale: 0.75 }}
+              className="absolute top-3 right-3 p-2 rounded-full bg-black/30 hover:bg-black/50 text-white backdrop-blur-md transition-all duration-200 cursor-pointer z-10 shadow-sm"
             >
-              {isSaved ? (
-                <motion.span
-                  key="filled"
-                  initial={{ scale: 0.5 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: "spring", damping: 10, stiffness: 300 }}
-                  className="block"
-                >
-                  <AiFillHeart size={20} className="text-[#ff385c]" />
-                </motion.span>
-              ) : (
-                <AiOutlineHeart size={20} className="text-white" />
-              )}
+              <AnimatePresence mode="wait">
+                {isSaved ? (
+                  <motion.span
+                    key="filled"
+                    initial={{ scale: 0.4 }}
+                    animate={{ scale: [1.35, 0.85, 1] }}
+                    exit={{ scale: 0.4 }}
+                    transition={{ type: "spring", damping: 12, stiffness: 350 }}
+                    className="block"
+                  >
+                    <AiFillHeart size={20} className="text-[#ff385c]" />
+                  </motion.span>
+                ) : (
+                  <motion.span
+                    key="empty"
+                    initial={{ scale: 0.8 }}
+                    animate={{ scale: 1 }}
+                    transition={{ duration: 0.15 }}
+                    className="block"
+                  >
+                    <AiOutlineHeart size={20} className="text-white" />
+                  </motion.span>
+                )}
+              </AnimatePresence>
             </motion.button>
           </div>
 

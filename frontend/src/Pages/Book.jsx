@@ -4,11 +4,9 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import Payment from "../components/Booking/Payment";
 import Listing from "../components/Booking/Listing";
 import { FadeLoader } from "react-spinners";
-import { useDispatch } from "react-redux";
-import { getOneListingRoomsDetails } from "../redux/actions/houseActions";
+import { useListingDetails } from "../hooks/useHostData";
 
 const Book = () => {
-  const [isLoading, setIsLoading] = useState(true);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
 
   const [searchParams] = useSearchParams();
@@ -17,15 +15,9 @@ const Book = () => {
   const navigate = useNavigate();
   const params = useParams();
   const listingId = params?.id;
-  const dispatch = useDispatch();
 
-  useEffect(() => {
-    (async () => {
-      setIsLoading(true);
-      await dispatch(getOneListingRoomsDetails(listingId));
-      setIsLoading(false);
-    })();
-  }, [listingId, dispatch]);
+  const { data: listingDetailsData, isLoading } = useListingDetails(listingId);
+  const listingData = listingDetailsData?.listing;
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -59,6 +51,7 @@ const Book = () => {
           <Payment
             searchParamsObj={searchParamsObj}
             appliedCoupon={appliedCoupon}
+            listingDataProp={listingData}
           />
         </div>
         <div className="w-full md:w-[380px] lg:w-[440px] shrink-0">
@@ -66,6 +59,7 @@ const Book = () => {
             searchParamsObj={searchParamsObj}
             appliedCoupon={appliedCoupon}
             setAppliedCoupon={setAppliedCoupon}
+            listingDataProp={listingData}
           />
         </div>
       </div>

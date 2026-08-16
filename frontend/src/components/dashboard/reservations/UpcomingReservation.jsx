@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
-import { FiUser, FiCalendar, FiDollarSign } from "react-icons/fi";
+import { FiUser, FiCalendar } from "react-icons/fi";
 
 const UpcomingReservation = ({ data = [] }) => {
   if (!data || data.length === 0) {

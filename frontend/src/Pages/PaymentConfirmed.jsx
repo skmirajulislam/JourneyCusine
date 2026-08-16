@@ -1,7 +1,7 @@
 import { Link, useSearchParams } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import { FadeLoader } from "react-spinners";
-import { useSelector } from "react-redux";
+import { useAuth } from "../hooks/useAuth";
 import api from "../backend";
 import { toast } from "react-hot-toast";
 import { FiCheckCircle, FiCalendar, FiCreditCard, FiArrowRight } from "react-icons/fi";
@@ -19,7 +19,7 @@ const RazorpayIcon = ({ size = 16, className = "" }) => (
 );
 
 const PaymentConfirmed = () => {
-  const currentUser = useSelector((state) => state.user?.userDetails);
+  const { user: currentUser } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [paymentFailed, setPaymentFailed] = useState(false);
 

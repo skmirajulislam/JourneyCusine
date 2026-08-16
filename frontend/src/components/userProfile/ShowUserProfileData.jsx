@@ -1,9 +1,8 @@
-import { useSelector } from "react-redux";
-import { Link } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
 import { profileOptions } from "./userProfileApi";
 
 const ShowUserProfileData = () => {
-  const user = useSelector((state) => state.user?.userDetails);
+  const { user } = useAuth();
   const userProfile = user?.profileDetails?.profile;
 
   const setProfileOptions = profileOptions?.filter((option) => {

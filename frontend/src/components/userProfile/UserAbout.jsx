@@ -1,20 +1,17 @@
-import { useEffect } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
-import { useDispatch, useSelector } from "react-redux";
 import api from "../../backend";
-import { updateUserDetails } from "../../redux/actions/userActions";
+import { useAuth } from "../../hooks/useAuth";
 
 const UserAbout = () => {
-  const dispatch = useDispatch();
+  const { user: userDetails, setUser } = useAuth();
   const [showAboutInput, setShowAboutInput] = useState(false);
   const [characterCount, setCharacterCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [aboutData, setAboutData] = useState(null);
   const { register, handleSubmit, reset } = useForm();
 
-  const userDetails = useSelector((state) => state.user?.userDetails);
   const user = userDetails?.profileDetails;
 
   const handleAboutForm = async (data) => {
@@ -29,7 +26,7 @@ const UserAbout = () => {
         }
       );
       if (postUserAboutData.data?.user_details) {
-        dispatch(updateUserDetails(postUserAboutData.data.user_details));
+        setUser(postUserAboutData.data.user_details);
       }
       toast.success(postUserAboutData.data?.message || "About section updated!");
       setTimeout(() => {

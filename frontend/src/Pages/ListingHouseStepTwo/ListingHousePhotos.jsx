@@ -1,9 +1,9 @@
-import { useSelector } from "react-redux";
+import { useListingFlow } from "../../context/ListingFlowContext";
 import PhotosCard from "../../components/listingHouse/PhotosCard";
 
 const ListingHousePhotos = () => {
-  const newHouseData = useSelector((state) => state.house.newHouse);
-  const houseType = newHouseData?.houseType || "stay";
+  const { newHouse } = useListingFlow();
+  const houseType = newHouse?.houseType || "stay";
 
   return (
     <div className="flex flex-col gap-8 max-w-screen-md mx-auto my-6 min-h-[70vh]">

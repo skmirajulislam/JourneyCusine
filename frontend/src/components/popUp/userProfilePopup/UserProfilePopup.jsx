@@ -6,11 +6,10 @@ import { PulseLoader } from "react-spinners";
 import closeIcon from "../../../assets/basicIcon/closeIcon.svg";
 import api from "../../../backend";
 
-import { useDispatch } from "react-redux";
-import { updateUserDetails } from "../../../redux/actions/userActions";
+import { useAuth } from "../../../hooks/useAuth";
 
 const UserProfilePopup = ({ showPopup, setShowPopup, popupData }) => {
-  const dispatch = useDispatch();
+  const { setUser } = useAuth();
   const [characterCount, setCharacterCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const { handleSubmit, register, watch } = useForm();
@@ -32,7 +31,7 @@ const UserProfilePopup = ({ showPopup, setShowPopup, popupData }) => {
         { headers: { "Content-Type": "application/json" } }
       );
       if (responseOfPostingProfileData.data?.user_details) {
-        dispatch(updateUserDetails(responseOfPostingProfileData.data.user_details));
+        setUser(responseOfPostingProfileData.data.user_details);
       }
       toast.success(responseOfPostingProfileData.data?.message || "Profile updated!");
       setTimeout(() => {

@@ -1,11 +1,10 @@
 /* eslint-disable react/prop-types */
-import { useSelector } from "react-redux";
+import { useAuth } from "../../hooks/useAuth";
 import { profileOptions } from "./userProfileApi";
 
 const UserProfileOptions = ({ setShowPopup, setSelectedOption }) => {
-  const userProfile = useSelector(
-    (state) => state.user?.userDetails?.profileDetails?.profile
-  );
+  const { user } = useAuth();
+  const userProfile = user?.profileDetails?.profile;
 
   return (
     <>

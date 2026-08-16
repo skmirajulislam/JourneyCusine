@@ -1,23 +1,15 @@
-import { useDispatch, useSelector } from "react-redux";
 import PropTypes from "prop-types";
 import AllReservations from "./AllReservations";
 import CancelledReservations from "./CancelledReservations";
 import CompletedReservations from "./CompletedReservations";
 import UpcomingReservation from "./UpcomingReservation";
 import HostCouponsManager from "../coupons/HostCouponsManager";
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { removeDuplicates } from "../../../hooks/useRemoveDuplicates";
-import { getAuthorReservations } from "../../../redux/actions/reservationsActions";
+import { useHostData } from "../../../hooks/useHostData";
 
 const ReservationsData = ({ active }) => {
-  const authorReservations = useSelector(
-    (state) => state.reservations.authorReservations || []
-  );
-  const dispatch = useDispatch();
-
-  useEffect(() => {
-    dispatch(getAuthorReservations());
-  }, [dispatch]);
+  const { authorReservations = [], refetchReservations } = useHostData();
 
   const uniqueReservations = useMemo(() => {
     return removeDuplicates(authorReservations, "_id");
@@ -70,7 +62,7 @@ const ReservationsData = ({ active }) => {
   }, [uniqueReservations]);
 
   const handleRefresh = () => {
-    dispatch(getAuthorReservations());
+    refetchReservations();
   };
 
   return (

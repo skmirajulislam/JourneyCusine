@@ -3,13 +3,11 @@ import { useState } from "react";
 import { FiTrash2, FiAlertTriangle, FiX } from "react-icons/fi";
 import { PulseLoader } from "react-spinners";
 import { toast } from "react-hot-toast";
-import { useDispatch } from "react-redux";
+import { useQueryClient } from "@tanstack/react-query";
 import api from "../../../backend";
-import { getUser } from "../../../redux/actions/userActions";
 
 const DeleteListingModal = ({ listing, onClose }) => {
-  const dispatch = useDispatch();
-  const allListingsData = useSelector((state) => state.house.housesData) || [];
+  const queryClient = useQueryClient();
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = async () => {
@@ -19,11 +17,12 @@ const DeleteListingModal = ({ listing, onClose }) => {
       const res = await api.delete(`/house/delete_listing/${listing._id}`);
       if (res.data?.success === 1) {
         toast.success("Listing and associated records deleted permanently");
-        // Immediately remove from Redux state to guarantee instant UI update
-        const updatedListings = allListingsData.filter((item) => item._id !== listing._id);
-        dispatch({ type: "SAVE_HOUSE_DATA", payload: updatedListings });
-        // Force refresh from backend
-        await dispatch(getUser(true));
+        queryClient.setQueryData(["hostHouses"], (old) =>
+          (old || []).filter((item) => item._id !== listing._id)
+        );
+        queryClient.invalidateQueries({ queryKey: ["hostHouses"] });
+        queryClient.invalidateQueries({ queryKey: ["allListing"] });
+        queryClient.invalidateQueries({ queryKey: ["authUser"] });
         onClose();
       } else {
         toast.error(res.data?.message || "Failed to delete listing");

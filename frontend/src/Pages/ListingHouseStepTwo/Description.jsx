@@ -1,15 +1,12 @@
 import { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { createNewHouse } from "../../redux/actions/houseActions";
+import { useListingFlow } from "../../context/ListingFlowContext";
 
 const Description = () => {
-  const newHouseData = useSelector((state) => state.house.newHouse);
-  const currentListing = useSelector((state) => state.house.currentListingHouse);
-  const initialDesc = newHouseData?.description || currentListing?.description || "";
+  const { newHouse, currentListingHouse, setNewHouse } = useListingFlow();
+  const initialDesc = newHouse?.description || currentListingHouse?.description || "";
 
   const [description, setDescription] = useState(initialDesc);
   const [characterCount, setCharacterCount] = useState(initialDesc.length);
-  const dispatch = useDispatch();
 
   useEffect(() => {
     if (initialDesc && !description) {
@@ -18,27 +15,18 @@ const Description = () => {
     }
   }, [initialDesc, description]);
 
-  const updateReduxDesc = (newVal) => {
-    dispatch(
-      createNewHouse(
-        newHouseData?.houseType || currentListing?.houseType,
-        newHouseData?.privacyType || currentListing?.privacyType,
-        newHouseData?.location || currentListing?.location,
-        newHouseData?.floorPlan || currentListing?.floorPlan,
-        newHouseData?.amenities || currentListing?.amenities,
-        newHouseData?.photos || currentListing?.photos,
-        newHouseData?.title || currentListing?.title,
-        newHouseData?.highlights || currentListing?.highlight,
-        newVal
-      )
-    );
+  const updateDescriptionState = (newVal) => {
+    setNewHouse((prev) => ({
+      ...prev,
+      description: newVal,
+    }));
   };
 
   const handleInputChange = (e) => {
     const val = e.target.value;
     setDescription(val);
     setCharacterCount(val.length);
-    updateReduxDesc(val);
+    updateDescriptionState(val);
   };
 
   return (
@@ -57,7 +45,7 @@ const Description = () => {
           rows="8"
           value={description}
           onChange={handleInputChange}
-          onBlur={() => updateReduxDesc(description)}
+          onBlur={() => updateDescriptionState(description)}
           placeholder="Write your house and motel stay description here (minimum 10 characters)..."
           maxLength={1600}
         />

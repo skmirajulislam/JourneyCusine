@@ -1,17 +1,13 @@
 import { useEffect, useState } from "react";
 import FloorPlanCard from "../../components/listingHouse/FloorPlanCard";
-import { useDispatch, useSelector } from "react-redux";
-import { createNewHouse } from "../../redux/actions/houseActions";
+import { useListingFlow } from "../../context/ListingFlowContext";
 
 const ListingHouseStepOneFloorPlan = () => {
-  const newHouseData = useSelector((state) => state.house.newHouse);
-  const [guestNumber, setGuestNumber] = useState(0);
-  const [bedroomsNumber, setBedroomsNumber] = useState(0);
-  const [bedsNumber, setBedsNumber] = useState(1);
-  const [bathroomsNumber, setBathroomsNumber] = useState(0);
-  const dispatch = useDispatch();
-
-  console.log(newHouseData);
+  const { newHouse, setNewHouse } = useListingFlow();
+  const [guestNumber, setGuestNumber] = useState(newHouse?.floorPlan?.guests || 1);
+  const [bedroomsNumber, setBedroomsNumber] = useState(newHouse?.floorPlan?.bedrooms || 1);
+  const [bedsNumber, setBedsNumber] = useState(newHouse?.floorPlan?.beds || 1);
+  const [bathroomsNumber, setBathroomsNumber] = useState(newHouse?.floorPlan?.bathroomsNumber || 1);
 
   useEffect(() => {
     let floorPlan = {
@@ -20,31 +16,12 @@ const ListingHouseStepOneFloorPlan = () => {
       beds: bedsNumber,
       bathroomsNumber: bathroomsNumber,
     };
-    if (
-      guestNumber !== 0 ||
-      bedroomsNumber !== 0 ||
-      bedsNumber !== 0 ||
-      bathroomsNumber !== 0
-    ) {
-      dispatch(
-        createNewHouse(
-          newHouseData?.houseType,
-          newHouseData?.privacyType,
-          newHouseData?.location,
-          floorPlan
-        )
-      );
-    }
-  }, [
-    bathroomsNumber,
-    bedroomsNumber,
-    bedsNumber,
-    dispatch,
-    guestNumber,
-    newHouseData?.houseType,
-    newHouseData?.location,
-    newHouseData?.privacyType,
-  ]);
+    setNewHouse((prev) => ({
+      ...prev,
+      floorPlan,
+    }));
+  }, [bathroomsNumber, bedroomsNumber, bedsNumber, guestNumber]);
+
   return (
     <section className="flex flex-col gap-10 max-w-screen-md mx-auto my-6 min-h-[70dvh] 2xl:h-[80vh]">
       <div className="flex flex-col gap-2">

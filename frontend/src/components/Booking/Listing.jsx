@@ -1,17 +1,16 @@
 /* eslint-disable react/prop-types */
 import { useState } from "react";
-import { useSelector } from "react-redux";
 import { AiFillStar } from "react-icons/ai";
 import { FiTag, FiCheckCircle, FiX, FiAlertCircle } from "react-icons/fi";
 import { PulseLoader } from "react-spinners";
 import { toast } from "react-hot-toast";
 import api from "../../backend";
 import { useCurrency } from "../../context/CurrencyContext";
+import { useListingDetails } from "../../hooks/useHostData";
 
-const Listing = ({ searchParamsObj, appliedCoupon, setAppliedCoupon }) => {
-  const listingData = useSelector(
-    (state) => state.house.listingDetails.listing
-  );
+const Listing = ({ searchParamsObj, appliedCoupon, setAppliedCoupon, listingDataProp }) => {
+  const { data: fetchedDetails } = useListingDetails(searchParamsObj?.listingId);
+  const listingData = listingDataProp || fetchedDetails?.listing;
   const { formatPrice, currency } = useCurrency();
 
   const [couponInput, setCouponInput] = useState("");

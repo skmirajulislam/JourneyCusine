@@ -143,9 +143,13 @@ const Footer = () => {
         <div className="flex flex-row flex-wrap items-center gap-1">
           <p>© {new Date().getFullYear()} Journey Cuisine, Inc.</p>
           <span className="px-2">·</span>
-          <p className="hover:underline cursor-pointer">Terms</p>
+          <Link to="/terms" className="hover:underline cursor-pointer text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white transition-colors">
+            Terms
+          </Link>
           <span className="px-2">·</span>
-          <p className="hover:underline cursor-pointer">Privacy</p>
+          <Link to="/privacy" className="hover:underline cursor-pointer text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white transition-colors">
+            Privacy
+          </Link>
         </div>
         <div className="flex flex-row gap-3 items-center">
           <p>English (US)</p>

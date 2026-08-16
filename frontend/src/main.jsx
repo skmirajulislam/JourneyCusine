@@ -3,24 +3,31 @@ import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
 import "./index.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Provider } from "react-redux";
-import store from "./redux/store.js";
 
 import { ThemeProvider } from "./context/ThemeContext.jsx";
 import { CurrencyProvider } from "./context/CurrencyContext.jsx";
+import { ListingFlowProvider } from "./context/ListingFlowContext.jsx";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      staleTime: 5 * 60 * 1000,
+      retry: 1,
+    },
+  },
+});
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <Provider store={store}>
-      <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
+      <ListingFlowProvider>
         <ThemeProvider>
           <CurrencyProvider>
             <App />
           </CurrencyProvider>
         </ThemeProvider>
-      </QueryClientProvider>
-    </Provider>
+      </ListingFlowProvider>
+    </QueryClientProvider>
   </React.StrictMode>
 );

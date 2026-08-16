@@ -1,14 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import logo from "../../assets/motelLogoBlack.png";
-import { useDispatch, useSelector } from "react-redux";
-import { getUser } from "../../redux/actions/userActions";
+import { useAuth } from "../../hooks/useAuth";
 
 const ListingNavbar = () => {
-  const user = useSelector((state) => state.user.userDetails);
+  const { user } = useAuth();
   const [isSticky, setIsSticky] = useState(false);
-
-  const dispatch = useDispatch();
 
   const handleSticky = () => {
     if (window.scrollY > 0) {
@@ -19,12 +16,7 @@ const ListingNavbar = () => {
   };
 
   useEffect(() => {
-    dispatch(getUser());
-  }, [dispatch]);
-
-  useEffect(() => {
     window.addEventListener("scroll", handleSticky);
-
     return () => {
       window.removeEventListener("scroll", handleSticky);
     };

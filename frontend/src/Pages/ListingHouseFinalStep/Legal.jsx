@@ -1,62 +1,33 @@
 import { AiOutlineQuestionCircle } from "react-icons/ai";
 import ModalPopup from "../../components/popUp/houseListing/ModalPopup";
 import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { createNewHouse } from "../../redux/actions/houseActions";
+import { useListingFlow } from "../../context/ListingFlowContext";
 
 const Legal = () => {
-  const newHouseData = useSelector((state) => state.house.newHouse);
-  const [labelValue, setLabelValue] = useState([]);
-  const dispatch = useDispatch();
+  const { newHouse, currentListingHouse, setNewHouse } = useListingFlow();
+  const initialSecurity = newHouse?.security || currentListingHouse?.security || [];
+  const [labelValue, setLabelValue] = useState(
+    Array.isArray(initialSecurity) ? initialSecurity : []
+  );
 
   const handleCheckboxChange = (event) => {
     const label = event.target.parentElement.querySelector("label");
     const labelText = label.textContent;
 
     if (event.target.checked) {
-      // Checkbox is checked, add the label to the selectedLabels array
       setLabelValue([...labelValue, labelText]);
     } else {
-      // Checkbox is unchecked, remove the label from the selectedLabels array
       setLabelValue(labelValue.filter((item) => item !== labelText));
     }
   };
+
   useEffect(() => {
-    dispatch(
-      createNewHouse(
-        newHouseData?.houseType,
-        newHouseData?.privacyType,
-        newHouseData?.location,
-        newHouseData?.floorPlan,
-        newHouseData?.amenities,
-        newHouseData?.photos,
-        newHouseData?.title,
-        newHouseData?.highlights,
-        newHouseData?.description,
-        newHouseData?.guestType,
-        newHouseData?.priceBeforeTaxes,
-        newHouseData?.authorEarnedPrice,
-        newHouseData?.basePrice,
-        labelValue
-      )
-    );
-  }, [
-    dispatch,
-    labelValue,
-    newHouseData?.amenities,
-    newHouseData?.authorEarnedPrice,
-    newHouseData?.basePrice,
-    newHouseData?.description,
-    newHouseData?.floorPlan,
-    newHouseData?.guestType,
-    newHouseData?.highlights,
-    newHouseData?.houseType,
-    newHouseData?.location,
-    newHouseData?.photos,
-    newHouseData?.priceBeforeTaxes,
-    newHouseData?.privacyType,
-    newHouseData?.title,
-  ]);
+    setNewHouse((prev) => ({
+      ...prev,
+      security: labelValue,
+    }));
+  }, [labelValue]);
+
   return (
     <>
       <div className="flex flex-col max-w-screen-sm mx-auto my-6 min-h-[70vh]">
@@ -70,7 +41,7 @@ const Legal = () => {
             </p>
             <div
               className="cursor-pointer p-1 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-full transition duration-300 text-neutral-600 dark:text-neutral-300"
-              onClick={() => window.my_modal_5.showModal()}
+              onClick={() => window.my_modal_5?.showModal?.()}
             >
               <AiOutlineQuestionCircle size={20} />
             </div>
@@ -84,6 +55,7 @@ const Legal = () => {
             <input
               type="checkbox"
               id="checkbox1"
+              checked={labelValue.includes("Security camera(s)")}
               className="cursor-pointer w-6 h-6 rounded-md accent-[#ff385c]"
               onChange={handleCheckboxChange}
             />
@@ -95,6 +67,7 @@ const Legal = () => {
             <input
               type="checkbox"
               id="checkbox2"
+              checked={labelValue.includes("Weapons")}
               className="cursor-pointer w-6 h-6 rounded-md accent-[#ff385c]"
               onChange={handleCheckboxChange}
             />
@@ -106,6 +79,7 @@ const Legal = () => {
             <input
               type="checkbox"
               id="checkbox3"
+              checked={labelValue.includes("Dangerous animals")}
               className="cursor-pointer w-6 h-6 rounded-md accent-[#ff385c]"
               onChange={handleCheckboxChange}
             />

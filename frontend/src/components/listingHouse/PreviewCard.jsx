@@ -1,16 +1,14 @@
-import { useSelector } from "react-redux";
+import { useListingFlow } from "../../context/ListingFlowContext";
 import { AiFillStar } from "react-icons/ai";
 
 const PreviewCard = () => {
-  const currentHouseData = useSelector(
-    (state) => state.house.currentListingHouse
-  );
+  const { currentListingHouse: currentHouseData } = useListingFlow();
 
   return (
     <>
       <div
         className="flex flex-col gap-3 rounded-3xl shadow-xl bg-white dark:bg-[#1e1e1e] border border-neutral-200 dark:border-neutral-800 max-w-sm p-4 cursor-pointer mx-auto transition-all hover:scale-[1.02] duration-200"
-        onClick={() => window.my_modal_4.showModal()}
+        onClick={() => window.my_modal_4?.showModal?.()}
       >
         <div className="relative">
           {currentHouseData?.photos?.[0] ? (

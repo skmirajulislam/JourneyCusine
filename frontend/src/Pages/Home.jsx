@@ -8,7 +8,7 @@ import axios from "axios";
 import HomePageSkeleton from "../components/skeletonLoading/HomePageSkeleton";
 import ListingPreviewCard from "../components/Home/ListingPreviewCard";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useAuth } from "../hooks/useAuth";
 import { useGetSubCatListing } from "../hooks/useGetSubCatListing";
 import SkeletonLoadingCards from "../components/skeletonLoading/SkeletonLoadingCards";
 import { FadeLoader } from "react-spinners";
@@ -47,7 +47,7 @@ const itemVariants = {
 };
 
 const Home = () => {
-  const user = useSelector((state) => state.user.userDetails);
+  const { user } = useAuth();
   const [hasScroll, setHasScroll] = useState(false);
   const [showBeforeTaxPrice, setShowBeforeTaxPrice] = useState(false);
   const [showFilterPopup, setShowFilterPopup] = useState(false);
@@ -76,9 +76,11 @@ const Home = () => {
   const allListingData = useQuery({
     queryKey: ["allListing"],
     queryFn: async () => {
-      const res = await axios.get(`${API}house/get_all_listing`);
-      return res.data.allListingData || [];
+      const res = await api.get("/house/get_all_listing");
+      return res.data?.allListingData || [];
     },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
   });
 
   const handleScrollTracking = () => {

@@ -9,20 +9,16 @@ import {
   FiCheckCircle,
   FiAlertOctagon,
 } from "react-icons/fi";
-import { useDispatch, useSelector } from "react-redux";
-import { PropagateLoader, PulseLoader } from "react-spinners";
-import { createNewHouse } from "../../redux/actions/houseActions";
+import { PropagateLoader } from "react-spinners";
+import { useListingFlow } from "../../context/ListingFlowContext";
 import { uploadFiles } from "../../utils/uploadthing";
 import api from "../../backend";
 
 const PhotosCard = () => {
-  const newHouseData = useSelector((state) => state.house.newHouse);
-  const currentListingHouse = useSelector(
-    (state) => state.house.currentListingHouse
-  );
+  const { newHouse, currentListingHouse, setNewHouse } = useListingFlow();
 
   const initialPhotos =
-    newHouseData?.photos || currentListingHouse?.photos || [];
+    newHouse?.photos || currentListingHouse?.photos || [];
 
   const [images, setImages] = useState(
     Array.isArray(initialPhotos) ? initialPhotos : []
@@ -30,24 +26,14 @@ const PhotosCard = () => {
   const [isImgUploading, setIsImgUploading] = useState(false);
   const [uploadStatusMsg, setUploadStatusMsg] = useState("");
   const [violationModal, setViolationModal] = useState(null);
-  const dispatch = useDispatch();
 
-  // Sync images with Redux store whenever images array changes
+  // Sync images with ListingFlow context whenever images array changes
   useEffect(() => {
-    dispatch(
-      createNewHouse(
-        newHouseData?.houseType || currentListingHouse?.houseType,
-        newHouseData?.privacyType || currentListingHouse?.privacyType,
-        newHouseData?.location || currentListingHouse?.location,
-        newHouseData?.floorPlan || currentListingHouse?.floorPlan,
-        newHouseData?.amenities || currentListingHouse?.amenities,
-        images,
-        newHouseData?.title || currentListingHouse?.title,
-        newHouseData?.highlights || currentListingHouse?.highlight,
-        newHouseData?.description || currentListingHouse?.description
-      )
-    );
-  }, [images, dispatch]);
+    setNewHouse((prev) => ({
+      ...prev,
+      photos: images,
+    }));
+  }, [images]);
 
   const convertFileToBase64 = (file) => {
     return new Promise((resolve, reject) => {

@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
-import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { PulseLoader } from "react-spinners";
 import cameraIcon from "../../assets/basicIcon/cameraIcon.png";
@@ -9,14 +8,13 @@ import UserProfilePopup from "../../components/popUp/userProfilePopup/UserProfil
 import UserAbout from "../../components/userProfile/UserAbout";
 import UserProfileOptions from "../../components/userProfile/UserProfileOptions";
 import { uploadFiles } from "../../utils/uploadthing";
-import { updateUserDetails } from "../../redux/actions/userActions";
+import { useAuth } from "../../hooks/useAuth";
 import { useCurrency } from "../../context/CurrencyContext";
 import { FiGlobe, FiDollarSign } from "react-icons/fi";
 
 const EditProfile = () => {
-  const user = useSelector((state) => state.user?.userDetails);
+  const { user, setUser } = useAuth();
   const { countriesList, supportedCurrencies, setCountry: setGlobalCountry, setCurrency: setGlobalCurrency, currency: currentGlobalCurrency, symbol } = useCurrency();
-  const dispatch = useDispatch();
   const [showPopup, setShowPopup] = useState(false);
   const [selectedOption, setSelectedOption] = useState(null);
   const [isImageLoading, setIsImgUploading] = useState(false);
@@ -110,9 +108,9 @@ const EditProfile = () => {
           });
 
           if (response.data?.user_details) {
-            dispatch(updateUserDetails(response.data.user_details));
+            setUser(response.data.user_details);
           } else if (response.data?.profileImg) {
-            dispatch(updateUserDetails({ ...user, profileImg: response.data.profileImg }));
+            setUser({ ...user, profileImg: response.data.profileImg });
           }
           toast.success("Profile image updated successfully!");
           setProfileImageLink(null);
@@ -125,7 +123,7 @@ const EditProfile = () => {
       }
     }
     uploadImg();
-  }, [profileImageLink, user, dispatch]);
+  }, [profileImageLink, user, setUser]);
 
   const handleSaveName = async (e) => {
     e.preventDefault();
@@ -142,7 +140,7 @@ const EditProfile = () => {
       });
 
       if (res.data?.success === 1) {
-        dispatch(updateUserDetails(res.data.user_details));
+        setUser(res.data.user_details);
         toast.success("Legal name updated successfully!");
         setShowNameModal(false);
       } else {
@@ -174,7 +172,7 @@ const EditProfile = () => {
       });
 
       if (res.data?.success === 1) {
-        dispatch(updateUserDetails(res.data.user_details));
+        setUser(res.data.user_details);
         setGlobalCountry(selectedCountry);
         setGlobalCurrency(selectedCurrency);
         toast.success(`Country & Currency updated to ${selectedCountry} (${selectedCurrency})!`);

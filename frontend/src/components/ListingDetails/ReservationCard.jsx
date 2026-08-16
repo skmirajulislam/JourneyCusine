@@ -1,20 +1,19 @@
-import { useEffect, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { AiFillStar, AiOutlineMinus, AiOutlinePlus } from "react-icons/ai";
 import { DateRange } from "react-date-range";
 import { useOutsideClick } from "../../hooks/useOutsideClick";
 import { MdKeyboardArrowDown, MdKeyboardArrowUp } from "react-icons/md";
-
-// date range selector css
-import "react-date-range/dist/styles.css"; // main css file
-import "react-date-range/dist/theme/default.css";
 import { toast } from "react-hot-toast";
-import { useDispatch, useSelector } from "react-redux";
-import { newReservation } from "../../redux/actions/reservationsActions";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import { API } from "../../backend";
+import { useQuery } from "@tanstack/react-query";
+import api from "../../backend";
 import { parseISO } from "date-fns";
 import { useCurrency } from "../../context/CurrencyContext";
+import { useAuth } from "../../hooks/useAuth";
+
+// date range selector css
+import "react-date-range/dist/styles.css";
+import "react-date-range/dist/theme/default.css";
 
 /* eslint-disable react/prop-types */
 const ReservationCard = ({ listingData }) => {
@@ -22,9 +21,9 @@ const ReservationCard = ({ listingData }) => {
   const calendarRef = useRef();
   const dropdownRef = useRef();
 
-  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const user = useSelector((state) => state.user.userDetails);
+  const { user } = useAuth();
+  const { formatPrice } = useCurrency();
 
   // handling outside click
   const { state: calendarState, setState: setCalendarState } =
@@ -32,23 +31,12 @@ const ReservationCard = ({ listingData }) => {
   const { state: showDropdown, setState: setShowDropdown } =
     useOutsideClick(dropdownRef);
 
-  // guests state is here
+  // guests state
   const [guestsNumber, setGuestsNumber] = useState(1);
   const [childrenNumber, setChildrenNumber] = useState(0);
-  const [totalGuest, setTotalGuest] = useState(guestsNumber + childrenNumber);
-  const [reservations, setReservations] = useState([]);
-  // pricing state
-  const [reservationBasePrice, setReservationBasePrice] = useState(
-    listingData?.basePrice
-  );
-  const [tax, setTax] = useState(
-    listingData?.priceAfterTaxes - listingData?.basePrice
-  );
-  const [authorEarned, setAuthorEarned] = useState(
-    listingData?.authorEarnedPrice
-  );
+  const totalGuest = guestsNumber + childrenNumber;
 
-  // dates saving and showing to the dateRange calendar calculation here
+  // dates selection state
   const [selectedDates, setSelectedDates] = useState([
     {
       startDate: new Date(),
@@ -57,146 +45,97 @@ const ReservationCard = ({ listingData }) => {
     },
   ]);
 
-  // calculating how many nights guest is staying
-  const [nightsStaying, setNightStaying] = useState(1);
+  // Query saved reservations dates with caching
+  const { data: reservations = [] } = useQuery({
+    queryKey: ["listingReservations", listingData?._id],
+    queryFn: async () => {
+      if (!listingData?._id) return [];
+      const res = await api.post("/reservations/get_reservations", {
+        id: listingData._id,
+      });
+      return Array.isArray(res.data) ? res.data : [];
+    },
+    enabled: Boolean(listingData?._id),
+    staleTime: 5 * 60 * 1000,
+  });
 
-  console.log(nightsStaying, typeof nightsStaying, "nights");
+  // Calculate nights and prices as derived state
+  const nightsStaying = useMemo(() => {
+    const start = selectedDates[0]?.startDate;
+    const end = selectedDates[0]?.endDate;
+    if (!start || !end) return 1;
+    const diffTime = Math.abs(end - start);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays === 0 ? 1 : diffDays;
+  }, [selectedDates]);
 
-  // formatted dates to save in the db
+  const reservationBasePrice = useMemo(() => {
+    const base = Number(listingData?.basePrice) || 50;
+    return base * nightsStaying;
+  }, [listingData?.basePrice, nightsStaying]);
+
+  // formatted dates
   const formattedStartDate = selectedDates[0]?.startDate?.toISOString();
   const formattedEndDate = selectedDates[0]?.endDate?.toISOString();
+  const localStartDate = selectedDates[0]?.startDate
+    ? new Date(selectedDates[0].startDate).toLocaleDateString()
+    : "";
+  const localEndDate = selectedDates[0]?.endDate
+    ? new Date(selectedDates[0].endDate).toLocaleDateString()
+    : "";
 
-  // local dates from fromatted date to show in the ui
-  const localStartDate = new Date(formattedStartDate).toLocaleDateString();
-  const localEndDate = new Date(formattedEndDate).toLocaleDateString();
-
-  console.log(
-    new Date(formattedStartDate).toLocaleDateString(),
-    localStartDate,
-    localEndDate,
-    "dates"
-  );
-  // Function to handle date selection
   const handleSelect = (ranges) => {
     setSelectedDates([ranges.selection]);
   };
 
-  // booking function
-  const orderNumber = localStorage.getItem("orderId");
-  const orderId = orderNumber ? orderNumber : 1;
-  console.log(orderId);
+  // booking action
   const handleBooking = () => {
     if (!user) {
       toast.error("Please log in or sign up to reserve a motel!");
       window.dispatchEvent(new Event("open-auth-popup"));
       return;
     }
+    const orderNumber = localStorage.getItem("orderId");
+    const orderId = orderNumber ? orderNumber : 1;
+
     navigate(
       `/book/stays/${listingData._id}?numberOfGuests=${totalGuest}&nightStaying=${nightsStaying}&checkin=${formattedStartDate}&checkout=${formattedEndDate}&orderId=${orderId}`
     );
   };
 
-  // getting saved reservations data
-  useEffect(() => {
-    (async () => {
-      const res = await axios.post(`${API}reservations/get_reservations`, {
-        id: listingData?._id,
-      });
+  // Calculate disabled date ranges
+  const disabledDates = useMemo(() => {
+    if (!Array.isArray(reservations) || reservations.length === 0) return [];
 
-      if (res.status === 200) {
-        setReservations(res.data);
+    const disabledDateRanges = reservations.map((obj) => ({
+      startDate: parseISO(obj.checkIn),
+      endDate: parseISO(obj.checkOut),
+    }));
+
+    return disabledDateRanges.reduce((dates, range) => {
+      const startDate = new Date(range.startDate);
+      const endDate = new Date(range.endDate);
+      const currentDate = new Date(startDate);
+
+      while (currentDate <= endDate) {
+        dates.push(new Date(currentDate));
+        currentDate.setDate(currentDate.getDate() + 1);
       }
-      console.log(res, "reservation data");
-    })();
-  }, [listingData?._id]);
-
-  // calculation of price for reservations
-  // side effects and logic
-  useEffect(() => {
-    const daysInMiliSec = Math.ceil(
-      selectedDates[0]?.endDate - selectedDates[0]?.startDate
-    );
-    // turning miliseconds into days
-    const calculatedNights = daysInMiliSec / (1000 * 60 * 60 * 24);
-    const finalNights = calculatedNights === 0 ? 1 : calculatedNights;
-    const calculatedBasePrice = listingData?.basePrice * finalNights;
-    // tax is 14%
-    const calculatingTaxes = Math.round((calculatedBasePrice * 14) / 100);
-    // motel service charge is 3%
-    const calculateAuthorEarned =
-      calculatedBasePrice - Math.round((calculatedBasePrice * 3) / 100);
-
-    // setting states
-    setReservationBasePrice(calculatedBasePrice);
-    setTax(calculatingTaxes);
-    setAuthorEarned(calculateAuthorEarned);
-    setNightStaying(calculatedNights);
-  }, [selectedDates, listingData?.basePrice]);
-
-  useEffect(() => {
-    setTotalGuest(guestsNumber + childrenNumber);
-  }, [guestsNumber, childrenNumber]);
-
-  // reservation data
-  useEffect(() => {
-    const data = {
-      listingData,
-      formattedStartDate,
-      formattedEndDate,
-      nightsStaying,
-      totalGuest,
-      reservationBasePrice,
-      tax,
-      authorEarned,
-    };
-    dispatch(newReservation(data));
-  }, [
-    dispatch,
-    listingData,
-    formattedStartDate,
-    formattedEndDate,
-    nightsStaying,
-    totalGuest,
-    reservationBasePrice,
-    tax,
-    authorEarned,
-  ]);
-
-  // Calculate the disabled date ranges for each object
-  const disabledDateRanges = reservations?.map((obj) => ({
-    startDate: parseISO(obj.checkIn),
-    endDate: parseISO(obj.checkOut),
-  }));
-
-  console.log(disabledDateRanges);
-
-  // Generate an array of individual dates within disabledDateRanges
-  const disabledDates = disabledDateRanges.reduce((dates, range) => {
-    const startDate = new Date(range.startDate);
-    const endDate = new Date(range.endDate);
-    const currentDate = new Date(startDate);
-
-    while (currentDate <= endDate) {
-      dates.push(new Date(currentDate));
-      currentDate.setDate(currentDate.getDate() + 1);
-    }
-
-    return dates;
-  }, []);
-
-  const { formatPrice } = useCurrency();
+      return dates;
+    }, []);
+  }, [reservations]);
 
   return (
     <>
-      <div className=" w-full min-h-[315px] rounded-xl border border-[#dddddd] dark:border-[#444444] sticky top-32 shadow-customShadow p-6 bg-white dark:bg-[#1e1e1e]">
-        <div className=" flex felx-row justify-between items-start">
-          <div className=" flex flex-col">
-            <h3 className=" text-[22px] text-[#222222] dark:text-white font-semibold">
+      <div className="w-full min-h-[315px] rounded-xl border border-[#dddddd] dark:border-[#444444] sticky top-32 shadow-customShadow p-6 bg-white dark:bg-[#1e1e1e]">
+        <div className="flex flex-row justify-between items-start">
+          <div className="flex flex-col">
+            <h3 className="text-[22px] text-[#222222] dark:text-white font-semibold">
               {formatPrice(reservationBasePrice)}
             </h3>
-            <p className=" text-[#313131] dark:text-[#a0a0a0] text-sm">Total before taxes</p>
+            <p className="text-[#313131] dark:text-[#a0a0a0] text-sm">Total before taxes</p>
           </div>
-          <span className=" text-sm text-[#222222] dark:text-[#e5e7eb] flex flex-row gap-1 items-center mt-2">
+          <span className="text-sm text-[#222222] dark:text-[#e5e7eb] flex flex-row gap-1 items-center mt-2">
             <AiFillStar size={18} />
             {listingData?.ratings ? listingData?.ratings : "New"}
             {listingData?.reviews && (
@@ -207,29 +146,28 @@ const ReservationCard = ({ listingData }) => {
             )}
           </span>
         </div>
-        {/* calender section */}
 
+        {/* calender section */}
         {!calendarState && (
-          <div className=" rounded-tl-lg rounded-tr-lg border border-[#b9b9b9] dark:border-[#555555] w-full min-h-[60px] mt-6 relative flex flex-col">
-            {/* dates & calendar & guests here */}
+          <div className="rounded-tl-lg rounded-tr-lg border border-[#b9b9b9] dark:border-[#555555] w-full min-h-[60px] mt-6 relative flex flex-col">
             <div>
               <div
                 onClick={() => {
                   setCalendarState(true);
                 }}
-                className=" grid grid-cols-2 cursor-pointer"
+                className="grid grid-cols-2 cursor-pointer"
               >
                 <div className="px-3 py-3">
-                  <p className=" text-[10px] text-black dark:text-white font-semibold uppercase">
+                  <p className="text-[10px] text-black dark:text-white font-semibold uppercase">
                     check-in
                   </p>
-                  <p className=" text-sm text-[#222222] dark:text-[#e5e7eb]">{localStartDate}</p>
+                  <p className="text-sm text-[#222222] dark:text-[#e5e7eb]">{localStartDate}</p>
                 </div>
                 <div className="px-3 py-3 border-l border-[#b9b9b9] dark:border-[#555555]">
-                  <p className=" text-[10px] text-black dark:text-white font-semibold uppercase">
+                  <p className="text-[10px] text-black dark:text-white font-semibold uppercase">
                     checkout
                   </p>
-                  <p className=" text-sm text-[#222222] dark:text-[#e5e7eb]">{localEndDate}</p>
+                  <p className="text-sm text-[#222222] dark:text-[#e5e7eb]">{localEndDate}</p>
                 </div>
               </div>
             </div>
@@ -237,7 +175,6 @@ const ReservationCard = ({ listingData }) => {
         )}
 
         {/* guest selection */}
-
         {!calendarState && (
           <div
             ref={dropdownRef}
@@ -245,14 +182,13 @@ const ReservationCard = ({ listingData }) => {
               setShowDropdown((prev) => !prev);
             }}
           >
-            <div className=" rounded-bl-lg rounded-br-lg border border-[#b9b9b9] dark:border-[#555555] w-full min-h-[50px] cursor-pointer relative">
-              {/* guests data */}
+            <div className="rounded-bl-lg rounded-br-lg border border-[#b9b9b9] dark:border-[#555555] w-full min-h-[50px] cursor-pointer relative">
               <div className="px-3 py-3 flex flex-row items-center justify-between">
-                <div className=" flex flex-col">
-                  <p className=" text-[10px] text-black dark:text-white font-semibold uppercase">
+                <div className="flex flex-col">
+                  <p className="text-[10px] text-black dark:text-white font-semibold uppercase">
                     guests
                   </p>
-                  <p className=" text-sm text-[#222222] dark:text-[#e5e7eb]">
+                  <p className="text-sm text-[#222222] dark:text-[#e5e7eb]">
                     {totalGuest} {totalGuest === 1 ? "guest" : "guests"}
                   </p>
                 </div>
@@ -267,115 +203,93 @@ const ReservationCard = ({ listingData }) => {
             </div>
           </div>
         )}
+
         {/* guests data dropdown */}
         {showDropdown && (
           <div
             ref={dropdownRef}
             className="min-h-[200px] w-72 shadow-lg border dark:border-[#444444] absolute z-[90] bg-white dark:bg-[#2a2a2a] px-4 py-5 rounded-md"
           >
-            <div className=" flex flex-col gap-5">
-              <div className=" flex felx-row items-center justify-between">
-                {/* adults number here */}
-                <span>
-                  <p className=" text-base text-[#222222] dark:text-white font-medium">
-                    Adults
-                  </p>
-                  <p className=" text-sm text-[#313131] dark:text-[#a0a0a0]">Age 13+</p>
-                </span>
-                {/* icons */}
-                <span className=" flex flex-row-reverse items-center gap-2">
+            <div className="flex flex-col gap-5">
+              <div className="flex flex-row items-center justify-between">
+                <div>
+                  <h4 className="text-base text-[#222222] dark:text-white font-medium">Adults</h4>
+                  <p className="text-xs text-[#717171] dark:text-[#a0a0a0]">Age 13+</p>
+                </div>
+                <div className="flex flex-row gap-3 items-center">
                   <button
-                    onClick={() => {
-                      setGuestsNumber((prev) => prev + 1);
-                    }}
-                    disabled={listingData?.floorPlan?.guests === totalGuest}
-                    className={` p-2 rounded-full border border-[#c0c0c0] dark:border-[#777777] opacity-90 disabled:cursor-not-allowed disabled:opacity-20 dark:text-white`}
-                  >
-                    <AiOutlinePlus size={16} />
-                  </button>
-                  <p className=" w-[30px] flex justify-center dark:text-white">
-                    {guestsNumber}
-                  </p>
-
-                  <button
-                    onClick={() => {
-                      setGuestsNumber((prev) => prev - 1);
-                    }}
                     disabled={guestsNumber === 1}
-                    className=" p-2 rounded-full border border-[#c0c0c0] dark:border-[#777777] disabled:cursor-not-allowed disabled:opacity-20 dark:text-white"
+                    onClick={() => setGuestsNumber((prev) => prev - 1)}
+                    className="p-2 border rounded-full border-[#b0b0b0] dark:border-[#666666] disabled:opacity-30 disabled:cursor-not-allowed"
                   >
-                    <AiOutlineMinus size={16} />
+                    <AiOutlineMinus size={14} className="dark:text-white" />
                   </button>
-                </span>
-              </div>
-              <div className=" flex felx-row items-center justify-between">
-                {/* children number here */}
-                <span>
-                  <p className=" text-base text-[#222222] dark:text-white font-medium">
-                    Children
-                  </p>
-                  <p className=" text-sm text-[#313131] dark:text-[#a0a0a0]">Ages 2-12</p>
-                </span>
-                {/* icons */}
-                <span className=" flex flex-row-reverse items-center gap-2">
+                  <span className="text-sm dark:text-white">{guestsNumber}</span>
                   <button
-                    onClick={() => {
-                      setChildrenNumber((prev) => prev + 1);
-                    }}
-                    disabled={listingData?.floorPlan?.guests === totalGuest}
-                    className=" p-2 rounded-full border border-[#c0c0c0] opacity-90 disabled:cursor-not-allowed disabled:opacity-20"
+                    disabled={guestsNumber === 10}
+                    onClick={() => setGuestsNumber((prev) => prev + 1)}
+                    className="p-2 border rounded-full border-[#b0b0b0] dark:border-[#666666] disabled:opacity-30 disabled:cursor-not-allowed"
                   >
-                    <AiOutlinePlus size={16} />
+                    <AiOutlinePlus size={14} className="dark:text-white" />
                   </button>
-                  <p className=" w-[30px] flex justify-center">
-                    {childrenNumber}
-                  </p>
+                </div>
+              </div>
 
+              <div className="flex flex-row items-center justify-between">
+                <div>
+                  <h4 className="text-base text-[#222222] dark:text-white font-medium">Children</h4>
+                  <p className="text-xs text-[#717171] dark:text-[#a0a0a0]">Ages 2–12</p>
+                </div>
+                <div className="flex flex-row gap-3 items-center">
                   <button
-                    onClick={() => {
-                      setChildrenNumber((prev) => prev - 1);
-                    }}
                     disabled={childrenNumber === 0}
-                    className=" p-2 rounded-full border border-[#c0c0c0] disabled:cursor-not-allowed disabled:opacity-20"
+                    onClick={() => setChildrenNumber((prev) => prev - 1)}
+                    className="p-2 border rounded-full border-[#b0b0b0] dark:border-[#666666] disabled:opacity-30 disabled:cursor-not-allowed"
                   >
-                    <AiOutlineMinus size={16} />
+                    <AiOutlineMinus size={14} className="dark:text-white" />
                   </button>
-                </span>
+                  <span className="text-sm dark:text-white">{childrenNumber}</span>
+                  <button
+                    disabled={childrenNumber === 5}
+                    onClick={() => setChildrenNumber((prev) => prev + 1)}
+                    className="p-2 border rounded-full border-[#b0b0b0] dark:border-[#666666] disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    <AiOutlinePlus size={14} className="dark:text-white" />
+                  </button>
+                </div>
               </div>
-            </div>
-            {/* close btn */}
-            <div className=" flex justify-end absolute bottom-3 right-2">
-              <button
-                onClick={() => {
-                  setShowDropdown(false);
-                }}
-                className="underline text-base text-[#222222] dark:text-white font-medium px-3 py-2 rounded-lg hover:bg-[#f5f5f5] dark:hover:bg-[#333333]"
-              >
-                Close
-              </button>
+
+              <div className="flex justify-end pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowDropdown(false)}
+                  className="underline text-sm text-[#222222] dark:text-white font-semibold px-3 py-1.5 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         )}
 
         {/* reservation button */}
         {!showDropdown && !calendarState && (
-          <div className=" mt-6 flex justify-center rounded-md">
+          <div className="mt-6 flex justify-center rounded-md">
             <button
-              onClick={() => {
-                handleBooking();
-              }}
-              className="capitalize py-3 w-full bg-[#ff385c] hover:bg-[#d90b63] transition duration-200 ease-in text-white font-medium text-sm rounded-md"
+              type="button"
+              onClick={handleBooking}
+              className="capitalize py-3 w-full bg-[#ff385c] hover:bg-[#d90b63] transition duration-200 ease-in text-white font-medium text-sm rounded-md shadow-md cursor-pointer"
             >
-              reserve
+              Reserve
             </button>
           </div>
         )}
 
         {/* calendar & date picker */}
-        {!calendarState ? null : (
+        {calendarState && (
           <div
             ref={calendarRef}
-            className=" absolute border-b-[1.2px] border-neutral-200 dark:border-neutral-700 shadow-md left-[2px] sm:translate-x-[30%] sm:translate-y-[0%] md:translate-x-[-30%] lg:translate-x-[-20%] xl:translate-x-0 xl:translate-y-0 bg-white dark:bg-[#1e1e1e] rounded-lg overflow-hidden"
+            className="absolute border-b-[1.2px] border-neutral-200 dark:border-neutral-700 shadow-md left-[2px] sm:translate-x-[30%] sm:translate-y-[0%] md:translate-x-[-30%] lg:translate-x-[-20%] xl:translate-x-0 xl:translate-y-0 bg-white dark:bg-[#1e1e1e] rounded-lg overflow-hidden z-[100]"
           >
             <DateRange
               rangeColors={["#262626"]}
@@ -385,7 +299,6 @@ const ReservationCard = ({ listingData }) => {
               moveRangeOnFirstSelection={false}
               ranges={selectedDates}
               disabledDates={disabledDates}
-              // isDayBlocked={(date) => isDateDisabled(date)}
               direction="vertical"
               showDateDisplay={false}
               minDate={new Date()}

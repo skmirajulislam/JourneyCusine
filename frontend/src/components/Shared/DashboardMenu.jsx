@@ -1,4 +1,4 @@
-import { useSelector } from "react-redux";
+import { useAuth } from "../../hooks/useAuth";
 import { Link } from "react-router-dom";
 import { navItem } from "./NavItem";
 import { MdKeyboardArrowDown, MdKeyboardArrowUp } from "react-icons/md";
@@ -6,7 +6,7 @@ import { useRef } from "react";
 import { useOutsideClick } from "../../hooks/useOutsideClick";
 
 const DashboardMenu = () => {
-  const user = useSelector((state) => state.user.userDetails);
+  const { user } = useAuth();
   // const [showDashboardMenu, setShowDashboardMenu] = useState(false);
   const isSmallDevice = window.innerWidth < 768;
   const userDashboardMenu = useRef();

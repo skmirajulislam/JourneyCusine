@@ -1,17 +1,15 @@
 import { useEffect, useState } from "react";
-
 import { MdEdit, MdKeyboardArrowDown, MdKeyboardArrowUp } from "react-icons/md";
-import { useDispatch, useSelector } from "react-redux";
-import { createNewHouse } from "../../redux/actions/houseActions";
+import { useListingFlow } from "../../context/ListingFlowContext";
 import { useCurrency } from "../../context/CurrencyContext";
 
 const Pricing = () => {
-  const newHouseData = useSelector((state) => state.house.newHouse);
+  const { newHouse, currentListingHouse, setNewHouse } = useListingFlow();
   const { symbol, currency } = useCurrency();
-  const [inputValue, setInputValue] = useState("168");
+  const initialBase = newHouse?.basePrice || currentListingHouse?.basePrice || "168";
+  const [inputValue, setInputValue] = useState(String(initialBase));
   const [showEdit, setShowEdit] = useState(true);
   const [showPricingTable, setShowPricingTable] = useState(false);
-  const dispatch = useDispatch();
 
   const handleInputChange = (event) => {
     const newValue = event.target.value.replace(/[^0-9]/g, ""); // Allow only numeric characters
@@ -41,39 +39,13 @@ const Pricing = () => {
   useEffect(() => {
     setPriceBeforeTaxes(totalPriceBeforeTax);
     setAuthorEarnedPrice(totalAuthorEarned);
-    dispatch(
-      createNewHouse(
-        newHouseData?.houseType,
-        newHouseData?.privacyType,
-        newHouseData?.location,
-        newHouseData?.floorPlan,
-        newHouseData?.amenities,
-        newHouseData?.photos,
-        newHouseData?.title,
-        newHouseData?.highlights,
-        newHouseData?.description,
-        newHouseData?.guestType,
-        totalPriceBeforeTax,
-        totalAuthorEarned,
-        basePrice
-      )
-    );
-  }, [
-    basePrice,
-    dispatch,
-    newHouseData?.amenities,
-    newHouseData?.description,
-    newHouseData?.floorPlan,
-    newHouseData?.guestType,
-    newHouseData?.highlights,
-    newHouseData?.houseType,
-    newHouseData?.location,
-    newHouseData?.photos,
-    newHouseData?.privacyType,
-    newHouseData?.title,
-    totalAuthorEarned,
-    totalPriceBeforeTax,
-  ]);
+    setNewHouse((prev) => ({
+      ...prev,
+      priceBeforeTaxes: totalPriceBeforeTax,
+      authorEarnedPrice: totalAuthorEarned,
+      basePrice,
+    }));
+  }, [basePrice, totalAuthorEarned, totalPriceBeforeTax]);
 
   return (
     <div className="flex flex-col max-w-screen-md mx-auto my-6 min-h-[70vh]">

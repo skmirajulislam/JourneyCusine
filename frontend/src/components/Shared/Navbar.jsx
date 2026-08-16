@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import AuthenticationPopUp from "../popUp/authentication/AuthenticationPopUp";
 import MiniNavbar from "./DashboardMenu";
-import { getUser, userLogOut } from "../../redux/actions/userActions";
+import { useAuth } from "../../hooks/useAuth";
 import motelLogo from "../../assets/Travel_Logo.png";
 import searchIcon from "../../assets/basicIcon/search.svg";
 import house from "../../assets/basicIcon/houseWhite.png";
@@ -26,7 +25,7 @@ import {
 
 const Navbar = () => {
   const { theme, toggleTheme } = useTheme();
-  const user = useSelector((state) => state.user.userDetails);
+  const { user, logout } = useAuth();
   const [showFilterPopup, setShowFilterPopup] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -41,8 +40,6 @@ const Navbar = () => {
   const isSmallDevice = window.innerWidth < 768;
 
   const [popup, setPopup] = useState(false);
-
-  const dispatch = useDispatch();
 
   // Active filters count
   const activeFilters = {
@@ -79,51 +76,49 @@ const Navbar = () => {
     navigate(`/?${params.toString()}`);
   };
 
+  // Sync search input with URL params
   useEffect(() => {
     setSearchValue(searchParams.get("search") || "");
   }, [searchParams]);
 
   const handleSearchSubmit = (e) => {
-    if (e) e.preventDefault();
-    const trimmed = searchValue.trim();
-    const newParams = new URLSearchParams(searchParams);
-    if (trimmed) {
-      newParams.set("search", trimmed);
+    e.preventDefault();
+    const params = new URLSearchParams(searchParams);
+    if (searchValue.trim()) {
+      params.set("search", searchValue.trim());
     } else {
-      newParams.delete("search");
+      params.delete("search");
     }
-    navigate(`/?${newParams.toString()}`);
+    navigate(`/?${params.toString()}`);
   };
 
   const handleClearSearch = () => {
     setSearchValue("");
-    const newParams = new URLSearchParams(searchParams);
-    newParams.delete("search");
-    navigate(`/?${newParams.toString()}`);
+    const params = new URLSearchParams(searchParams);
+    params.delete("search");
+    navigate(`/?${params.toString()}`);
   };
 
   const handleLogout = () => {
-    dispatch(userLogOut());
+    logout();
   };
-
-  useEffect(() => {
-    dispatch(getUser());
-  }, [dispatch]);
 
   useEffect(() => {
     const handleOpenAuth = () => {
       setPopup(true);
     };
-    const handleSessionExpired = () => {
-      dispatch(userLogOut());
+    const handleForceLogout = () => {
+      logout();
+      setPopup(true);
     };
+
     window.addEventListener("open-auth-popup", handleOpenAuth);
-    window.addEventListener("auth-session-expired", handleSessionExpired);
+    window.addEventListener("force-logout", handleForceLogout);
     return () => {
       window.removeEventListener("open-auth-popup", handleOpenAuth);
-      window.removeEventListener("auth-session-expired", handleSessionExpired);
+      window.removeEventListener("force-logout", handleForceLogout);
     };
-  }, [dispatch]);
+  }, [logout]);
 
   return (
     <motion.nav

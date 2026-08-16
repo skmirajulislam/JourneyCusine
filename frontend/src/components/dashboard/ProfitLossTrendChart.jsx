@@ -11,8 +11,7 @@ import {
   Legend,
 } from "recharts";
 import { useCurrency } from "../../context/CurrencyContext";
-import { convertPrice, formatCurrency, getCurrencySymbol } from "../../utils/currency";
-import { FiTrendingUp, FiTrendingDown, FiDollarSign, FiRefreshCw } from "react-icons/fi";
+import { FiTrendingUp, FiTrendingDown } from "react-icons/fi";
 
 const ProfitLossTrendChart = ({ reservations = [] }) => {
   const { currency: hostCurrency } = useCurrency();

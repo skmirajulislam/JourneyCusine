@@ -1,6 +1,7 @@
 /* eslint-disable react/prop-types */
-import { useState, useEffect, useMemo } from "react";
-import { useSelector } from "react-redux";
+import { useState, useMemo } from "react";
+import { useAuth } from "../../hooks/useAuth";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 import api from "../../backend";
 import {
@@ -11,25 +12,39 @@ import {
 } from "react-icons/ai";
 import {
   FiAlertTriangle,
-  FiCheckCircle,
   FiTrash2,
   FiEdit2,
   FiSend,
   FiMessageSquare,
   FiShield,
   FiInfo,
-  FiX,
   FiCheck,
 } from "react-icons/fi";
 import AuthenticationPopUp from "../popUp/authentication/AuthenticationPopUp";
 
 const PropertyReviews = ({ listingId }) => {
-  const user = useSelector((state) => state.user?.userDetails);
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
 
-  const [reviews, setReviews] = useState([]);
-  const [totalReviews, setTotalReviews] = useState(0);
-  const [avgRating, setAvgRating] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: reviewsData = {}, isLoading, refetch: fetchReviews } = useQuery({
+    queryKey: ["listingReviews", listingId],
+    queryFn: async () => {
+      if (!listingId) return { reviews: [], totalReviews: 0, avgRating: 0 };
+      try {
+        const res = await api.get(`/reviews/listing/${listingId}`);
+        return res.data?.success ? res.data : { reviews: [], totalReviews: 0, avgRating: 0 };
+      } catch (error) {
+        console.error("Error fetching reviews:", error);
+        return { reviews: [], totalReviews: 0, avgRating: 0 };
+      }
+    },
+    enabled: Boolean(listingId),
+    staleTime: 3 * 60 * 1000,
+  });
+
+  const reviews = reviewsData.reviews || [];
+  const totalReviews = reviewsData.totalReviews || 0;
+  const avgRating = reviewsData.avgRating || 0;
 
   // Form state for new review
   const [rating, setRating] = useState(5);
@@ -47,27 +62,6 @@ const PropertyReviews = ({ listingId }) => {
 
   // AI Moderation Warning Modal
   const [aiWarning, setAiWarning] = useState(null);
-
-  const fetchReviews = async () => {
-    if (!listingId) return;
-    try {
-      setIsLoading(true);
-      const res = await api.get(`/reviews/listing/${listingId}`);
-      if (res.data?.success) {
-        setReviews(res.data.reviews || []);
-        setTotalReviews(res.data.totalReviews || 0);
-        setAvgRating(res.data.avgRating || 0);
-      }
-    } catch (error) {
-      console.error("Error fetching reviews:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchReviews();
-  }, [listingId]);
 
   const handleSubmitReview = async (e) => {
     e.preventDefault();
@@ -180,13 +174,14 @@ const PropertyReviews = ({ listingId }) => {
     try {
       const res = await api.post(`/reviews/like/${reviewId}`);
       if (res.data?.success) {
-        setReviews((prev) =>
-          prev.map((r) => {
+        queryClient.setQueryData(["listingReviews", listingId], (old) => {
+          if (!old || !Array.isArray(old.reviews)) return old;
+          const userStr = String(user._id);
+          const updatedReviews = old.reviews.map((r) => {
             if (r._id === reviewId) {
-              const userStr = String(user._id);
               const newLikes = res.data.liked
-                ? [...r.likes, userStr]
-                : r.likes.filter((id) => String(id) !== userStr);
+                ? [...(r.likes || []), userStr]
+                : (r.likes || []).filter((id) => String(id) !== userStr);
               return {
                 ...r,
                 likes: newLikes,
@@ -194,8 +189,9 @@ const PropertyReviews = ({ listingId }) => {
               };
             }
             return r;
-          })
-        );
+          });
+          return { ...old, reviews: updatedReviews };
+        });
       }
     } catch (error) {
       console.error("Error liking review:", error);

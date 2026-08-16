@@ -119,7 +119,7 @@ const WelcomePopup = ({
           </div>
           <p className="text-xs text-[#222222] dark:text-[#e5e7eb] pt-3 mb-4 opacity-80 ml-[2px]">
             We’ll send a confirmation email to verify your email address. <br />{" "}
-            <Link className="font-semibold underline hover:text-[#ff385c] transition-colors">Privacy Policy</Link>
+            <Link to="/privacy" className="font-semibold underline hover:text-[#ff385c] transition-colors">Privacy Policy</Link>
           </p>
           <button
             className={`bg-[#ff385c] hover:bg-[#d90b63] transition-all duration-300 text-white font-semibold rounded-xl p-3 w-full shadow-md disabled:bg-[#dddddd] cursor-pointer ${

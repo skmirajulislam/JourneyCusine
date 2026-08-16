@@ -1,11 +1,11 @@
-/* eslint-disable react/prop-types */
 import { useState } from "react";
 import { useDateFormatting } from "../../hooks/useDateFormatting";
 import { PulseLoader } from "react-spinners";
-import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import api from "../../backend";
+import { useAuth } from "../../hooks/useAuth";
+import { useListingDetails } from "../../hooks/useHostData";
 import {
   FiShield,
   FiCreditCard,
@@ -28,14 +28,10 @@ const RazorpayIcon = ({ size = 16, className = "" }) => (
   </svg>
 );
 
-const Payment = ({ searchParamsObj, appliedCoupon }) => {
-  const newReservationData = useSelector(
-    (state) => state.reservations?.newReservationsData
-  );
-  const listingData = useSelector(
-    (state) => state.house.listingDetails.listing
-  );
-  const currentUser = useSelector((state) => state.user?.userDetails);
+const Payment = ({ searchParamsObj, appliedCoupon, listingDataProp }) => {
+  const { user: currentUser } = useAuth();
+  const { data: fetchedDetails } = useListingDetails(searchParamsObj?.listingId);
+  const listingData = listingDataProp || fetchedDetails?.listing;
   const { currency: guestCurrency, formatPrice, convertPrice, country, symbol } = useCurrency();
 
   const [isProcessing, setIsProcessing] = useState(false);
@@ -48,18 +44,10 @@ const Payment = ({ searchParamsObj, appliedCoupon }) => {
 
   const formattedDates = useDateFormatting(dateObj);
 
-  const guestNumber = newReservationData
-    ? newReservationData.guestNumber
-    : searchParamsObj?.numberOfGuests || 1;
-  const checkin = newReservationData
-    ? newReservationData?.checkIn
-    : searchParamsObj?.checkin;
-  const checkout = newReservationData
-    ? newReservationData?.checkOut
-    : searchParamsObj?.checkout;
-  const nightStaying = newReservationData
-    ? newReservationData?.nightStaying
-    : parseInt(searchParamsObj?.nightStaying, 10) || 1;
+  const guestNumber = Number(searchParamsObj?.numberOfGuests) || 1;
+  const checkin = searchParamsObj?.checkin;
+  const checkout = searchParamsObj?.checkout;
+  const nightStaying = parseInt(searchParamsObj?.nightStaying, 10) || 1;
   const orderId = Math.round(Math.random() * 10000000000);
 
   // Standard USD Calculation

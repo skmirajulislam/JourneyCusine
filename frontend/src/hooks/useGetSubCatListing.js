@@ -1,29 +1,25 @@
-import axios from "axios";
-import { useEffect, useState } from "react"
-import { API } from "../backend";
+import { useQuery } from "@tanstack/react-query";
+import api from "../backend";
 
 export const useGetSubCatListing = (cat) => {
-    const [isLoading, setIsLoading] = useState(false);
-    const [data, setData] = useState([]);
+  const { data = [], isLoading } = useQuery({
+    queryKey: ["categoryListings", cat],
+    queryFn: async () => {
+      if (!cat) return [];
+      try {
+        const res = await api.post("/house/get_listing_with_cat", {
+          category: cat,
+        });
+        return Array.isArray(res.data?.catBasedListing) ? res.data.catBasedListing : [];
+      } catch (error) {
+        console.error("Error fetching category listings:", error);
+        return [];
+      }
+    },
+    enabled: Boolean(cat),
+    staleTime: 5 * 60 * 1000, // 5 mins cache
+    gcTime: 15 * 60 * 1000,
+  });
 
-    useEffect(() => {
-        setIsLoading(true)
-        const getSubCatListing = async () => {
-            try {
-                const res = await axios.post(`${API}house/get_listing_with_cat`, {
-                    category: cat,
-                });
-                setData(res.data.catBasedListing)
-                setIsLoading(false)
-            } catch (error) {
-                console.log(error)
-                setIsLoading(false)
-            } finally {
-                setIsLoading(false)
-            }
-        }
-        getSubCatListing()
-    }, [cat])
-
-    return { isLoading, data }
-}
+  return { isLoading, data };
+};

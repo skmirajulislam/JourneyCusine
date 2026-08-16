@@ -70,10 +70,8 @@ const FinalStepOverview = lazy(() =>
 const Description = lazy(() =>
   import("../../Pages/ListingHouseStepTwo/Description")
 );
-const Highlight = lazy(() =>
-  import("../../Pages/ListingHouseStepTwo/Highlight")
-);
-// import PaymentConfirmed from "../../Pages/PaymentConfirmed";
+const Terms = lazy(() => import("../../Pages/Terms"));
+const Privacy = lazy(() => import("../../Pages/Privacy"));
 
 const router = createBrowserRouter([
   {
@@ -193,6 +191,34 @@ const router = createBrowserRouter([
       {
         path: "/contact",
         element: <ContactUs />,
+      },
+      {
+        path: "/terms",
+        element: (
+          <Suspense
+            fallback={
+              <div className="flex justify-center items-center w-full h-[60dvh]">
+                <FadeLoader color="#ff385c" />
+              </div>
+            }
+          >
+            <Terms />
+          </Suspense>
+        ),
+      },
+      {
+        path: "/privacy",
+        element: (
+          <Suspense
+            fallback={
+              <div className="flex justify-center items-center w-full h-[60dvh]">
+                <FadeLoader color="#ff385c" />
+              </div>
+            }
+          >
+            <Privacy />
+          </Suspense>
+        ),
       },
       {
         path: "/payment-confirmed",

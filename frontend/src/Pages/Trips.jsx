@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useAuth } from "../hooks/useAuth";
 import {
   MapContainer,
   TileLayer,
@@ -219,7 +219,7 @@ const CountdownBadge = React.memo(({ visitTime, title, destId, notifiedSet, comp
 CountdownBadge.displayName = "CountdownBadge";
 
 const Trips = () => {
-  const user = useSelector((state) => state.user?.userDetails);
+  const { user } = useAuth();
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const { formatPrice } = useCurrency();

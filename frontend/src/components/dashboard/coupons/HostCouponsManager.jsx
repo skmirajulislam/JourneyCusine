@@ -7,13 +7,10 @@ import {
   FiTrash2,
   FiClock,
   FiUsers,
-  FiPercent,
-  FiDollarSign,
   FiHome,
   FiAlertCircle,
   FiCheckCircle,
   FiRefreshCw,
-  FiCalendar,
 } from "react-icons/fi";
 import { FadeLoader, PulseLoader } from "react-spinners";
 import { useCurrency } from "../../../context/CurrencyContext";
@@ -24,7 +21,7 @@ const HostCouponsManager = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { symbol, currency } = useCurrency();
+  const { symbol } = useCurrency();
 
   // New Coupon Form state
   const [formData, setFormData] = useState({

@@ -3,20 +3,16 @@ import ListingTitle from "../components/ListingDetails/ListingTitle";
 import ListingsPhotos from "../components/ListingDetails/ListingsPhotos";
 import ListingDescriptions from "../components/ListingDetails/ListingDescriptions";
 import ReservationCard from "../components/ListingDetails/ReservationCard";
-import { useDispatch, useSelector } from "react-redux";
-import { useEffect, useState } from "react";
-import { getOneListingRoomsDetails } from "../redux/actions/houseActions";
+import { useEffect } from "react";
+import { useListingDetails } from "../hooks/useHostData";
 import ListingDetailsPageSkeleton from "../components/skeletonLoading/ListingDetailsPageSkeleton";
 import { useActiveReservations } from "../hooks/useActiveReservations";
 import { FiCheckCircle, FiCalendar, FiArrowRight } from "react-icons/fi";
 
 const ListingDetails = () => {
-  const [isLoading, setIsLoading] = useState(true);
-  const data = useSelector((state) => state.house.listingDetails);
   const params = useParams();
+  const { data, isLoading } = useListingDetails(params.id);
   const { getListingReservation } = useActiveReservations();
-
-  const dispatch = useDispatch();
 
   // listing details data
   const listingData = data?.listing;
@@ -27,14 +23,6 @@ const ListingDetails = () => {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
-
-  useEffect(() => {
-    async function getListingData() {
-      await dispatch(getOneListingRoomsDetails(params.id));
-      setIsLoading(false);
-    }
-    getListingData();
-  }, [params.id, dispatch]);
 
   if (isLoading) {
     return <ListingDetailsPageSkeleton />;

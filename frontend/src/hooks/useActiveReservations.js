@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import { useSelector } from "react-redux";
+import { useAuth } from "./useAuth";
 import api from "../backend";
 
 export function useActiveReservations() {
-  const user = useSelector((state) => state.user?.userDetails);
+  const { user } = useAuth();
 
   const { data: myBookings = [], isLoading } = useQuery({
     queryKey: ["myBookings", user?._id],

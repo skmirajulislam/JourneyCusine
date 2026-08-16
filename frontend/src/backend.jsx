@@ -55,14 +55,18 @@ api.interceptors.response.use(
       error.response.status === 401 &&
       !originalRequest._retry &&
       !originalRequest.url?.includes("/auth/refresh_token") &&
-      !originalRequest.url?.includes("/auth/log_in")
+      !originalRequest.url?.includes("/auth/log_in") &&
+      !originalRequest.url?.includes("/auth/get_user_details")
     ) {
       originalRequest._retry = true;
+      const refreshToken = getStoredToken("refreshToken");
+      
+      if (!refreshToken) {
+        localStorage.removeItem("accessToken");
+        return Promise.reject(error);
+      }
+
       try {
-        const refreshToken = getStoredToken("refreshToken");
-        if (!refreshToken) {
-          throw new Error("No refresh token available");
-        }
         const response = await axios.post(`${API}auth/refresh_token`, {
           refreshToken,
         });
@@ -76,11 +80,10 @@ api.interceptors.response.use(
         originalRequest.headers["authorization"] = `Bearer ${newAccessToken}`;
         return api(originalRequest);
       } catch (refreshError) {
-        console.error("Session expired or invalidated by another login:", refreshError);
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
         window.dispatchEvent(new Event("auth-session-expired"));
-        throw refreshError;
+        return Promise.reject(refreshError);
       }
     }
     return Promise.reject(error);
@@ -90,4 +93,3 @@ api.interceptors.response.use(
 // This module intentionally exports an Axios client rather than a React component.
 // eslint-disable-next-line react-refresh/only-export-components
 export default api;
-

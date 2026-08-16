@@ -1,15 +1,12 @@
 import { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { createNewHouse } from "../../redux/actions/houseActions";
+import { useListingFlow } from "../../context/ListingFlowContext";
 
 const HouseTitle = () => {
-  const newHouseData = useSelector((state) => state.house.newHouse);
-  const currentListing = useSelector((state) => state.house.currentListingHouse);
-  const initialTitle = newHouseData?.title || currentListing?.title || "";
+  const { newHouse, currentListingHouse, setNewHouse } = useListingFlow();
+  const initialTitle = newHouse?.title || currentListingHouse?.title || "";
 
   const [title, setTitle] = useState(initialTitle);
   const [characterCount, setCharacterCount] = useState(initialTitle.length);
-  const dispatch = useDispatch();
 
   useEffect(() => {
     if (initialTitle && !title) {
@@ -18,27 +15,18 @@ const HouseTitle = () => {
     }
   }, [initialTitle, title]);
 
-  const updateReduxTitle = (newVal) => {
-    dispatch(
-      createNewHouse(
-        newHouseData?.houseType || currentListing?.houseType,
-        newHouseData?.privacyType || currentListing?.privacyType,
-        newHouseData?.location || currentListing?.location,
-        newHouseData?.floorPlan || currentListing?.floorPlan,
-        newHouseData?.amenities || currentListing?.amenities,
-        newHouseData?.photos || currentListing?.photos,
-        newVal,
-        newHouseData?.highlights || currentListing?.highlight,
-        newHouseData?.description || currentListing?.description
-      )
-    );
+  const updateTitleState = (newVal) => {
+    setNewHouse((prev) => ({
+      ...prev,
+      title: newVal,
+    }));
   };
 
   const handleInputChange = (e) => {
     const val = e.target.value;
     setTitle(val);
     setCharacterCount(val.length);
-    updateReduxTitle(val);
+    updateTitleState(val);
   };
 
   return (
@@ -57,7 +45,7 @@ const HouseTitle = () => {
           rows="5"
           value={title}
           onChange={handleInputChange}
-          onBlur={() => updateReduxTitle(title)}
+          onBlur={() => updateTitleState(title)}
           placeholder="e.g., Cozy Seaside Villa in Malibu"
           maxLength={40}
         />

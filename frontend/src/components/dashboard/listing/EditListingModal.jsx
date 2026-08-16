@@ -1,12 +1,10 @@
-/* eslint-disable react/prop-types */
 import { useState } from "react";
 import { FiX, FiTrash2, FiPlus, FiCheck } from "react-icons/fi";
 import { AiOutlineMinus, AiOutlinePlus } from "react-icons/ai";
 import { PulseLoader } from "react-spinners";
 import { toast } from "react-hot-toast";
-import { useDispatch } from "react-redux";
+import { useQueryClient } from "@tanstack/react-query";
 import api from "../../../backend";
-import { getUser } from "../../../redux/actions/userActions";
 
 const AVAILABLE_AMENITIES = [
   "Wifi",
@@ -72,7 +70,7 @@ const HOUSE_TYPES = [
 ];
 
 const EditListingModal = ({ listing, onClose }) => {
-  const dispatch = useDispatch();
+  const queryClient = useQueryClient();
   const [isSaving, setIsSaving] = useState(false);
 
   // Form states
@@ -155,7 +153,9 @@ const EditListingModal = ({ listing, onClose }) => {
       const res = await api.put(`/house/update_listing/${listing._id}`, payload);
       if (res.data?.success === 1) {
         toast.success("Listing updated successfully!");
-        await dispatch(getUser());
+        queryClient.invalidateQueries({ queryKey: ["hostHouses"] });
+        queryClient.invalidateQueries({ queryKey: ["allListing"] });
+        queryClient.invalidateQueries({ queryKey: ["authUser"] });
         onClose();
       } else {
         toast.error(res.data?.message || "Failed to update listing");

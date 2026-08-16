@@ -1,7 +1,6 @@
-import { useDispatch, useSelector } from "react-redux";
-import StructureCard from "../../components/listingHouse/StructureCard";
 import { useEffect, useState } from "react";
-import { createNewHouse } from "../../redux/actions/houseActions";
+import { useListingFlow } from "../../context/ListingFlowContext";
+import StructureCard from "../../components/listingHouse/StructureCard";
 
 import { LiaShoePrintsSolid } from "react-icons/lia";
 import { PiComputerTower } from "react-icons/pi";
@@ -10,55 +9,36 @@ import { CiLocationOn } from "react-icons/ci";
 import { HiOutlineUserGroup } from "react-icons/hi";
 
 const Highlight = () => {
-  const newHouseData = useSelector((state) => state.house.newHouse);
-  const [storedCardData, setStoredCardData] = useState([]);
-  const dispatch = useDispatch();
+  const { newHouse, currentListingHouse, setNewHouse } = useListingFlow();
+  const initialHighlights = newHouse?.highlights || currentListingHouse?.highlight || [];
+  const [storedCardData, setStoredCardData] = useState(
+    Array.isArray(initialHighlights) ? initialHighlights : []
+  );
   const svgSize = 24;
 
   const handleStoreCardData = (name) => {
     if (storedCardData.includes(name)) {
-      storedCardData.pop(name);
-      setStoredCardData([...storedCardData]);
+      setStoredCardData(storedCardData.filter((item) => item !== name));
     } else {
       setStoredCardData([...storedCardData, name]);
     }
   };
-  useEffect(() => {
-    dispatch(
-      createNewHouse(
-        newHouseData?.houseType,
-        newHouseData?.privacyType,
-        newHouseData?.location,
-        newHouseData?.floorPlan,
-        newHouseData?.amenities,
-        newHouseData?.photos,
-        newHouseData?.title,
-        storedCardData
-      )
-    );
-  }, [
-    dispatch,
-    newHouseData?.amenities,
-    newHouseData?.floorPlan,
-    newHouseData?.houseType,
-    newHouseData?.location,
-    newHouseData?.photos,
-    newHouseData?.privacyType,
-    newHouseData?.title,
-    storedCardData,
-  ]);
 
-  console.log(storedCardData, "from descriptions");
+  useEffect(() => {
+    setNewHouse((prev) => ({
+      ...prev,
+      highlights: storedCardData,
+    }));
+  }, [storedCardData]);
 
   return (
     <div className="flex flex-col gap-10 max-w-screen-md mx-auto my-8 xl:py-[15vh] min-h-[70vh]">
       <div className="flex flex-col gap-3 md:gap-0">
         <h1 className="text-[#222222] dark:text-white text-xl sm:text-2xl md:text-[32px] font-medium">
-          Next, let&apos;s describe your apartment
+          Next, let&apos;s describe your stay
         </h1>
         <p className="text-sm sm:text-base md:text-lg text-[#717171] dark:text-neutral-400">
-          Choose up to 2 highlights. We&apos;ll use these to get your
-          description started.
+          Choose highlights. We&apos;ll use these to get your description started.
         </p>
       </div>
       <div className="flex flex-wrap gap-5">

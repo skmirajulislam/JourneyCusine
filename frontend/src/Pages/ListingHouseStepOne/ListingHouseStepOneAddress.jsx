@@ -1,15 +1,12 @@
 import { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { createNewHouse } from "../../redux/actions/houseActions";
+import { useListingFlow } from "../../context/ListingFlowContext";
 import { City, Country, State } from "country-state-city";
 import Select from "react-select";
 
 const ListingHouseStepOneAddress = () => {
-  const houseData = useSelector((state) => state.house);
+  const { newHouse, currentListingHouse, setNewHouse } = useListingFlow();
   const existingLoc =
-    houseData.newHouse?.location || houseData.currentListingHouse?.location || {};
-
-  const dispatch = useDispatch();
+    newHouse?.location || currentListingHouse?.location || {};
 
   const [formData, setFormData] = useState({
     country: existingLoc.country || "",
@@ -33,20 +30,11 @@ const ListingHouseStepOneAddress = () => {
     }
   }, [existingLoc, formData.country]);
 
-  const syncRedux = (updated) => {
-    dispatch(
-      createNewHouse(
-        houseData.newHouse?.houseType || houseData.currentListingHouse?.houseType,
-        houseData.newHouse?.privacyType || houseData.currentListingHouse?.privacyType,
-        updated,
-        houseData.newHouse?.floorPlan || houseData.currentListingHouse?.floorPlan,
-        houseData.newHouse?.amenities || houseData.currentListingHouse?.amenities,
-        houseData.newHouse?.photos || houseData.currentListingHouse?.photos,
-        houseData.newHouse?.title || houseData.currentListingHouse?.title,
-        houseData.newHouse?.highlights || houseData.currentListingHouse?.highlight,
-        houseData.newHouse?.description || houseData.currentListingHouse?.description
-      )
-    );
+  const syncState = (updated) => {
+    setNewHouse((prev) => ({
+      ...prev,
+      location: updated,
+    }));
   };
 
   const handleInputChange = (e) => {
@@ -56,7 +44,7 @@ const ListingHouseStepOneAddress = () => {
       [name]: value,
     };
     setFormData(updated);
-    syncRedux(updated);
+    syncState(updated);
   };
 
   const selectCustomStyles = {
@@ -99,7 +87,7 @@ const ListingHouseStepOneAddress = () => {
             onChange={(item) => {
               const updated = { ...formData, country: item };
               setFormData(updated);
-              syncRedux(updated);
+              syncState(updated);
             }}
             className="react-select-container text-sm"
             classNamePrefix="react-select"
@@ -114,7 +102,7 @@ const ListingHouseStepOneAddress = () => {
             onChange={(item) => {
               const updated = { ...formData, state: item };
               setFormData(updated);
-              syncRedux(updated);
+              syncState(updated);
             }}
             className="react-select-container text-sm"
             classNamePrefix="react-select"
@@ -132,7 +120,7 @@ const ListingHouseStepOneAddress = () => {
             onChange={(item) => {
               const updated = { ...formData, city: item };
               setFormData(updated);
-              syncRedux(updated);
+              syncState(updated);
             }}
             className="react-select-container text-sm"
             classNamePrefix="react-select"

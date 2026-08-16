@@ -1,11 +1,11 @@
-import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { useAuth } from "../../hooks/useAuth";
 import ProfileData from "../../components/userProfile/ShowUserProfileData";
 import UserReservationsSection from "../../components/userProfile/UserReservationsSection";
 
 const UserProfile = () => {
-  const user = useSelector((state) => state.user?.userDetails);
+  const { user } = useAuth();
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {

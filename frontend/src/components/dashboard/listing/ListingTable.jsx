@@ -1,14 +1,14 @@
 import { useState } from "react";
-import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { GrInProgress } from "react-icons/gr";
 import { AiFillCheckCircle, AiFillCloseCircle } from "react-icons/ai";
 import { FiEdit2, FiTrash2, FiPlus, FiHome } from "react-icons/fi";
 import EditListingModal from "./EditListingModal";
 import DeleteListingModal from "./DeleteListingModal";
+import { useHostData } from "../../../hooks/useHostData";
 
 const ListingTable = () => {
-  const allListingsData = useSelector((state) => state.house.housesData) || [];
+  const { hostHouses: allListingsData = [] } = useHostData();
   const [editingListing, setEditingListing] = useState(null);
   const [deletingListing, setDeletingListing] = useState(null);
 

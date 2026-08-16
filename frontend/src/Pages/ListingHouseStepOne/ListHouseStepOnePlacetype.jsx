@@ -1,19 +1,16 @@
 import { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { createNewHouse } from "../../redux/actions/houseActions";
+import { useListingFlow } from "../../context/ListingFlowContext";
 import PlaceTypeCard from "../../components/listingHouse/PlaceTypeCard";
 import { PiHouseLine } from "react-icons/pi";
-import { BsDoorOpen } from "react-icons/bs";
-import { BsHouseAdd } from "react-icons/bs";
+import { BsDoorOpen, BsHouseAdd } from "react-icons/bs";
 
 const ListHouseStepOnePlacetype = () => {
-  const [storedCardData, setStoredCardData] = useState("");
-  const houseData = useSelector((state) => state.house);
-  const dispatch = useDispatch();
+  const { newHouse, setNewHouse } = useListingFlow();
+  const [storedCardData, setStoredCardData] = useState(newHouse?.privacyType || "");
 
   const handleStoreCardData = (name) => {
     setStoredCardData(name);
-    dispatch(createNewHouse(houseData.newHouse?.houseType, name));
+    setNewHouse((prev) => ({ ...prev, privacyType: name }));
   };
 
   return (

@@ -20,17 +20,16 @@ import { RiEarthquakeLine } from "react-icons/ri";
 import { LiaHotelSolid } from "react-icons/lia";
 import StructureCard from "../../components/listingHouse/StructureCard";
 import { useState } from "react";
-import { useDispatch } from "react-redux";
-import { createNewHouse } from "../../redux/actions/houseActions";
+import { useListingFlow } from "../../context/ListingFlowContext";
 
 const ListHouseStepOneStructure = () => {
-  const [storedCardData, setStoredCardData] = useState("");
-  const dispatch = useDispatch();
+  const { newHouse, setNewHouse } = useListingFlow();
+  const [storedCardData, setStoredCardData] = useState(newHouse?.houseType || "");
   const svgSize = window.innerWidth < 768 ? 28 : 40;
 
   const handleStoreCardData = (name) => {
     setStoredCardData(name);
-    dispatch(createNewHouse(name));
+    setNewHouse((prev) => ({ ...prev, houseType: name }));
   };
 
   return (

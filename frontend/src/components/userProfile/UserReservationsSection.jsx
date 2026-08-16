@@ -1,7 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../../backend";
 import { toast } from "react-hot-toast";
+import { useAuth } from "../../hooks/useAuth";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   FiCalendar,
   FiClock,
@@ -12,36 +14,33 @@ import {
   FiXCircle,
   FiDollarSign,
   FiMapPin,
-  FiChevronRight,
   FiRefreshCw,
 } from "react-icons/fi";
 import { FadeLoader } from "react-spinners";
 import { CURRENCY_SYMBOLS } from "../../utils/currency";
 
 const UserReservationsSection = () => {
-  const [reservations, setReservations] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [cancellingRes, setCancellingRes] = useState(null);
   const [cancelReason, setCancelReason] = useState("");
   const [isSubmittingCancel, setIsSubmittingCancel] = useState(false);
 
-  const fetchReservations = async () => {
-    try {
-      setIsLoading(true);
-      const res = await api.get("/reservations/my_bookings");
-      if (Array.isArray(res.data)) {
-        setReservations(res.data);
+  const { data: reservations = [], isLoading, refetch: fetchReservations } = useQuery({
+    queryKey: ["myBookings", user?._id],
+    queryFn: async () => {
+      if (!user?._id) return [];
+      try {
+        const res = await api.get("/reservations/my_bookings");
+        return Array.isArray(res.data) ? res.data : [];
+      } catch (error) {
+        console.error("Fetch reservations error:", error);
+        return [];
       }
-    } catch (error) {
-      console.error("Fetch reservations error:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchReservations();
-  }, []);
+    },
+    enabled: Boolean(user?._id),
+    staleTime: 2 * 60 * 1000,
+  });
 
   const handleRequestCancellation = async (e) => {
     e.preventDefault();
@@ -57,7 +56,8 @@ const UserReservationsSection = () => {
       toast.success(res.data?.message || "Cancellation request sent to host!");
       setCancellingRes(null);
       setCancelReason("");
-      fetchReservations();
+      queryClient.invalidateQueries({ queryKey: ["myBookings"] });
+      queryClient.invalidateQueries({ queryKey: ["authorReservations"] });
     } catch (error) {
       console.error("Cancellation request error:", error);
       toast.error(
