@@ -10,9 +10,19 @@ import api from "../../../backend";
 
 const sanitizeImageUrl = (url) => {
   if (!url || typeof url !== "string") return "";
-  const trimmed = url.trim();
-  if (/^(https?:\/\/|data:image\/|\/)/i.test(trimmed)) return trimmed;
-  return "";
+  try {
+    const trimmed = url.trim();
+    if (trimmed.startsWith("/") || trimmed.startsWith("data:image/")) {
+      return encodeURI(trimmed);
+    }
+    const parsed = new URL(trimmed);
+    if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+      return parsed.href;
+    }
+    return "";
+  } catch {
+    return "";
+  }
 };
 
 const AVAILABLE_AMENITIES = [

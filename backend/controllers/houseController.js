@@ -675,9 +675,22 @@ exports.updateListing = async (req, res) => {
             updateData.authorEarnedPrice = Math.round(basePrice * 0.97);
         }
 
+        const allowedFields = [
+            "title", "description", "houseType", "privacyType", "location",
+            "floorPlan", "amenities", "photos", "highlights", "cuisineSpecialties",
+            "localFoodSecrets", "cuisineOfferings", "basePrice", "priceAfterTaxes",
+            "authorEarnedPrice", "security", "visibility", "guestType", "ratings", "status"
+        ];
+        const sanitizedFields = {};
+        for (const field of allowedFields) {
+            if (updateData[field] !== undefined) {
+                sanitizedFields[field] = updateData[field];
+            }
+        }
+
         const updatedHouse = await House.findByIdAndUpdate(
             houseObjId,
-            { $set: updateData },
+            { $set: sanitizedFields },
             { new: true }
         );
 

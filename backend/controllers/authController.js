@@ -287,8 +287,16 @@ exports.getUserDetails = async (req, res) => {
 
 exports.checkEmail = async (req, res) => {
     try {
-        const payload = req.body;
-        const email = (payload.email || "").toLowerCase().trim();
+        const payload = req.body || {};
+        const email = typeof payload.email === "string" ? payload.email.toLowerCase().trim() : "";
+
+        if (!email) {
+            return res.status(400).json({
+                info: "Email is required",
+                success: 0,
+                status: 400
+            });
+        }
 
         // Check if blacklisted
         const isBlocked = await BlockedEmail.findOne({ email });
@@ -301,10 +309,7 @@ exports.checkEmail = async (req, res) => {
             });
         }
 
-        const findCriteria = {
-            emailId: payload.email
-        };
-        const isEmailExist = await User.find(findCriteria);
+        const isEmailExist = await User.find({ emailId: email });
         let response;
         if (isEmailExist.length !== 0) {
             response = {
@@ -334,8 +339,8 @@ exports.userProfileDetails = async (req, res) => {
         const profileDetailsvalue = Array.isArray(payload.value) ? payload.value[0] : payload.value;
         const fieldName = payload.fieldName;
 
-        if (!fieldName) {
-            return res.status(400).json({ success: 0, error: "Field name is required" });
+        if (!fieldName || typeof fieldName !== "string" || !/^[a-zA-Z0-9_]{1,40}$/.test(fieldName)) {
+            return res.status(400).json({ success: 0, error: "Valid field name is required" });
         }
 
         const updateQuery = {};
