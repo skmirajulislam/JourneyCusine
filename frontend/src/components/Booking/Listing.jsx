@@ -130,7 +130,7 @@ const Listing = ({ searchParamsObj, appliedCoupon, setAppliedCoupon, listingData
                   type="text"
                   placeholder="Enter code (e.g. SUMMER20)"
                   value={couponInput}
-                  onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                  onChange={(e) => setCouponInput(e.target.value.toUpperCase().replace(/[^A-Z0-9\-_]/g, ""))}
                   className="flex-1 px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-700 bg-neutral-50 dark:bg-[#252525] text-xs font-mono uppercase font-bold text-gray-900 dark:text-white focus:outline-none focus:border-[#ff385c]"
                 />
                 <button
