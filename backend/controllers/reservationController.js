@@ -49,7 +49,13 @@ exports.createRazorpayOrder = async (req, res) => {
         if (listing && listing.basePrice) {
           const baseUSD = parseInt(listing.basePrice, 10);
           const nights = parseInt(payload.nightStaying, 10) || 1;
-          const totalUSD = baseUSD * nights;
+          const roomUSD = baseUSD * nights;
+          
+          // Calculate selected cuisine add-ons
+          const cuisineAddons = Array.isArray(payload.selectedCuisineAddons) ? payload.selectedCuisineAddons : [];
+          const cuisineUSD = cuisineAddons.reduce((sum, item) => sum + (Number(item.price) || 0) * (Number(item.quantity) || 1), 0);
+          
+          const totalUSD = roomUSD + cuisineUSD;
           const taxUSD = Math.round((totalUSD * 14) / 100);
           const totalStayUSD = totalUSD + taxUSD;
 
@@ -226,12 +232,21 @@ exports.verifyRazorpayPayment = async (req, res) => {
       }
     }
 
+    // Calculate selected cuisine add-ons
+    const selectedCuisineAddons = Array.isArray(req.body.selectedCuisineAddons) ? req.body.selectedCuisineAddons : [];
+    const cuisineTotalPriceUSD = selectedCuisineAddons.reduce(
+      (sum, item) => sum + (Number(item.price) || 0) * (Number(item.quantity) || 1),
+      0
+    );
+    const guestCuisineTotalPrice = convertPrice(cuisineTotalPriceUSD, "USD", guestCurrency);
+
     const discountedRoomUSD = Math.max(0, totalRoomPriceUSD - discountUSD);
-    const taxUSD = Math.round((discountedRoomUSD * 14) / 100);
-    const totalPriceUSD = discountedRoomUSD + taxUSD;
-    const originalTotalPriceUSD = totalRoomPriceUSD + Math.round((totalRoomPriceUSD * 14) / 100);
+    const subtotalWithCuisineUSD = discountedRoomUSD + cuisineTotalPriceUSD;
+    const taxUSD = Math.round((subtotalWithCuisineUSD * 14) / 100);
+    const totalPriceUSD = subtotalWithCuisineUSD + taxUSD;
+    const originalTotalPriceUSD = (totalRoomPriceUSD + cuisineTotalPriceUSD) + Math.round(((totalRoomPriceUSD + cuisineTotalPriceUSD) * 14) / 100);
     const authorEarnedPriceUSD =
-      discountedRoomUSD - Math.round((discountedRoomUSD * 3) / 100);
+      discountedRoomUSD - Math.round((discountedRoomUSD * 3) / 100) + cuisineTotalPriceUSD;
 
     // Converted Guest Amounts
     const guestBasePrice = convertPrice(discountedRoomUSD, "USD", guestCurrency);
@@ -263,6 +278,10 @@ exports.verifyRazorpayPayment = async (req, res) => {
       couponCode: appliedCouponCode,
       couponDiscount: guestDiscountAmount,
       authorEarnedPrice: authorEarnedPriceUSD,
+      // Cuisine Dining Experiences Add-ons
+      selectedCuisineAddons,
+      cuisineTotalPrice: cuisineTotalPriceUSD,
+      guestCuisineTotalPrice,
       // Multi-Currency Cross-Border Fields
       currency: guestCurrency,
       guestCurrency,
@@ -344,10 +363,20 @@ exports.newReservation = async (req, res) => {
 
     const basePriceUSD = parseInt(listingDetails.basePrice, 10) || 0;
     const totalRoomPriceUSD = basePriceUSD * nightStaying;
-    const taxUSD = Math.round((totalRoomPriceUSD * 14) / 100);
-    const totalPriceUSD = totalRoomPriceUSD + taxUSD;
+
+    // Calculate selected cuisine add-ons
+    const selectedCuisineAddons = Array.isArray(payload.selectedCuisineAddons) ? payload.selectedCuisineAddons : [];
+    const cuisineTotalPriceUSD = selectedCuisineAddons.reduce(
+      (sum, item) => sum + (Number(item.price) || 0) * (Number(item.quantity) || 1),
+      0
+    );
+    const guestCuisineTotalPrice = convertPrice(cuisineTotalPriceUSD, "USD", guestCurrency);
+
+    const subtotalWithCuisineUSD = totalRoomPriceUSD + cuisineTotalPriceUSD;
+    const taxUSD = Math.round((subtotalWithCuisineUSD * 14) / 100);
+    const totalPriceUSD = subtotalWithCuisineUSD + taxUSD;
     const authorEarnedPriceUSD =
-      totalRoomPriceUSD - Math.round((totalRoomPriceUSD * 3) / 100);
+      totalRoomPriceUSD - Math.round((totalRoomPriceUSD * 3) / 100) + cuisineTotalPriceUSD;
 
     const guestBasePrice = convertPrice(totalRoomPriceUSD, "USD", guestCurrency);
     const guestTaxes = convertPrice(taxUSD, "USD", guestCurrency);
@@ -368,6 +397,10 @@ exports.newReservation = async (req, res) => {
       taxes: taxUSD,
       totalPrice: totalPriceUSD,
       authorEarnedPrice: authorEarnedPriceUSD,
+      // Cuisine Dining Experiences Add-ons
+      selectedCuisineAddons,
+      cuisineTotalPrice: cuisineTotalPriceUSD,
+      guestCuisineTotalPrice,
       currency: guestCurrency,
       guestCurrency,
       guestBasePrice,

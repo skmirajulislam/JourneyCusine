@@ -38,6 +38,7 @@
     "react-select": "^5.10.0",
     "react-spinners": "^0.15.0",
     "recharts": "^2.15.1",
+    "socket.io-client": "^4.8.3",
     "styled-components": "^6.1.14",
     "tailwind-merge": "^3.6.0",
     "twind": "^0.16.19",

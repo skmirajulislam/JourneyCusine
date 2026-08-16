@@ -4,7 +4,7 @@ import { FadeLoader } from "react-spinners";
 import { useAuth } from "../hooks/useAuth";
 import api from "../backend";
 import { toast } from "react-hot-toast";
-import { FiCheckCircle, FiCalendar, FiArrowRight } from "react-icons/fi";
+import { FiCheckCircle, FiCalendar, FiArrowRight, FiPrinter } from "react-icons/fi";
 
 const RazorpayIcon = ({ size = 16, className = "" }) => (
   <svg
@@ -147,22 +147,33 @@ const PaymentConfirmed = () => {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md pt-2">
-          <Link
-            to={currentUser?._id ? `/users/show/${currentUser._id}` : "/user/profile"}
-            className="flex-1 py-3 px-5 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-bold text-xs hover:bg-black dark:hover:bg-gray-100 transition shadow-sm flex items-center justify-center gap-1.5"
+        <div className="flex flex-col gap-2.5 w-full max-w-md pt-2">
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="w-full py-3 px-5 rounded-xl bg-[#ff385c] hover:bg-[#d90b63] text-white font-bold text-xs transition shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
           >
-            <FiCalendar size={14} />
-            View in My Bookings
-          </Link>
+            <FiPrinter size={14} />
+            Download / Print PDF Booking Invoice
+          </button>
 
-          <Link
-            to="/"
-            className="flex-1 py-3 px-5 rounded-xl border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-800 dark:text-gray-200 font-bold text-xs transition flex items-center justify-center gap-1.5"
-          >
-            Explore More Stays
-            <FiArrowRight size={13} />
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-2.5 w-full">
+            <Link
+              to={currentUser?._id ? `/users/show/${currentUser._id}` : "/user/profile"}
+              className="flex-1 py-3 px-4 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-bold text-xs hover:bg-black dark:hover:bg-gray-100 transition shadow-sm flex items-center justify-center gap-1.5"
+            >
+              <FiCalendar size={14} />
+              View in My Bookings
+            </Link>
+
+            <Link
+              to="/"
+              className="flex-1 py-3 px-4 rounded-xl border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-800 dark:text-gray-200 font-bold text-xs transition flex items-center justify-center gap-1.5"
+            >
+              Explore More Stays
+              <FiArrowRight size={13} />
+            </Link>
+          </div>
         </div>
       </div>
     </main>

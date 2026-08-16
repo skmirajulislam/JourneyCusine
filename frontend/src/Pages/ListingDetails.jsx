@@ -3,16 +3,23 @@ import ListingTitle from "../components/ListingDetails/ListingTitle";
 import ListingsPhotos from "../components/ListingDetails/ListingsPhotos";
 import ListingDescriptions from "../components/ListingDetails/ListingDescriptions";
 import ReservationCard from "../components/ListingDetails/ReservationCard";
-import { useEffect } from "react";
+import CuisineOfferingsSection from "../components/ListingDetails/CuisineOfferingsSection";
+import LocalFoodSecretsGuide from "../components/ListingDetails/LocalFoodSecretsGuide";
+import EditListingModal from "../components/dashboard/listing/EditListingModal";
+import { useEffect, useState } from "react";
 import { useListingDetails } from "../hooks/useHostData";
 import ListingDetailsPageSkeleton from "../components/skeletonLoading/ListingDetailsPageSkeleton";
 import { useActiveReservations } from "../hooks/useActiveReservations";
+import { useAuth } from "../hooks/useAuth";
 import { FiCheckCircle, FiCalendar, FiArrowRight } from "react-icons/fi";
 
 const ListingDetails = () => {
   const params = useParams();
+  const { user } = useAuth();
   const { data, isLoading } = useListingDetails(params.id);
   const { getListingReservation } = useActiveReservations();
+  const [selectedCuisineAddons, setSelectedCuisineAddons] = useState([]);
+  const [isEditingListing, setIsEditingListing] = useState(false);
 
   // listing details data
   const listingData = data?.listing;
@@ -23,6 +30,21 @@ const ListingDetails = () => {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
+
+  const handleToggleCuisineAddon = (addon) => {
+    setSelectedCuisineAddons((prev) => {
+      const exists = prev.some(
+        (a) => a.offeringId === addon.offeringId || a.title === addon.title
+      );
+      if (exists) {
+        return prev.filter(
+          (a) => a.offeringId !== addon.offeringId && a.title !== addon.title
+        );
+      } else {
+        return [...prev, addon];
+      }
+    });
+  };
 
   if (isLoading) {
     return <ListingDetailsPageSkeleton />;
@@ -43,6 +65,13 @@ const ListingDetails = () => {
         year: "numeric",
       })
     : "";
+
+  const hostName = listedAuthor?.name?.firstName || "Your Host";
+  const authorIdStr = listingData?.author?._id || listingData?.author;
+  const currentUserIdStr = user?._id;
+  const isHost = Boolean(
+    currentUserIdStr && authorIdStr && String(currentUserIdStr) === String(authorIdStr)
+  );
 
   return (
     <main className="max-w-screen-xl xl:px-12 mx-auto py-7 px-5 sm:px-16 md:px-8">
@@ -89,12 +118,41 @@ const ListingDetails = () => {
             listingData={listingData}
             author={listedAuthor}
           />
+
+          {/* 🍲 Cuisine & Dining Experiences Section (Real Host Dishes) */}
+          <CuisineOfferingsSection
+            offerings={listingData?.cuisineOfferings}
+            selectedAddons={selectedCuisineAddons}
+            onToggleAddon={handleToggleCuisineAddon}
+            isHost={isHost}
+            onOpenHostEdit={() => setIsEditingListing(true)}
+          />
+
+          {/* 🍽️ Host's Local Food Secrets Section (Real Host Recommendations) */}
+          <LocalFoodSecretsGuide
+            secrets={listingData?.localFoodSecrets}
+            hostName={hostName}
+            isHost={isHost}
+            onOpenHostEdit={() => setIsEditingListing(true)}
+          />
         </div>
         {/* reservations of the listing */}
         <div className="md:col-span-3 lg:col-span-2 order-1 md:order-2 max-h-[900px]">
-          <ReservationCard listingData={listingData} />
+          <ReservationCard
+            listingData={listingData}
+            selectedCuisineAddons={selectedCuisineAddons}
+            onToggleCuisineAddon={handleToggleCuisineAddon}
+          />
         </div>
       </section>
+
+      {/* Edit Listing Modal if Host wants to manage dishes from this page */}
+      {isEditingListing && (
+        <EditListingModal
+          listing={listingData}
+          onClose={() => setIsEditingListing(false)}
+        />
+      )}
     </main>
   );
 };

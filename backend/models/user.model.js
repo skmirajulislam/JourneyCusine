@@ -60,9 +60,22 @@ const userSchema = new mongoose.Schema({
         type: Date,
         default: null,
     },
-    profileImg: {
-        type: String
+    loyaltyPoints: {
+        type: Number,
+        default: 200,
     },
+    lastDailyClaim: {
+        type: Date,
+        default: null,
+    },
+    passportBadges: [{
+        badgeId: { type: String, required: true },
+        name: { type: String, required: true },
+        icon: { type: String, default: "🍽️" },
+        description: { type: String, default: "" },
+        category: { type: String, default: "culinary" },
+        unlockedAt: { type: Date, default: Date.now }
+    }],
     wishlist: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "House"

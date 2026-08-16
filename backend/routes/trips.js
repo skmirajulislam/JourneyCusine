@@ -7,6 +7,9 @@ const {
   removeDestination,
   addActivity,
   removeActivity,
+  inviteCollaborator,
+  joinTripByInvite,
+  updateSplitStatus,
 } = require("../controllers/tripController.js");
 const { verifyJwtToken } = require("../middleware/jwt.js");
 
@@ -20,5 +23,10 @@ router.post("/:id/destinations", verifyJwtToken, addDestination);
 router.delete("/:id/destinations/:destId", verifyJwtToken, removeDestination);
 router.post("/:id/destinations/:destId/activities", verifyJwtToken, addActivity);
 router.delete("/:id/destinations/:destId/activities/:activityId", verifyJwtToken, removeActivity);
+
+// Group Collaboration & Split-Pay routes
+router.post("/:id/invite", verifyJwtToken, inviteCollaborator);
+router.post("/join/:inviteCode", verifyJwtToken, joinTripByInvite);
+router.patch("/:id/split_status", verifyJwtToken, updateSplitStatus);
 
 module.exports = router;

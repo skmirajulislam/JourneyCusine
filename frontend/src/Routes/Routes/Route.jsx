@@ -191,6 +191,20 @@ const router = createBrowserRouter([
         ),
       },
       {
+        path: "/trips/join/:inviteCode",
+        element: (
+          <Suspense
+            fallback={
+              <div className=" flex justify-center items-center w-full h-[60dvh]">
+                <FadeLoader color="#ff385c" />
+              </div>
+            }
+          >
+            <Trips />
+          </Suspense>
+        ),
+      },
+      {
         path: "/contact",
         element: <ContactUs />,
       },

@@ -9,8 +9,11 @@ import searchIcon from "../../assets/basicIcon/search.svg";
 import house from "../../assets/basicIcon/houseWhite.png";
 
 import { useTheme } from "../../context/ThemeContext.jsx";
+import { useChat } from "../../context/ChatContext.jsx";
+import { useNotifications } from "../../context/NotificationContext.jsx";
+import { useLoyalty } from "../../context/LoyaltyContext.jsx";
 import { BsSun, BsMoonStars } from "react-icons/bs";
-import { FiX, FiSliders } from "react-icons/fi";
+import { FiX, FiSliders, FiMessageSquare, FiBell, FiAward } from "react-icons/fi";
 import { Menu, User } from "lucide-react";
 import FilterPopUp from "../popUp/FilterPopUp/FilterPopUp";
 
@@ -26,6 +29,9 @@ import {
 const Navbar = () => {
   const { theme, toggleTheme } = useTheme();
   const { user, logout } = useAuth();
+  const { setIsChatOpen, unreadTotal } = useChat();
+  const { unreadCount: notificationUnreadCount, openDrawer: openNotificationDrawer } = useNotifications();
+  const { profile: loyaltyProfile, openPassportModal } = useLoyalty();
   const [showFilterPopup, setShowFilterPopup] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -35,8 +41,9 @@ const Navbar = () => {
   const inUserProfile = pathName?.includes("/users/show/");
   const inUserDashboard = pathName?.includes("/users/dashboard/");
   const inHostHomesLandingPage = pathName?.includes("/host/homes");
-  const inListingDetailsPage = pathName?.includes("/listing");
+  const inListingDetailsPage = pathName?.includes("/listing") || pathName?.includes("/rooms/");
   const inBookingPage = pathName?.includes("/book/stays");
+  const inTripsPage = pathName?.includes("/trips");
   const isSmallDevice = window.innerWidth < 768;
 
   const [popup, setPopup] = useState(false);
@@ -161,7 +168,7 @@ const Navbar = () => {
         ) : (
           <>
             {/* searchbar (desktop) */}
-            {inUserProfile || inUserDashboard || inHostHomesLandingPage ? (
+            {inUserProfile || inUserDashboard || inHostHomesLandingPage || inTripsPage ? (
               <div>{inUserDashboard && <MiniNavbar />} </div>
             ) : (
               <div className="mx-auto lg:block hidden">
@@ -283,6 +290,57 @@ const Navbar = () => {
                     </Link>
                   )}
 
+                  {/* Foodie Passport pill button */}
+                  {user && (
+                    <button
+                      type="button"
+                      onClick={openPassportModal}
+                      className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-900/60 hover:bg-amber-100 dark:hover:bg-amber-900/80 transition shadow-2xs text-xs font-bold text-amber-900 dark:text-amber-200 cursor-pointer"
+                      title="Foodie Passport & Rewards"
+                    >
+                      <span>🏆</span>
+                      <span>{loyaltyProfile?.points ?? 200} pts</span>
+                    </button>
+                  )}
+
+                  {/* Notifications bell button */}
+                  {user && (
+                    <Button
+                      type="button"
+                      onClick={openNotificationDrawer}
+                      variant="outline"
+                      size="icon"
+                      className="rounded-full shrink-0 relative"
+                      title="Notifications & Alerts"
+                    >
+                      <FiBell size={15} />
+                      {notificationUnreadCount > 0 && (
+                        <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#ff385c] text-white text-[9px] font-extrabold flex items-center justify-center animate-pulse">
+                          {notificationUnreadCount}
+                        </span>
+                      )}
+                    </Button>
+                  )}
+
+                  {/* Messages / Inquiries button */}
+                  {user && (
+                    <Button
+                      type="button"
+                      onClick={() => setIsChatOpen(true)}
+                      variant="outline"
+                      size="icon"
+                      className="rounded-full shrink-0 relative"
+                      title="Host-Guest Messages"
+                    >
+                      <FiMessageSquare size={15} />
+                      {unreadTotal > 0 && (
+                        <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#ff385c] text-white text-[9px] font-extrabold flex items-center justify-center animate-pulse">
+                          {unreadTotal}
+                        </span>
+                      )}
+                    </Button>
+                  )}
+
                   {/* Theme toggle button */}
                   <Button
                     type="button"
@@ -359,11 +417,38 @@ const Navbar = () => {
                                 Home
                               </DropdownMenuItem>
                             )
-                          ) : (
-                            <DropdownMenuItem className="font-medium">
-                              Notifications
-                            </DropdownMenuItem>
-                          )}
+                          ) : null}
+                          <DropdownMenuItem
+                            className="font-medium flex items-center justify-between"
+                            onClick={openPassportModal}
+                          >
+                            <span>🏆 Foodie Passport</span>
+                            <span className="text-xs font-bold text-amber-600 dark:text-amber-400">
+                              {loyaltyProfile?.points ?? 200} pts
+                            </span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="font-medium flex items-center justify-between"
+                            onClick={openNotificationDrawer}
+                          >
+                            <span>Notifications</span>
+                            {notificationUnreadCount > 0 && (
+                              <span className="px-1.5 py-0.2 rounded-full bg-[#ff385c] text-white text-[10px] font-bold">
+                                {notificationUnreadCount}
+                              </span>
+                            )}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="font-medium flex items-center justify-between"
+                            onClick={() => setIsChatOpen(true)}
+                          >
+                            <span>Messages &amp; Inquiries</span>
+                            {unreadTotal > 0 && (
+                              <span className="px-1.5 py-0.2 rounded-full bg-[#ff385c] text-white text-[10px] font-bold">
+                                {unreadTotal}
+                              </span>
+                            )}
+                          </DropdownMenuItem>
                           <DropdownMenuItem
                             className="font-medium"
                             onClick={() => navigate("/trips")}
@@ -405,7 +490,8 @@ const Navbar = () => {
       {!inUserProfile &&
         !inUserDashboard &&
         !inHostHomesLandingPage &&
-        !inBookingPage && (
+        !inBookingPage &&
+        !inTripsPage && (
           <div className="lg:hidden px-5 pb-3.5 pt-0.5 max-w-screen-2xl mx-auto">
             <div className="flex items-center gap-2">
               <form

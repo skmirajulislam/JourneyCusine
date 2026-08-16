@@ -37,7 +37,7 @@ const DeleteListingModal = ({ listing, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-[1650] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-white dark:bg-[#1e1e1e] rounded-3xl max-w-md w-full p-6 shadow-2xl border border-neutral-200 dark:border-neutral-800 flex flex-col">
+      <div className="bg-white dark:bg-[#1e1e1e] rounded-[28px] overflow-hidden max-w-md w-full p-6 shadow-2xl border border-neutral-200 dark:border-neutral-800 flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">

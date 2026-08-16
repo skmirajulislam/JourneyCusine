@@ -30,17 +30,18 @@ export const RATING_OPTIONS = [
 ];
 
 export const AMENITIES_OPTIONS = [
-  { id: "Wifi", label: "Wifi", icon: HiOutlineWifi },
-  { id: "TV", label: "TV", icon: PiTelevisionSimple },
-  { id: "Kitchen", label: "Kitchen / Fridge", icon: MdOutlineKitchen },
-  { id: "Air conditioning", label: "Air conditioning", icon: BsSnow },
-  { id: "Pool", label: "Pool", icon: MdOutlinePool },
-  { id: "Free parking", label: "Free parking", icon: AiOutlineCar },
-  { id: "Washer", label: "Washing machine", icon: BiSolidWasher },
-  { id: "Dedicated workspace", label: "Workspace", icon: BsPersonWorkspace },
-  { id: "Hot tub", label: "Hot tub", icon: GiBathtub },
-  { id: "BBQ grill", label: "BBQ Grill", icon: GiBarbecue },
-  { id: "Gym", label: "Gym / Fitness", icon: CiDumbbell },
+  { id: "Host Meals", label: "🍲 Host Meals & Dining", icon: MdOutlineKitchen },
+  { id: "Kitchen", label: "🍳 Chef's Kitchen / Cookware", icon: MdOutlineKitchen },
+  { id: "BBQ grill", label: "🥩 BBQ Grill & Oven", icon: GiBarbecue },
+  { id: "Wifi", label: "⚡ High-Speed Wifi", icon: HiOutlineWifi },
+  { id: "Pool", label: "🏊 Pool", icon: MdOutlinePool },
+  { id: "Air conditioning", label: "❄️ Air conditioning", icon: BsSnow },
+  { id: "Dedicated workspace", label: "💻 Workspace", icon: BsPersonWorkspace },
+  { id: "Free parking", label: "🚗 Free parking", icon: AiOutlineCar },
+  { id: "Hot tub", label: "🛁 Hot tub", icon: GiBathtub },
+  { id: "TV", label: "📺 TV & Entertainment", icon: PiTelevisionSimple },
+  { id: "Washer", label: "🧺 Washing machine", icon: BiSolidWasher },
+  { id: "Gym", label: "🏋️ Gym / Fitness", icon: CiDumbbell },
 ];
 
 const staggerContainer = {
@@ -108,7 +109,7 @@ const FilterPopUp = ({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-[120] flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4"
+          className="fixed inset-0 z-[2500] flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4"
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}

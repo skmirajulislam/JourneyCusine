@@ -62,7 +62,7 @@ const AuthenticationPopUp = ({ popup, setPopup }) => {
         {popup && (
           <DialogPortal forceMount>
             <DialogOverlay />
-            <div className="fixed inset-0 z-[101] flex items-center justify-center p-4 sm:p-6 pointer-events-none">
+            <div className="fixed inset-0 z-[2501] flex items-center justify-center p-4 sm:p-6 pointer-events-none">
               <DialogPrimitive.Content asChild onEscapeKeyDown={handleClose} onPointerDownOutside={handleClose}>
                 <motion.div
                   initial={{ opacity: 0, scale: 0.95, y: 15 }}

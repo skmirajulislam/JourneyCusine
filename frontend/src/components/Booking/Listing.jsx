@@ -1,5 +1,4 @@
- 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { AiFillStar } from "react-icons/ai";
 import { FiTag, FiCheckCircle, FiX } from "react-icons/fi";
 import { PulseLoader } from "react-spinners";
@@ -21,14 +20,34 @@ const Listing = ({ searchParamsObj, appliedCoupon, setAppliedCoupon, listingData
   const listingType = listingData?.houseType;
 
   const nightStaying = parseInt(searchParamsObj?.nightStaying, 10) || 1;
+  const numberOfGuests = parseInt(searchParamsObj?.numberOfGuests, 10) || 1;
   const rawBaseUSD = Number(listingData?.basePrice) || 0;
   const baseUSD = rawBaseUSD * nightStaying;
+
+  // Parse Selected Cuisine Add-ons from Search Params
+  const selectedCuisineAddons = useMemo(() => {
+    if (!searchParamsObj?.cuisineAddons) return [];
+    try {
+      const parsed = JSON.parse(decodeURIComponent(searchParamsObj.cuisineAddons));
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }, [searchParamsObj?.cuisineAddons]);
+
+  const cuisineUSD = useMemo(() => {
+    return selectedCuisineAddons.reduce(
+      (sum, item) => sum + (Number(item.price) || 0) * (Number(item.quantity) || numberOfGuests),
+      0
+    );
+  }, [selectedCuisineAddons, numberOfGuests]);
 
   // Calculate discount in USD
   const discountUSD = appliedCoupon?.discountAmount || 0;
   const discountedBaseUSD = Math.max(0, baseUSD - discountUSD);
-  const taxUSD = Math.round((discountedBaseUSD * 14) / 100);
-  const totalUSD = discountedBaseUSD + taxUSD;
+  const subtotalUSD = discountedBaseUSD + cuisineUSD;
+  const taxUSD = Math.round((subtotalUSD * 14) / 100);
+  const totalUSD = subtotalUSD + taxUSD;
 
   const handleApplyCoupon = async (e) => {
     e.preventDefault();
@@ -170,12 +189,28 @@ const Listing = ({ searchParamsObj, appliedCoupon, setAppliedCoupon, listingData
 
           <div className="flex justify-between">
             <span>
-              {formatPrice(rawBaseUSD)} × {nightStaying} night{nightStaying > 1 ? "s" : ""}
+              Accommodation ({formatPrice(rawBaseUSD)} × {nightStaying} night{nightStaying > 1 ? "s" : ""})
             </span>
             <span className="font-semibold text-gray-900 dark:text-white">
               {formatPrice(baseUSD)}
             </span>
           </div>
+
+          {/* Itemized Dining Addons */}
+          {selectedCuisineAddons.length > 0 && (
+            <div className="py-1 border-y border-neutral-100 dark:border-neutral-800 my-1 space-y-1">
+              <div className="flex justify-between font-bold text-rose-600 dark:text-rose-400">
+                <span>🍲 Cuisine Experiences ({selectedCuisineAddons.length})</span>
+                <span>+{formatPrice(cuisineUSD)}</span>
+              </div>
+              {selectedCuisineAddons.map((addon, idx) => (
+                <div key={idx} className="flex justify-between text-[11px] text-[#717171] dark:text-[#a0a0a0] pl-2">
+                  <span className="truncate max-w-[200px]">• {addon.title}</span>
+                  <span>{formatPrice(addon.price * (addon.quantity || numberOfGuests))}</span>
+                </div>
+              ))}
+            </div>
+          )}
 
           {appliedCoupon && discountUSD > 0 && (
             <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-semibold">

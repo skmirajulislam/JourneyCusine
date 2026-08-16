@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import {
   MapContainer,
@@ -26,9 +26,15 @@ import {
   FiMap,
   FiList,
   FiActivity,
+  FiUsers,
+  FiUserPlus,
+  FiShare2,
+  FiDollarSign,
+  FiCopy,
+  FiCheck,
 } from "react-icons/fi";
 import { AiFillStar } from "react-icons/ai";
-import { FadeLoader } from "react-spinners";
+import { FadeLoader, PulseLoader } from "react-spinners";
 import { toast } from "react-hot-toast";
 import api, { API } from "../backend";
 import { useTheme } from "../context/ThemeContext";
@@ -235,6 +241,13 @@ const Trips = () => {
   const [mobileView, setMobileView] = useState("list"); // 'map' or 'list'
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Group Collaboration & Split-Pay States
+  const { inviteCode } = useParams();
+  const navigate = useNavigate();
+  const [activeTripTab, setActiveTripTab] = useState("itinerary"); // "itinerary" | "group"
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [isInviting, setIsInviting] = useState(false);
+
   // Modals & UI states
   const [showNewTripModal, setShowNewTripModal] = useState(false);
   const [showAddDestModal, setShowAddDestModal] = useState(false);
@@ -265,6 +278,34 @@ const Trips = () => {
   const [actNotes, setActNotes] = useState("");
 
   const notifiedDestinations = useRef(new Set());
+
+  // Auto-join group trip if user lands with invite code
+  useEffect(() => {
+    if (inviteCode && user) {
+      async function joinGroup() {
+        try {
+          const res = await api.post(`/trips/join/${inviteCode}`);
+          if (res.data?.success === 1) {
+            toast.success(res.data.message);
+            setActiveTrip(res.data.trip);
+            setTrips((prev) => {
+              const existing = prev.find((t) => t._id === res.data.trip._id);
+              if (existing) {
+                return prev.map((t) => (t._id === res.data.trip._id ? res.data.trip : t));
+              }
+              return [res.data.trip, ...prev];
+            });
+            setActiveTripTab("group");
+            navigate("/trips", { replace: true });
+          }
+        } catch (err) {
+          console.error("join trip error:", err);
+          toast.error(err.response?.data?.error || "Failed to join trip");
+        }
+      }
+      joinGroup();
+    }
+  }, [inviteCode, user, navigate]);
 
   // Request browser notification permission once
   useEffect(() => {
@@ -529,6 +570,76 @@ const Trips = () => {
     }
   };
 
+  // Group Collaboration Handlers
+  const handleInviteCollaborator = async (e) => {
+    e.preventDefault();
+    if (!inviteEmail.trim() || !activeTrip) return;
+    try {
+      setIsInviting(true);
+      const res = await api.post(`/trips/${activeTrip._id}/invite`, {
+        email: inviteEmail.trim(),
+      });
+      if (res.data?.success === 1) {
+        toast.success(res.data.message);
+        setActiveTrip(res.data.trip);
+        setTrips((prev) =>
+          prev.map((t) => (t._id === res.data.trip._id ? res.data.trip : t))
+        );
+        setInviteEmail("");
+      }
+    } catch (err) {
+      console.error("invite error:", err);
+      toast.error(err.response?.data?.error || "Failed to invite co-traveler");
+    } finally {
+      setIsInviting(false);
+    }
+  };
+
+  const handleTogglePaidStatus = async (collabId, currentStatus) => {
+    if (!activeTrip) return;
+    try {
+      const res = await api.patch(`/trips/${activeTrip._id}/split_status`, {
+        collaboratorId: collabId,
+        hasPaid: !currentStatus,
+      });
+      if (res.data?.success === 1) {
+        setActiveTrip(res.data.trip);
+        setTrips((prev) =>
+          prev.map((t) => (t._id === res.data.trip._id ? res.data.trip : t))
+        );
+        toast.success("Payment status updated!");
+      }
+    } catch (err) {
+      console.error("split status error:", err);
+      toast.error("Failed to update status");
+    }
+  };
+
+  const handleUpdateTotalCost = async (newTotal) => {
+    if (!activeTrip) return;
+    try {
+      const res = await api.patch(`/trips/${activeTrip._id}/split_status`, {
+        totalCost: Number(newTotal) || 0,
+      });
+      if (res.data?.success === 1) {
+        setActiveTrip(res.data.trip);
+        setTrips((prev) =>
+          prev.map((t) => (t._id === res.data.trip._id ? res.data.trip : t))
+        );
+        toast.success("Total estimated trip budget updated!");
+      }
+    } catch (err) {
+      console.error("update total cost error:", err);
+    }
+  };
+
+  const handleCopyInviteLink = () => {
+    if (!activeTrip?.inviteCode) return;
+    const link = `${window.location.origin}/trips/join/${activeTrip.inviteCode}`;
+    navigator.clipboard.writeText(link);
+    toast.success("Group invite link copied to clipboard!");
+  };
+
   // Add a motel directly to active trip
   const handleAddMotelToTrip = (motel) => {
     if (!user) {
@@ -578,6 +689,32 @@ const Trips = () => {
       (a, b) => new Date(a.visitTime) - new Date(b.visitTime)
     );
   }, [activeTrip]);
+
+  const computedMotelCost = useMemo(() => {
+    if (!activeTrip?.destinations) return 0;
+    return activeTrip.destinations.reduce((sum, d) => {
+      if (d.motelId && d.motelId.basePrice) {
+        return sum + Number(d.motelId.basePrice);
+      }
+      return sum;
+    }, 0);
+  }, [activeTrip?.destinations]);
+
+  const totalTripCost = activeTrip?.splitSettings?.totalEstimatedCost || computedMotelCost || 0;
+  const collaborators = activeTrip?.collaborators || [];
+  const collaboratorCount = Math.max(1, collaborators.length);
+  const perPersonShare = Math.round(totalTripCost / collaboratorCount);
+  const paidCount = collaborators.filter((c) => c.hasPaid).length;
+  const totalCollected = collaborators.reduce(
+    (sum, c) => sum + (c.hasPaid ? c.shareAmount || perPersonShare : 0),
+    0
+  );
+  const paidPercent =
+    totalTripCost > 0
+      ? Math.min(100, Math.round((totalCollected / totalTripCost) * 100))
+      : collaborators.length > 0 && paidCount === collaborators.length
+      ? 100
+      : 0;
 
   if (isLoading) {
     return (
@@ -700,234 +837,459 @@ const Trips = () => {
                   </button>
                 </div>
 
-                {/* Itinerary Timeline */}
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-bold text-[#111827] dark:text-white flex items-center gap-2">
-                    <FiClock className="text-[#ff385c]" /> Itinerary &amp; Timers
-                  </h3>
-                  <span className="text-[11px] font-medium text-[#6b7280] dark:text-[#9ca3af]">
-                    Chronological
-                  </span>
+                {/* Sub-tab Switcher: Itinerary vs Group & Split-Pay */}
+                <div className="flex border-b border-neutral-200 dark:border-neutral-800 mb-5">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTripTab("itinerary")}
+                    className={`flex-1 py-2.5 text-xs font-bold transition-all border-b-2 flex items-center justify-center gap-1.5 cursor-pointer ${
+                      activeTripTab === "itinerary"
+                        ? "border-[#ff385c] text-[#ff385c]"
+                        : "border-transparent text-neutral-500 hover:text-neutral-900 dark:hover:text-white"
+                    }`}
+                  >
+                    <FiClock size={14} />
+                    <span>Itinerary &amp; Timers ({sortedDestinations.length})</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTripTab("group")}
+                    className={`flex-1 py-2.5 text-xs font-bold transition-all border-b-2 flex items-center justify-center gap-1.5 cursor-pointer ${
+                      activeTripTab === "group"
+                        ? "border-[#ff385c] text-[#ff385c]"
+                        : "border-transparent text-neutral-500 hover:text-neutral-900 dark:hover:text-white"
+                    }`}
+                  >
+                    <FiUsers size={14} />
+                    <span>Group &amp; Split-Pay ({collaborators.length})</span>
+                  </button>
                 </div>
 
-                {sortedDestinations.length === 0 ? (
-                  <div className="text-center py-12 px-4 border border-dashed border-[#d1d5db] dark:border-[#333333] rounded-2xl bg-neutral-50 dark:bg-[#1f1f1f]">
-                    <FiMapPin className="mx-auto text-4xl text-[#9ca3af] mb-2" />
-                    <p className="text-sm font-bold text-[#111827] dark:text-white">
-                      No destinations in this trip yet
-                    </p>
-                    <p className="text-xs text-[#6b7280] dark:text-[#9ca3af] mt-1 max-w-xs mx-auto leading-relaxed">
-                      Tap any motel on the map or click anywhere to drop a pin for
-                      local attractions with a reminder timer.
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => setMobileView("map")}
-                      className="mt-4 px-4 py-2 rounded-xl bg-[#ff385c] text-white text-xs font-bold shadow-sm inline-flex items-center gap-1.5"
-                    >
-                      <FiMap /> Pin on Map
-                    </button>
+                {activeTripTab === "group" ? (
+                  /* Group & Split-Pay Panel */
+                  <div className="space-y-5">
+                    {/* Split Pay Overview Card */}
+                    <div className="p-4 rounded-2xl bg-gradient-to-br from-rose-50/70 via-white to-amber-50/50 dark:from-[#201518] dark:via-[#191919] dark:to-[#1a1715] border border-rose-200 dark:border-rose-950/60 shadow-xs">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <div className="p-2 rounded-xl bg-[#ff385c] text-white">
+                            <FiDollarSign size={16} />
+                          </div>
+                          <div>
+                            <h4 className="text-xs font-bold text-neutral-900 dark:text-white">
+                              Group Split-Pay
+                            </h4>
+                            <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
+                              {collaboratorCount} co-traveler{collaboratorCount !== 1 ? "s" : ""} sharing costs
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="text-right">
+                          <span className="text-[10px] text-neutral-400 uppercase font-bold tracking-wider block">
+                            Each Person Pays
+                          </span>
+                          <span className="text-base font-extrabold text-[#ff385c]">
+                            {formatPrice(perPersonShare)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Progress Bar */}
+                      <div className="mt-2">
+                        <div className="flex items-center justify-between text-[11px] font-semibold text-neutral-600 dark:text-neutral-300 mb-1">
+                          <span>Collected: {formatPrice(totalCollected)}</span>
+                          <span>
+                            {paidCount} of {collaboratorCount} paid ({paidPercent}%)
+                          </span>
+                        </div>
+                        <div className="w-full h-2 rounded-full bg-neutral-200 dark:bg-neutral-700 overflow-hidden">
+                          <div
+                            className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                            style={{ width: `${paidPercent}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Total Budget Edit Form */}
+                      <div className="mt-3 pt-3 border-t border-rose-100 dark:border-neutral-800 flex items-center justify-between gap-2">
+                        <span className="text-[11px] text-neutral-500">
+                          Total Trip Budget (USD $):
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            min="0"
+                            defaultValue={totalTripCost}
+                            onBlur={(e) => handleUpdateTotalCost(e.target.value)}
+                            className="w-24 px-2 py-1 text-xs font-bold rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-[#222] text-neutral-900 dark:text-white text-right"
+                          />
+                          <span className="text-[11px] font-semibold text-neutral-400">
+                            ({formatPrice(totalTripCost)})
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Invite Co-Travelers Card */}
+                    <div className="p-4 rounded-2xl bg-white dark:bg-[#202020] border border-[#e5e7eb] dark:border-[#2e2e2e] shadow-xs">
+                      <h4 className="text-xs font-bold text-[#111827] dark:text-white flex items-center gap-1.5 mb-2">
+                        <FiShare2 className="text-[#ff385c]" />
+                        <span>Invite Friends to Group Trip</span>
+                      </h4>
+
+                      {/* Share Link Button */}
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="flex-1 px-3 py-2 rounded-xl bg-neutral-100 dark:bg-[#181818] border border-neutral-200 dark:border-neutral-700 text-[11px] text-neutral-600 dark:text-neutral-400 truncate font-mono">
+                          Code: <span className="font-bold text-[#ff385c]">{activeTrip.inviteCode || "TRIP_INVITE"}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleCopyInviteLink}
+                          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#ff385c] hover:bg-[#d90b63] text-white text-xs font-bold transition shadow-xs cursor-pointer shrink-0"
+                        >
+                          <FiCopy size={13} />
+                          <span>Copy Link</span>
+                        </button>
+                      </div>
+
+                      {/* Direct Email Invite Form */}
+                      <form onSubmit={handleInviteCollaborator} className="flex gap-2">
+                        <input
+                          type="email"
+                          placeholder="friend@email.com"
+                          value={inviteEmail}
+                          onChange={(e) => setInviteEmail(e.target.value)}
+                          className="flex-1 px-3 py-2 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-[#181818] text-xs text-neutral-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#ff385c]"
+                        />
+                        <button
+                          type="submit"
+                          disabled={!inviteEmail.trim() || isInviting}
+                          className="flex items-center gap-1 px-3.5 py-2 rounded-xl bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 disabled:opacity-40 text-xs font-bold transition cursor-pointer shrink-0"
+                        >
+                          {isInviting ? (
+                            <PulseLoader size={4} color="#fff" />
+                          ) : (
+                            <>
+                              <FiUserPlus size={13} />
+                              <span>Invite</span>
+                            </>
+                          )}
+                        </button>
+                      </form>
+                    </div>
+
+                    {/* Group Members List */}
+                    <div className="space-y-2">
+                      <h4 className="text-xs font-bold text-[#111827] dark:text-white flex items-center justify-between">
+                        <span>Co-Travelers &amp; Payment Status</span>
+                        <span className="text-[11px] font-normal text-neutral-500">Tap status to toggle</span>
+                      </h4>
+
+                      {collaborators.map((collab, idx) => {
+                        const isMe =
+                          user?._id &&
+                          (String(collab.userId) === String(user._id) ||
+                            collab.email === user.emailId);
+                        const name = collab.name || collab.email.split("@")[0];
+
+                        return (
+                          <div
+                            key={collab._id || idx}
+                            className="p-3 rounded-2xl bg-white dark:bg-[#202020] border border-[#e5e7eb] dark:border-[#2e2e2e] shadow-2xs flex items-center justify-between gap-3"
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="w-9 h-9 rounded-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center font-bold text-xs uppercase overflow-hidden shrink-0">
+                                {collab.avatar ? (
+                                  <img
+                                    src={collab.avatar}
+                                    alt={name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  name[0]
+                                )}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-xs font-bold text-neutral-900 dark:text-white truncate flex items-center gap-1.5">
+                                  <span>{name}</span>
+                                  {isMe && (
+                                    <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-rose-100 dark:bg-rose-950/60 text-[#ff385c] font-semibold">
+                                      You
+                                    </span>
+                                  )}
+                                  {collab.role === "owner" && (
+                                    <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 font-semibold">
+                                      Leader
+                                    </span>
+                                  )}
+                                </p>
+                                <p className="text-[11px] text-neutral-400 truncate">
+                                  {collab.email} • Share: {formatPrice(perPersonShare)}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Toggle Payment Status Button */}
+                            <button
+                              type="button"
+                              onClick={() => handleTogglePaidStatus(collab._id, collab.hasPaid)}
+                              className={`px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 transition cursor-pointer ${
+                                collab.hasPaid
+                                  ? "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200"
+                                  : "bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 hover:bg-amber-200"
+                              }`}
+                            >
+                              {collab.hasPaid ? (
+                                <>
+                                  <FiCheck size={13} />
+                                  <span>Paid</span>
+                                </>
+                              ) : (
+                                <span>Pending</span>
+                              )}
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    {sortedDestinations.map((dest, idx) => {
-                      const isMotel = Boolean(dest.motelId);
-                      const activities = dest.activities || [];
+                  /* Itinerary Timeline */
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-sm font-bold text-[#111827] dark:text-white flex items-center gap-2">
+                        <FiClock className="text-[#ff385c]" /> Itinerary &amp; Timers
+                      </h3>
+                      <span className="text-[11px] font-medium text-[#6b7280] dark:text-[#9ca3af]">
+                        Chronological
+                      </span>
+                    </div>
 
-                      return (
-                        <div
-                          key={dest._id}
-                          className="p-4 rounded-2xl border transition-all bg-white dark:bg-[#202020] border-[#e5e7eb] dark:border-[#2e2e2e] shadow-sm hover:shadow-md"
+                    {sortedDestinations.length === 0 ? (
+                      <div className="text-center py-12 px-4 border border-dashed border-[#d1d5db] dark:border-[#333333] rounded-2xl bg-neutral-50 dark:bg-[#1f1f1f]">
+                        <FiMapPin className="mx-auto text-4xl text-[#9ca3af] mb-2" />
+                        <p className="text-sm font-bold text-[#111827] dark:text-white">
+                          No destinations in this trip yet
+                        </p>
+                        <p className="text-xs text-[#6b7280] dark:text-[#9ca3af] mt-1 max-w-xs mx-auto leading-relaxed">
+                          Tap any motel on the map or click anywhere to drop a pin for
+                          local attractions with a reminder timer.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setMobileView("map")}
+                          className="mt-4 px-4 py-2 rounded-xl bg-[#ff385c] text-white text-xs font-bold shadow-sm inline-flex items-center gap-1.5"
                         >
-                          {/* Destination Main Header */}
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="flex items-start gap-3 flex-1">
-                              <span className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-extrabold text-white shrink-0 mt-0.5 bg-[#ff385c] shadow-sm">
-                                {idx + 1}
-                              </span>
-                              <div className="flex-1 min-w-0">
-                                <h4 className="text-sm font-extrabold text-[#111827] dark:text-white truncate">
-                                  {dest.title}
-                                </h4>
-                                {dest.address && (
-                                  <p className="text-xs text-[#6b7280] dark:text-[#9ca3af] truncate mt-0.5">
-                                    {dest.address}
-                                  </p>
-                                )}
+                          <FiMap /> Pin on Map
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {sortedDestinations.map((dest, idx) => {
+                          const isMotel = Boolean(dest.motelId);
+                          const activities = dest.activities || [];
 
-                                {/* Scheduled Date & Time */}
-                                <div className="flex items-center gap-3 mt-2 text-xs text-[#374151] dark:text-[#d1d5db]">
-                                  <span className="flex items-center gap-1">
-                                    <FiCalendar className="text-[#ff385c]" />
-                                    {new Date(dest.visitTime).toLocaleDateString(
-                                      undefined,
-                                      {
-                                        month: "short",
-                                        day: "numeric",
-                                        year: "numeric",
-                                      }
-                                    )}
-                                  </span>
-                                  <span className="flex items-center gap-1 font-bold">
-                                    <FiClock className="text-[#ff385c]" />
-                                    {new Date(dest.visitTime).toLocaleTimeString(
-                                      [],
-                                      {
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                      }
-                                    )}
-                                  </span>
-                                </div>
-
-                                {/* Live Countdown Badge */}
-                                <div className="mt-2.5">
-                                  <CountdownBadge
-                                    visitTime={dest.visitTime}
-                                    title={dest.title}
-                                    destId={dest._id}
-                                    notifiedSet={notifiedDestinations}
-                                  />
-                                </div>
-
-                                {/* Notes section */}
-                                {dest.notes && (
-                                  <div className="mt-2.5 text-xs text-[#374151] dark:text-[#d1d5db] bg-[#f9fafb] dark:bg-[#171717] p-2.5 rounded-xl border border-neutral-100 dark:border-neutral-800">
-                                    <span className="font-semibold text-[#111827] dark:text-white">Note: </span>
-                                    <span className="italic">&ldquo;{dest.notes}&rdquo;</span>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-
-                            <div className="flex flex-col gap-1 items-end">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setMapTarget([dest.latitude, dest.longitude]);
-                                  setMobileView("map");
-                                }}
-                                title="Focus on Map"
-                                className="p-2 text-xs text-[#111827] dark:text-white bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded-xl cursor-pointer transition-colors"
-                              >
-                                <FiNavigation size={14} />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveDestination(dest._id)}
-                                title="Remove Destination"
-                                className="p-2 text-xs text-[#6b7280] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-xl cursor-pointer transition-colors"
-                              >
-                                <FiTrash2 size={14} />
-                              </button>
-                            </div>
-                          </div>
-
-                          {/* Motel Card Preview if linked */}
-                          {isMotel && dest.motelId?.photos?.[0] && (
-                            <Link
-                              to={`/rooms/${dest.motelId._id}`}
-                              className="mt-3 pt-2.5 border-t border-[#f3f4f6] dark:border-[#2e2e2e] flex items-center gap-3 group"
+                          return (
+                            <div
+                              key={dest._id}
+                              className="p-4 rounded-2xl border transition-all bg-white dark:bg-[#202020] border-[#e5e7eb] dark:border-[#2e2e2e] shadow-sm hover:shadow-md"
                             >
-                              <img
-                                src={dest.motelId.photos[0]}
-                                alt="Motel"
-                                className="w-12 h-12 object-cover rounded-xl shrink-0"
-                              />
-                              <div className="flex-1 min-w-0">
-                                <p className="text-xs font-bold text-[#111827] dark:text-white group-hover:underline truncate">
-                                  {dest.motelId.title}
-                                </p>
-                                <p className="text-[11px] text-[#6b7280] dark:text-[#9ca3af]">
-                                  ${dest.motelId.basePrice} / night
-                                </p>
-                              </div>
-                            </Link>
-                          )}
+                              {/* Destination Main Header */}
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="flex items-start gap-3 flex-1">
+                                  <span className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-extrabold text-white shrink-0 mt-0.5 bg-[#ff385c] shadow-sm">
+                                    {idx + 1}
+                                  </span>
+                                  <div className="flex-1 min-w-0">
+                                    <h4 className="text-sm font-extrabold text-[#111827] dark:text-white truncate">
+                                      {dest.title}
+                                    </h4>
+                                    {dest.address && (
+                                      <p className="text-xs text-[#6b7280] dark:text-[#9ca3af] truncate mt-0.5">
+                                        {dest.address}
+                                      </p>
+                                    )}
 
-                          {/* Side-Wise Activities / Sub-tasks Section */}
-                          <div className="mt-3.5 pt-3 border-t border-[#f3f4f6] dark:border-[#2e2e2e]">
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="text-xs font-bold text-[#111827] dark:text-white flex items-center gap-1.5">
-                                <FiActivity className="text-[#ff385c]" />
-                                Activities &amp; Sub-timers ({activities.length})
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => handleOpenAddActivity(dest)}
-                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-neutral-100 dark:bg-neutral-800 hover:bg-[#ff385c]/10 hover:text-[#ff385c] text-[11px] font-bold text-[#111827] dark:text-white transition-colors cursor-pointer"
-                              >
-                                <FiPlus size={12} /> Add Activity
-                              </button>
-                            </div>
-
-                            {/* Side-Wise Horizontal Scroll of Activities */}
-                            {activities.length > 0 ? (
-                              <div className="flex items-stretch gap-2.5 overflow-x-auto pb-1.5 pt-1 [scrollbar-width:thin]">
-                                {activities.map((act) => (
-                                  <div
-                                    key={act._id}
-                                    className="min-w-[190px] max-w-[220px] p-2.5 rounded-xl bg-[#f9fafb] dark:bg-[#181818] border border-[#e5e7eb] dark:border-[#2a2a2a] shadow-xs flex flex-col justify-between shrink-0"
-                                  >
-                                    <div>
-                                      <div className="flex items-start justify-between gap-1">
-                                        <h5 className="text-xs font-bold text-[#111827] dark:text-white truncate">
-                                          {act.title}
-                                        </h5>
-                                        <button
-                                          type="button"
-                                          onClick={() =>
-                                            handleRemoveActivity(
-                                              dest._id,
-                                              act._id
-                                            )
+                                    {/* Scheduled Date & Time */}
+                                    <div className="flex items-center gap-3 mt-2 text-xs text-[#374151] dark:text-[#d1d5db]">
+                                      <span className="flex items-center gap-1">
+                                        <FiCalendar className="text-[#ff385c]" />
+                                        {new Date(dest.visitTime).toLocaleDateString(
+                                          undefined,
+                                          {
+                                            month: "short",
+                                            day: "numeric",
+                                            year: "numeric",
                                           }
-                                          className="text-[#9ca3af] hover:text-red-500 p-0.5 cursor-pointer"
-                                          title="Remove Activity"
-                                        >
-                                          <FiX size={12} />
-                                        </button>
-                                      </div>
-
-                                      <p className="text-[10px] text-[#6b7280] dark:text-[#9ca3af] mt-1 flex items-center gap-1">
-                                        <FiClock size={10} className="text-[#ff385c]" />
-                                        {new Date(act.time).toLocaleTimeString(
+                                        )}
+                                      </span>
+                                      <span className="flex items-center gap-1 font-bold">
+                                        <FiClock className="text-[#ff385c]" />
+                                        {new Date(dest.visitTime).toLocaleTimeString(
                                           [],
                                           {
                                             hour: "2-digit",
                                             minute: "2-digit",
                                           }
                                         )}
-                                      </p>
-
-                                      {act.notes && (
-                                        <p className="text-[10px] italic text-[#4b5563] dark:text-[#9ca3af] mt-1 truncate">
-                                          &ldquo;{act.notes}&rdquo;
-                                        </p>
-                                      )}
+                                      </span>
                                     </div>
 
-                                    <div className="mt-2">
+                                    {/* Live Countdown Badge */}
+                                    <div className="mt-2.5">
                                       <CountdownBadge
-                                        visitTime={act.time}
-                                        title={act.title}
-                                        destId={act._id}
+                                        visitTime={dest.visitTime}
+                                        title={dest.title}
+                                        destId={dest._id}
                                         notifiedSet={notifiedDestinations}
-                                        compact={true}
                                       />
                                     </div>
+
+                                    {/* Notes section */}
+                                    {dest.notes && (
+                                      <div className="mt-2.5 text-xs text-[#374151] dark:text-[#d1d5db] bg-[#f9fafb] dark:bg-[#171717] p-2.5 rounded-xl border border-neutral-100 dark:border-neutral-800">
+                                        <span className="font-semibold text-[#111827] dark:text-white">Note: </span>
+                                        <span className="italic">&ldquo;{dest.notes}&rdquo;</span>
+                                      </div>
+                                    )}
                                   </div>
-                                ))}
+                                </div>
+
+                                {/* Action Buttons */}
+                                <div className="flex flex-col gap-1 items-end shrink-0">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setMapTarget([dest.latitude, dest.longitude]);
+                                      setMobileView("map");
+                                    }}
+                                    title="Focus on Map"
+                                    className="p-1.5 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors cursor-pointer"
+                                  >
+                                    <FiNavigation size={14} />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveDestination(dest._id)}
+                                    title="Remove Pin"
+                                    className="p-1.5 text-[#9ca3af] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg transition-colors cursor-pointer"
+                                  >
+                                    <FiTrash2 size={14} />
+                                  </button>
+                                </div>
                               </div>
-                            ) : (
-                              <p className="text-[11px] text-[#9ca3af] italic">
-                                No side-activities added yet. Click &ldquo;+ Add Activity&rdquo; for scuba, dinner, tour reminders!
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
+
+                              {/* Motel Details Card if this destination is linked to a Motel */}
+                              {isMotel && dest.motelId && (
+                                <div className="mt-3.5 p-3 rounded-xl bg-[#f9fafb] dark:bg-[#171717] border border-neutral-200 dark:border-[#2e2e2e] flex items-center gap-3">
+                                  <div className="w-14 h-14 rounded-lg overflow-hidden shrink-0 bg-neutral-200">
+                                    <img
+                                      src={dest.motelId.photos?.[0] || "/placeholder.jpg"}
+                                      alt={dest.motelId.title}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-bold text-[#111827] dark:text-white truncate">
+                                      {dest.motelId.title}
+                                    </p>
+                                    <p className="text-xs text-[#ff385c] font-extrabold mt-0.5">
+                                      {formatPrice(dest.motelId.basePrice)}
+                                      <span className="text-[10px] text-[#6b7280] dark:text-[#9ca3af] font-normal">
+                                        {" "}/ night
+                                      </span>
+                                    </p>
+                                  </div>
+                                  <Link
+                                    to={`/house/${dest.motelId._id}`}
+                                    target="_blank"
+                                    className="px-2.5 py-1.5 text-xs font-bold rounded-lg bg-[#111827] dark:bg-white text-white dark:text-[#111827] hover:opacity-90 shrink-0"
+                                  >
+                                    View Stay
+                                  </Link>
+                                </div>
+                              )}
+
+                              {/* Sub-Activities Timeline within this Destination */}
+                              <div className="mt-4 pt-3 border-t border-neutral-100 dark:border-[#2a2a2a]">
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="text-xs font-bold text-[#374151] dark:text-[#d1d5db] flex items-center gap-1.5">
+                                    <FiActivity className="text-[#ff385c]" />
+                                    Activities &amp; Stops ({activities.length})
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOpenAddActivity(dest)}
+                                    className="text-xs font-bold text-[#ff385c] hover:underline flex items-center gap-1 cursor-pointer"
+                                  >
+                                    <FiPlus size={12} /> Add Activity
+                                  </button>
+                                </div>
+
+                                {activities.length > 0 ? (
+                                  <div className="space-y-2 pl-2 border-l-2 border-[#ff385c]/40">
+                                    {activities.map((act) => (
+                                      <div
+                                        key={act._id}
+                                        className="p-2.5 rounded-xl bg-[#f9fafb] dark:bg-[#181818] border border-neutral-100 dark:border-neutral-800 text-xs"
+                                      >
+                                        <div className="flex items-start justify-between gap-1">
+                                          <span className="font-bold text-[#111827] dark:text-white">
+                                            {act.title}
+                                          </span>
+                                          <button
+                                            type="button"
+                                            onClick={() =>
+                                              handleRemoveActivity(dest._id, act._id)
+                                            }
+                                            title="Delete Activity"
+                                            className="text-[#9ca3af] hover:text-red-500 cursor-pointer p-0.5"
+                                          >
+                                            <FiTrash2 size={12} />
+                                          </button>
+                                        </div>
+
+                                        <div className="flex items-center gap-2 mt-1 text-[11px] text-[#6b7280] dark:text-[#9ca3af]">
+                                          <FiClock size={11} className="text-[#ff385c]" />
+                                          <span>
+                                            {new Date(act.time).toLocaleTimeString([], {
+                                              hour: "2-digit",
+                                              minute: "2-digit",
+                                            })}
+                                          </span>
+                                        </div>
+
+                                        {act.notes && (
+                                          <p className="text-[11px] text-[#4b5563] dark:text-[#9ca3af] italic mt-1">
+                                            &ldquo;{act.notes}&rdquo;
+                                          </p>
+                                        )}
+
+                                        {/* Sub-activity Live Countdown Badge */}
+                                        <div className="mt-1.5">
+                                          <CountdownBadge
+                                            visitTime={act.time}
+                                            title={act.title}
+                                            destId={act._id}
+                                            notifiedSet={notifiedDestinations}
+                                            compact={true}
+                                          />
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <p className="text-[11px] text-[#9ca3af] italic">
+                                    No side-activities added yet. Click &ldquo;+ Add Activity&rdquo; for scuba, dinner, tour reminders!
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

@@ -17,7 +17,7 @@ const DialogOverlay = React.forwardRef(({ className, ...props }, ref) => (
       exit={{ opacity: 0 }}
       transition={{ duration: 0.2 }}
       className={cn(
-        "fixed inset-0 z-[100] bg-black/60 backdrop-blur-[2px]",
+        "fixed inset-0 z-[2500] bg-black/60 backdrop-blur-[2px]",
         className
       )}
       {...props}
@@ -30,7 +30,7 @@ const DialogContent = React.forwardRef(
   ({ className, children, showClose = true, ...props }, ref) => (
     <DialogPortal>
       <DialogOverlay />
-      <div className="fixed inset-0 z-[101] flex items-center justify-center p-4 sm:p-6 pointer-events-none">
+      <div className="fixed inset-0 z-[2501] flex items-center justify-center p-4 sm:p-6 pointer-events-none">
         <DialogPrimitive.Content ref={ref} asChild>
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 15 }}

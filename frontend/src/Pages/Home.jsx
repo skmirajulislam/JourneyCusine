@@ -155,10 +155,17 @@ const Home = () => {
         );
         const desc = (item.description || "").toLowerCase();
         const title = (item.title || "").toLowerCase();
+        const hasCuisineOfferings = (item.cuisineOfferings || []).length > 0;
 
         // Must match all selected amenities
         return amenitiesFilter.every((reqAmenity) => {
           const lowerReq = reqAmenity.toLowerCase();
+          if (lowerReq.includes("host meal") || lowerReq.includes("cuisine")) {
+            return hasCuisineOfferings || desc.includes("meal") || desc.includes("breakfast") || desc.includes("dinner") || desc.includes("chef");
+          }
+          if (lowerReq.includes("speedtest") || lowerReq.includes("100+ mbps")) {
+            return itemAmenities.some((a) => a?.includes("wifi") || a?.includes("speed")) || desc.includes("mbps") || desc.includes("high-speed") || desc.includes("wifi");
+          }
           return (
             itemAmenities.some((a) => a?.includes(lowerReq)) ||
             desc.includes(lowerReq) ||

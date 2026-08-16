@@ -47,6 +47,25 @@ const reservationSchema = new mongoose.Schema(
     authorEarnedPrice: {
       type: Number,
     },
+    // Cuisine & Dining Add-ons Selected
+    selectedCuisineAddons: [
+      {
+        offeringId: { type: String },
+        title: { type: String },
+        price: { type: Number }, // price in USD
+        guestPrice: { type: Number }, // price in guest currency
+        quantity: { type: Number, default: 1 },
+        type: { type: String },
+      },
+    ],
+    cuisineTotalPrice: {
+      type: Number,
+      default: 0,
+    },
+    guestCuisineTotalPrice: {
+      type: Number,
+      default: 0,
+    },
     // Multi-Currency Breakdown
     currency: {
       type: String,

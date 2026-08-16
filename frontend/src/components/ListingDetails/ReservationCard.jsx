@@ -15,8 +15,7 @@ import { useAuth } from "../../hooks/useAuth";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 
- 
-const ReservationCard = ({ listingData }) => {
+const ReservationCard = ({ listingData, selectedCuisineAddons = [], onToggleCuisineAddon }) => {
   // refs
   const calendarRef = useRef();
   const dropdownRef = useRef();
@@ -69,10 +68,22 @@ const ReservationCard = ({ listingData }) => {
     return diffDays === 0 ? 1 : diffDays;
   }, [selectedDates]);
 
-  const reservationBasePrice = useMemo(() => {
+  // Calculate room price
+  const roomBasePrice = useMemo(() => {
     const base = Number(listingData?.basePrice) || 50;
     return base * nightsStaying;
   }, [listingData?.basePrice, nightsStaying]);
+
+  // Calculate cuisine add-ons price
+  const cuisineTotalPrice = useMemo(() => {
+    if (!Array.isArray(selectedCuisineAddons) || selectedCuisineAddons.length === 0) return 0;
+    return selectedCuisineAddons.reduce(
+      (sum, item) => sum + (Number(item.price) || 0) * (Number(item.quantity) || totalGuest),
+      0
+    );
+  }, [selectedCuisineAddons, totalGuest]);
+
+  const totalBeforeTaxes = roomBasePrice + cuisineTotalPrice;
 
   // formatted dates
   const formattedStartDate = selectedDates[0]?.startDate?.toISOString();
@@ -98,8 +109,13 @@ const ReservationCard = ({ listingData }) => {
     const orderNumber = localStorage.getItem("orderId");
     const orderId = orderNumber ? orderNumber : 1;
 
+    const cuisineParam =
+      selectedCuisineAddons.length > 0
+        ? `&cuisineAddons=${encodeURIComponent(JSON.stringify(selectedCuisineAddons))}`
+        : "";
+
     navigate(
-      `/book/stays/${listingData._id}?numberOfGuests=${totalGuest}&nightStaying=${nightsStaying}&checkin=${formattedStartDate}&checkout=${formattedEndDate}&orderId=${orderId}`
+      `/book/stays/${listingData._id}?numberOfGuests=${totalGuest}&nightStaying=${nightsStaying}&checkin=${formattedStartDate}&checkout=${formattedEndDate}&orderId=${orderId}${cuisineParam}`
     );
   };
 
@@ -131,9 +147,11 @@ const ReservationCard = ({ listingData }) => {
         <div className="flex flex-row justify-between items-start">
           <div className="flex flex-col">
             <h3 className="text-[22px] text-[#222222] dark:text-white font-semibold">
-              {formatPrice(reservationBasePrice)}
+              {formatPrice(totalBeforeTaxes)}
             </h3>
-            <p className="text-[#313131] dark:text-[#a0a0a0] text-sm">Total before taxes</p>
+            <p className="text-[#313131] dark:text-[#a0a0a0] text-sm">
+              {cuisineTotalPrice > 0 ? "Stay + Dining before taxes" : "Total before taxes"}
+            </p>
           </div>
           <span className="text-sm text-[#222222] dark:text-[#e5e7eb] flex flex-row gap-1 items-center mt-2">
             <AiFillStar size={18} />
@@ -200,6 +218,39 @@ const ReservationCard = ({ listingData }) => {
                   )}
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Selected Cuisine Addons Preview */}
+        {selectedCuisineAddons.length > 0 && !calendarState && (
+          <div className="mt-4 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/60 text-xs">
+            <div className="flex items-center justify-between font-bold text-rose-900 dark:text-rose-200 mb-1.5">
+              <span>🍲 Dining Experiences Added ({selectedCuisineAddons.length})</span>
+              <span>+{formatPrice(cuisineTotalPrice)}</span>
+            </div>
+            <div className="space-y-1">
+              {selectedCuisineAddons.map((addon, idx) => (
+                <div key={idx} className="flex items-center justify-between text-neutral-600 dark:text-neutral-400 text-[11px]">
+                  <span className="truncate max-w-[170px]">• {addon.title}</span>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span>{formatPrice(addon.price * (addon.quantity || totalGuest))}</span>
+                    {onToggleCuisineAddon && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onToggleCuisineAddon(addon);
+                        }}
+                        className="text-neutral-400 hover:text-rose-600 font-bold ml-1 cursor-pointer"
+                        title="Remove"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}

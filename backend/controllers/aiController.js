@@ -1725,3 +1725,130 @@ Output a valid JSON object ONLY:
   }
 };
 
+/**
+ * AI Listing Description Generator
+ * POST /ai/generate_description
+ */
+exports.generateListingDescription = async (req, res) => {
+  try {
+    const { title, houseType, location, amenities, cuisineOfferings, tone } = req.body;
+
+    const typeLabel = houseType || "boutique motel retreat";
+    const placeName = title || "our peaceful haven";
+    const locString =
+      typeof location === "object"
+        ? [location?.address, location?.city?.name, location?.city?.country]
+            .filter(Boolean)
+            .join(", ")
+        : location || "a scenic destination";
+
+    const amenityList =
+      Array.isArray(amenities) && amenities.length > 0
+        ? amenities.slice(0, 6).join(", ")
+        : "fast Wi-Fi, air conditioning, and full home comfort";
+
+    const hasDining = Array.isArray(cuisineOfferings) && cuisineOfferings.length > 0;
+    const mealHighlight = hasDining
+      ? `Indulge in authentic host-prepared dining offerings (${cuisineOfferings
+          .map((c) => c.title)
+          .join(", ")}) during your stay.`
+      : "Located within easy reach of top-rated regional culinary gems and authentic neighborhood eateries.";
+
+    let generatedText = "";
+
+    if (tone === "culinary") {
+      generatedText = `Welcome to ${placeName}, where memorable travel meets authentic gastronomy in ${locString}!\n\nThis charming ${typeLabel.toLowerCase()} is designed for travelers who cherish rich regional flavors and warm hospitality. Unwind in thoughtfully appointed spaces featuring ${amenityList}.\n\n${mealHighlight}\n\nWhether you're exploring the local culinary trail, relaxing on the private patio, or gathering for an unforgettable evening feast, your stay promises an inspiring taste of local culture. Book your culinary getaway today!`;
+    } else if (tone === "luxury") {
+      generatedText = `Experience refined elegance and serene sophistication at ${placeName}, nestled in ${locString}.\n\nThis premier ${typeLabel.toLowerCase()} offers an elevated sanctuary for discerning travelers. Immerse yourself in designer interiors, plush bedding, and top-tier amenities including ${amenityList}.\n\n${mealHighlight}\n\nFrom tranquil morning coffees to breathtaking twilight views, every detail is curated for supreme comfort and relaxation. Reserve your five-star escape today.`;
+    } else if (tone === "modern") {
+      generatedText = `Discover a stylish, high-tech haven at ${placeName} in the heart of ${locString}!\n\nPerfect for modern adventurers, remote professionals, and city explorers, this contemporary ${typeLabel.toLowerCase()} seamlessly blends comfort with sleek design. Enjoy seamless connectivity with ${amenityList}.\n\n${mealHighlight}\n\nStep out to explore iconic landmarks and hidden city gems, then recharge in a comfortable, modern retreat. Secure your stay now!`;
+    } else {
+      // Default: "cozy" / homestyle
+      generatedText = `Make yourself at home at ${placeName}, your tranquil sanctuary in ${locString}.\n\nThis cozy and inviting ${typeLabel.toLowerCase()} is the perfect retreat for families, couples, and friends seeking relaxation. Enjoy peaceful surroundings equipped with ${amenityList}.\n\n${mealHighlight}\n\nRelax, recharge, and create lasting memories in a space crafted with care and warmth. We look forward to hosting you!`;
+    }
+
+    return res.status(200).json({
+      success: 1,
+      description: generatedText,
+    });
+  } catch (error) {
+    console.error("generateListingDescription error:", error);
+    return res.status(500).json({ success: 0, message: "Failed to generate description" });
+  }
+};
+
+/**
+ * AI Smart Pricing Recommendation Engine
+ * POST /ai/smart_pricing
+ */
+exports.calculateSmartPricing = async (req, res) => {
+  try {
+    const { houseType, floorPlan, amenities, cuisineOfferings } = req.body;
+
+    const categoryBase = {
+      Hotel: 95,
+      House: 80,
+      Apartment: 70,
+      Cabin: 85,
+      Boat: 120,
+      Castle: 250,
+      Dome: 110,
+      Tent: 45,
+      "Tree house": 105,
+      Camper: 55,
+      Container: 65,
+    };
+
+    let base = categoryBase[houseType] || 75;
+
+    const guests = Number(floorPlan?.guests) || 1;
+    const bedrooms = Number(floorPlan?.bedrooms) || 1;
+    const bathrooms = Number(floorPlan?.bathroomsNumber) || 1;
+    base += (guests - 1) * 12;
+    base += (bedrooms - 1) * 20;
+    base += (bathrooms - 1) * 15;
+
+    if (Array.isArray(amenities)) {
+      if (amenities.includes("Pool") || amenities.includes("Swimming Pool")) base += 25;
+      if (amenities.includes("Air conditioning")) base += 10;
+      if (amenities.includes("Bathtub") || amenities.includes("Buthub")) base += 12;
+      if (amenities.includes("Grill") || amenities.includes("Campfire")) base += 8;
+      if (amenities.includes("Dedicated workspace")) base += 7;
+      if (amenities.includes("Exercise equipment")) base += 10;
+    }
+
+    if (Array.isArray(cuisineOfferings) && cuisineOfferings.length > 0) {
+      base += cuisineOfferings.length * 6;
+    }
+
+    const recommendedPrice = Math.round(base);
+    const lowRange = Math.round(recommendedPrice * 0.85);
+    const highRange = Math.round(recommendedPrice * 1.25);
+    const peakSeasonPrice = Math.round(recommendedPrice * 1.4);
+
+    return res.status(200).json({
+      success: 1,
+      pricing: {
+        recommendedPrice,
+        lowRange,
+        highRange,
+        peakSeasonPrice,
+        currency: "USD",
+        confidence: "94%",
+        insights: [
+          `Base price calculated for ${guests} guest(s) and ${bedrooms} bedroom(s).`,
+          amenities?.length > 5
+            ? "Boosted by premium amenity selection (Pool, AC, Workspace)."
+            : "Standard amenity profile.",
+          cuisineOfferings?.length > 0
+            ? `Includes value add from ${cuisineOfferings.length} dining experience(s).`
+            : "Add host meals to boost booking value.",
+        ],
+      },
+    });
+  } catch (error) {
+    console.error("calculateSmartPricing error:", error);
+    return res.status(500).json({ success: 0, message: "Failed to calculate smart pricing" });
+  }
+};
+

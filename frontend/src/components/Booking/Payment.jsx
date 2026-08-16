@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useDateFormatting } from "../../hooks/useDateFormatting";
 import { PulseLoader } from "react-spinners";
 import { useNavigate } from "react-router-dom";
@@ -50,6 +50,24 @@ const Payment = ({ searchParamsObj, appliedCoupon, listingDataProp }) => {
   const nightStaying = parseInt(searchParamsObj?.nightStaying, 10) || 1;
   const orderId = Math.round(Math.random() * 10000000000);
 
+  // Parse Selected Cuisine Add-ons from Search Params
+  const selectedCuisineAddons = useMemo(() => {
+    if (!searchParamsObj?.cuisineAddons) return [];
+    try {
+      const parsed = JSON.parse(decodeURIComponent(searchParamsObj.cuisineAddons));
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }, [searchParamsObj?.cuisineAddons]);
+
+  const cuisineUSD = useMemo(() => {
+    return selectedCuisineAddons.reduce(
+      (sum, item) => sum + (Number(item.price) || 0) * (Number(item.quantity) || guestNumber),
+      0
+    );
+  }, [selectedCuisineAddons, guestNumber]);
+
   // Standard USD Calculation
   const rawBaseUSD = parseInt(listingData?.basePrice, 10) || 100;
   const totalRoomUSD = rawBaseUSD * nightStaying;
@@ -57,8 +75,9 @@ const Payment = ({ searchParamsObj, appliedCoupon, listingDataProp }) => {
   // Apply coupon discount if active
   const discountUSD = appliedCoupon?.discountAmount || 0;
   const discountedRoomUSD = Math.max(0, totalRoomUSD - discountUSD);
-  const taxesUSD = Math.round((discountedRoomUSD * 14) / 100);
-  const totalStayUSD = discountedRoomUSD + taxesUSD;
+  const subtotalWithCuisineUSD = discountedRoomUSD + cuisineUSD;
+  const taxesUSD = Math.round((subtotalWithCuisineUSD * 14) / 100);
+  const totalStayUSD = subtotalWithCuisineUSD + taxesUSD;
 
   // Converted in Guest's local currency
   const convertedGuestTotal = convertPrice(totalStayUSD);
@@ -102,13 +121,14 @@ const Payment = ({ searchParamsObj, appliedCoupon, listingDataProp }) => {
         return;
       }
 
-      // Step 1: Create order on backend in Guest's Currency with Coupon
+      // Step 1: Create order on backend in Guest's Currency with Coupon & Cuisine Addons
       const orderRes = await api.post("/reservations/create_razorpay_order", {
         amount: convertedGuestTotal,
         currency: guestCurrency,
         listingId: listingData?._id,
         nightStaying,
         guestNumber,
+        selectedCuisineAddons,
         couponCode: appliedCoupon?.coupon?.code || null,
       });
 
@@ -132,7 +152,7 @@ const Payment = ({ searchParamsObj, appliedCoupon, listingDataProp }) => {
         amount: amount,
         currency: currency || guestCurrency || "INR",
         name: "Journey Cuisine",
-        description: `Booking: ${listingData?.title || "Motel Stay"} (${nightStaying} Night${nightStaying > 1 ? "s" : ""})`,
+        description: `Booking: ${listingData?.title || "Motel Stay"} (${nightStaying} Night${nightStaying > 1 ? "s" : ""})${selectedCuisineAddons.length > 0 ? ` + ${selectedCuisineAddons.length} Dining Experiences` : ""}`,
         image: "/src/assets/Travel_Logo.png",
         order_id: order_id,
         handler: async function (response) {
@@ -150,6 +170,7 @@ const Payment = ({ searchParamsObj, appliedCoupon, listingDataProp }) => {
               nightStaying,
               orderId,
               currency: guestCurrency,
+              selectedCuisineAddons,
               couponCode: appliedCoupon?.coupon?.code || null,
             });
 

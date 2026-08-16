@@ -2,6 +2,9 @@ import { Outlet, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import Footer from "../components/Shared/Footer";
 import Navbar from "../components/Shared/Navbar";
+import ChatDrawerModal from "../components/chat/ChatDrawerModal";
+import NotificationDrawerModal from "../components/notifications/NotificationDrawerModal";
+import FoodiePassportModal from "../components/loyalty/FoodiePassportModal";
 
 const MainLayout = () => {
   const location = useLocation();
@@ -21,6 +24,9 @@ const MainLayout = () => {
         </motion.div>
       </AnimatePresence>
       <Footer />
+      <ChatDrawerModal />
+      <NotificationDrawerModal />
+      <FoodiePassportModal />
     </>
   );
 };

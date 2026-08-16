@@ -2,10 +2,15 @@ import ListingDescriptionPopup from "../popUp/ListingDescriptionPopup";
 import Map from "../../components/Map";
 import { amenities } from "./amenitiesApi";
 import { AiOutlineRight } from "react-icons/ai";
+import { FiMessageSquare } from "react-icons/fi";
 import PropertyReviews from "../reviews/PropertyReviews";
+import { useChat } from "../../context/ChatContext";
+import { useAuth } from "../../hooks/useAuth";
 
- 
 const ListingDescriptions = ({ listingData, author }) => {
+  const { openChatWithHost } = useChat();
+  const { user } = useAuth();
+
   const latitude = Number(listingData?.location?.city?.latitude);
   const longitude = Number(listingData?.location?.city?.longitude);
   const latLong = [latitude, longitude];
@@ -24,7 +29,18 @@ const ListingDescriptions = ({ listingData, author }) => {
     author?.user_image ||
     author?.avatar ||
     author?.photo ||
+    author?.profilePic ||
     listingData?.authorDetails?.profileImg;
+
+  const authorId = author?._id || listingData?.author?._id || listingData?.author;
+  const isHost = Boolean(user?._id && authorId && String(user._id) === String(authorId));
+
+  const handleContactHost = () => {
+    openChatWithHost({
+      hostId: authorId,
+      listingId: listingData?._id,
+    });
+  };
 
   return (
     <>
@@ -39,7 +55,21 @@ const ListingDescriptions = ({ listingData, author }) => {
             {listingData?.floorPlan?.beds || 1} beds ·{" "}
             {listingData?.floorPlan?.bathroomsNumber || 1} bath
           </p>
+
+          {!isHost && (
+            <div className="mt-2">
+              <button
+                type="button"
+                onClick={handleContactHost}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 text-xs font-bold text-neutral-900 dark:text-white transition shadow-2xs cursor-pointer"
+              >
+                <FiMessageSquare size={14} className="text-[#ff385c]" />
+                <span>Contact Host</span>
+              </button>
+            </div>
+          )}
         </div>
+
         {/* host profile img */}
         <div className="shrink-0 ml-4">
           {hostPhoto ? (
@@ -80,6 +110,51 @@ const ListingDescriptions = ({ listingData, author }) => {
         Show more
         <AiOutlineRight size={16} />
       </button>
+
+      {/* Verified Badges & Highlights Section */}
+      <div className="my-8 space-y-5">
+        <div className="flex items-start gap-4">
+          <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-300 flex items-center justify-center shrink-0 text-base shadow-2xs">
+            ⚡
+          </div>
+          <div>
+            <h4 className="text-sm sm:text-base font-bold text-neutral-900 dark:text-white">
+              150+ Mbps High-Speed Wi-Fi
+            </h4>
+            <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mt-0.5 leading-relaxed">
+              Verified fast Wi-Fi suitable for 4K video streaming, team calls, and remote work.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-start gap-4">
+          <div className="w-10 h-10 rounded-2xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-300 flex items-center justify-center shrink-0 text-base shadow-2xs">
+            🍲
+          </div>
+          <div>
+            <h4 className="text-sm sm:text-base font-bold text-neutral-900 dark:text-white">
+              Authentic Dining &amp; Culinary Secrets
+            </h4>
+            <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mt-0.5 leading-relaxed">
+              Host offers homemade dining add-ons and curated neighborhood food guides.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-start gap-4">
+          <div className="w-10 h-10 rounded-2xl bg-rose-50 dark:bg-rose-950/60 text-[#ff385c] flex items-center justify-center shrink-0 text-base shadow-2xs">
+            🛡️
+          </div>
+          <div>
+            <h4 className="text-sm sm:text-base font-bold text-neutral-900 dark:text-white">
+              Verified Journey Guarantee
+            </h4>
+            <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mt-0.5 leading-relaxed">
+              Identity verified host with secure Razorpay checkout and 24/7 support.
+            </p>
+          </div>
+        </div>
+      </div>
 
       <hr className="h-[1.2px] w-full bg-[#dddddd] dark:bg-[#333333] border-none my-8" />
 
