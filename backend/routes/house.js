@@ -46,9 +46,11 @@ router.post("/save_title", verifyJwtToken, saveTitle);
 router.post("/save_highlight", verifyJwtToken, saveHighlight);
 router.post("/save_description", verifyJwtToken, saveDescription);
 router.post("/save_guesttype", verifyJwtToken, saveGuestType);
+router.post("/save_guest_type", verifyJwtToken, saveGuestType);
 router.post("/save_prices", verifyJwtToken, savePrices);
 router.post("/save_security", verifyJwtToken, saveSecurity);
 router.post("/publish_list", verifyJwtToken, publishList);
+router.post("/publish_listing", verifyJwtToken, publishList);
 
 // Full update and deletion endpoints
 router.put("/update_listing/:id", verifyJwtToken, updateListing);

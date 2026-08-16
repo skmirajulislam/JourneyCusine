@@ -22,6 +22,7 @@ const ListingFooter = () => {
     saveHouseHighlights,
     saveHouseDescription,
     saveHousePrices,
+    saveGuestType,
     saveSecurity,
     publishListing,
   } = useListingFlow();
@@ -190,9 +191,7 @@ const ListingFooter = () => {
             guestType: newHouse?.guestType,
             houseId: currentListingHouseId,
           };
-          await api.post("/house/save_guest_type", visibilityData, {
-            headers: { "Content-Type": "application/json" },
-          });
+          await saveGuestType(visibilityData);
         } else if (currentStepIndex === 14) {
           const PriceData = {
             priceBeforeTaxes: newHouse?.priceBeforeTaxes,

@@ -202,6 +202,20 @@ export const ListingFlowProvider = ({ children }) => {
     }
   };
 
+  const saveGuestType = async (guestTypeData) => {
+    try {
+      const res = await api.post("/house/save_guest_type", guestTypeData, {
+        headers: { "Content-Type": "application/json" },
+      });
+      if (res.status === 200 && res.data?.houseDetails) {
+        setCurrentListingHouse(res.data.houseDetails);
+        return res.data.houseDetails;
+      }
+    } catch (error) {
+      console.error("Error saving guest type:", error);
+    }
+  };
+
   const publishListing = async (publishData) => {
     try {
       const res = await api.post("/house/publish_listing", publishData, {
@@ -237,6 +251,7 @@ export const ListingFlowProvider = ({ children }) => {
     saveHouseHighlights,
     saveHouseDescription,
     saveHousePrices,
+    saveGuestType,
     saveSecurity,
     publishListing,
   };
