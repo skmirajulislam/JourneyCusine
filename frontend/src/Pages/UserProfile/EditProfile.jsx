@@ -20,8 +20,6 @@ const EditProfile = () => {
   const [showPopup, setShowPopup] = useState(false);
   const [selectedOption, setSelectedOption] = useState(null);
   const [isImageLoading, setIsImgUploading] = useState(false);
-  const [profileImageLink, setProfileImageLink] = useState(null);
-  const [image, setImage] = useState(null);
 
   // Edit Name states
   const [showNameModal, setShowNameModal] = useState(false);
@@ -50,12 +48,6 @@ const EditProfile = () => {
     }
   }, [user]);
 
-  const handleImageChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      setImage(e.target.files[0]);
-    }
-  };
-
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 600);
@@ -74,92 +66,69 @@ const EditProfile = () => {
     });
   };
 
-  useEffect(() => {
-    async function uploadToUploadThing() {
-      if (image !== null) {
-        if (image.size > 8 * 1024 * 1024) {
-          toast.error("Image size can't exceed 8MB");
-          setImage(null);
-          return;
-        }
+  const handleImageChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-        try {
-          setIsImgUploading(true);
-          // Sanitize file name to avoid S3 presigned URL encoding mismatches
-          const ext = (image.name?.split(".").pop() || "jpg").toLowerCase();
-          const cleanFile = new File([image], `profile_${Date.now()}.${ext}`, {
-            type: image.type || "image/jpeg",
-          });
+    e.target.value = "";
 
-          let uploadedUrl = null;
-          try {
-            const res = await uploadFiles("imageUploader", {
-              files: [cleanFile],
-            });
-            if (res && res[0]) {
-              uploadedUrl =
-                res[0].ufsUrl ||
-                res[0].url ||
-                res[0].appUrl ||
-                (res[0].key ? `https://utfs.io/f/${res[0].key}` : null);
-            }
-          } catch (uploadThingErr) {
-            console.warn("UploadThing presign/upload fallback to base64:", uploadThingErr);
-          }
-
-          // Fallback to base64 data URL if CDN upload failed
-          if (!uploadedUrl) {
-            uploadedUrl = await convertFileToBase64(image);
-          }
-
-          if (uploadedUrl) {
-            setProfileImageLink(uploadedUrl);
-          } else {
-            toast.error("Upload failed, please try again.");
-          }
-        } catch (error) {
-          console.error(error);
-          toast.error("Image upload failed. Try again.");
-        } finally {
-          setIsImgUploading(false);
-          setImage(null);
-        }
-      }
+    if (file.size > 8 * 1024 * 1024) {
+      toast.error("Image size cannot exceed 8MB");
+      return;
     }
-    uploadToUploadThing();
-  }, [image]);
 
-  useEffect(() => {
-    async function uploadImg() {
-      if (profileImageLink) {
-        setIsImgUploading(true);
-        try {
-          let imageLink = {
-            id: user?._id,
-            profileImg: profileImageLink,
-          };
-          const response = await api.post("/auth/uploadimage", imageLink, {
-            headers: { "Content-Type": "application/json" },
-          });
+    try {
+      setIsImgUploading(true);
+      const ext = (file.name?.split(".").pop() || "jpg").toLowerCase();
+      const cleanFile = new File([file], `profile_${Date.now()}.${ext}`, {
+        type: file.type || "image/jpeg",
+      });
 
-          if (response.data?.user_details) {
-            setUser(response.data.user_details);
-          } else if (response.data?.profileImg) {
-            setUser({ ...user, profileImg: response.data.profileImg });
-          }
-          queryClient.invalidateQueries({ queryKey: ["authUser"] });
-          toast.success("Profile image updated successfully!");
-          setProfileImageLink(null);
-        } catch (err) {
-          console.error(err);
-          toast.error("Saving image failed, try again!");
-        } finally {
-          setIsImgUploading(false);
+      let uploadedUrl = null;
+      try {
+        const res = await uploadFiles("imageUploader", {
+          files: [cleanFile],
+        });
+        if (res && res[0]) {
+          uploadedUrl =
+            res[0].ufsUrl ||
+            res[0].url ||
+            res[0].appUrl ||
+            (res[0].key ? `https://utfs.io/f/${res[0].key}` : null);
         }
+      } catch (uploadThingErr) {
+        console.warn("UploadThing CDN fallback to base64:", uploadThingErr);
       }
+
+      if (!uploadedUrl) {
+        uploadedUrl = await convertFileToBase64(file);
+      }
+
+      if (!uploadedUrl) {
+        toast.error("Upload failed, please try again.");
+        return;
+      }
+
+      const response = await api.post(
+        "/auth/uploadimage",
+        { id: user?._id, profileImg: uploadedUrl },
+        { headers: { "Content-Type": "application/json" } }
+      );
+
+      if (response.data?.user_details) {
+        setUser(response.data.user_details);
+      } else if (response.data?.profileImg) {
+        setUser({ ...user, profileImg: response.data.profileImg });
+      }
+      queryClient.invalidateQueries({ queryKey: ["authUser"] });
+      toast.success("Profile image updated successfully!");
+    } catch (error) {
+      console.error("Profile image update error:", error);
+      toast.error("Failed to update profile image. Try again.");
+    } finally {
+      setIsImgUploading(false);
     }
-    uploadImg();
-  }, [profileImageLink, user, setUser, queryClient]);
+  };
 
   const handleSaveName = async (e) => {
     e.preventDefault();
