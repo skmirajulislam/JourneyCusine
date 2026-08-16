@@ -63,28 +63,57 @@ const EditProfile = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  const convertFileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
   useEffect(() => {
     async function uploadToUploadThing() {
       if (image !== null) {
-        if (image.size > 5 * 1024 * 1024) {
-          toast.error("Image size can't exceed 5MB");
+        if (image.size > 8 * 1024 * 1024) {
+          toast.error("Image size can't exceed 8MB");
           setImage(null);
           return;
         }
 
         try {
           setIsImgUploading(true);
-          const res = await uploadFiles("imageUploader", {
-            files: [image],
+          // Sanitize file name to avoid S3 presigned URL encoding mismatches
+          const ext = (image.name?.split(".").pop() || "jpg").toLowerCase();
+          const cleanFile = new File([image], `profile_${Date.now()}.${ext}`, {
+            type: image.type || "image/jpeg",
           });
-          if (res && res[0]?.url) {
-            setProfileImageLink(res[0].url);
+
+          let uploadedUrl = null;
+          try {
+            const res = await uploadFiles("imageUploader", {
+              files: [cleanFile],
+            });
+            if (res && res[0]?.url) {
+              uploadedUrl = res[0].url;
+            }
+          } catch (uploadThingErr) {
+            console.warn("UploadThing presign/upload fallback to base64:", uploadThingErr);
+          }
+
+          // Fallback to base64 data URL if CDN upload failed
+          if (!uploadedUrl) {
+            uploadedUrl = await convertFileToBase64(image);
+          }
+
+          if (uploadedUrl) {
+            setProfileImageLink(uploadedUrl);
           } else {
             toast.error("Upload failed, please try again.");
           }
         } catch (error) {
           console.error(error);
-          toast.error(error?.message || "Image upload failed. Try again.");
+          toast.error("Image upload failed. Try again.");
         } finally {
           setIsImgUploading(false);
           setImage(null);
