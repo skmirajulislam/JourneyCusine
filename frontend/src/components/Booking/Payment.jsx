@@ -82,7 +82,18 @@ const Payment = ({ searchParamsObj, appliedCoupon }) => {
         resolve(true);
         return;
       }
+      const existingScript = document.getElementById("razorpay-checkout-sdk");
+      if (existingScript) {
+        if (window.Razorpay) {
+          resolve(true);
+        } else {
+          existingScript.addEventListener("load", () => resolve(true), { once: true });
+          existingScript.addEventListener("error", () => resolve(false), { once: true });
+        }
+        return;
+      }
       const script = document.createElement("script");
+      script.id = "razorpay-checkout-sdk";
       script.src = "https://checkout.razorpay.com/v1/checkout.js";
       script.onload = () => resolve(true);
       script.onerror = () => resolve(false);

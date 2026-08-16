@@ -107,7 +107,11 @@ const Navbar = () => {
     const handleOpenAuth = () => {
       setPopup(true);
     };
+    const handleSessionExpired = () => {
+      dispatch(userLogOut());
+    };
     window.addEventListener("open-auth-popup", handleOpenAuth);
+    window.addEventListener("auth-session-expired", handleSessionExpired);
     const handleOutsideClick = (event) => {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
         setShowUserMenu(false);
@@ -116,9 +120,10 @@ const Navbar = () => {
     document.addEventListener("mouseup", handleOutsideClick);
     return () => {
       window.removeEventListener("open-auth-popup", handleOpenAuth);
+      window.removeEventListener("auth-session-expired", handleSessionExpired);
       document.removeEventListener("mouseup", handleOutsideClick);
     };
-  }, []);
+  }, [dispatch]);
 
   return (
     <nav

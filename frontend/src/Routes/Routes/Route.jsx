@@ -107,7 +107,6 @@ const router = createBrowserRouter([
             <ListingDetails />
           </Suspense>
         ),
-        loader: ({ params }) => fetch(`${API}house/listing/${params.id}`),
       },
       {
         path: "/book/stays/:id",
@@ -119,7 +118,7 @@ const router = createBrowserRouter([
               </div>
             }
           >
-            <Book />,
+            <Book />
           </Suspense>
         ),
       },

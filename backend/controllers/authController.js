@@ -3,13 +3,14 @@ const BlockedEmail = require("../models/blockedEmail.model.js");
 const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
+const crypto = require("crypto");
 const House = require("../models/house.model.js");
 require('dotenv').config() 
 
 const saltRounds = 10;
-// JWT expiration: use a relative duration string so each token expires
-// 1 hour after it is issued (not a fixed timestamp from server startup).
-const TOKEN_EXPIRY = "1h";
+// JWT expiration: 7 days (1 week) persistent session duration.
+// Only one active session is valid per user account at any moment.
+const TOKEN_EXPIRY = "7d";
 
 exports.signUp = async (req, res, next) => {
     try {
@@ -58,17 +59,27 @@ exports.signUp = async (req, res, next) => {
         }
         const userDetails = await User.find(findCriteria);
 
+        const sessionId = crypto.randomUUID();
         const accessToken = jwt.sign(
             {
                 _id: userDetails[0]._id,
-                role: userDetails[0].role
+                role: userDetails[0].role,
+                sessionId: sessionId
             },
             process.env.ACCESS_TOKEN_SECRET,
             { expiresIn: TOKEN_EXPIRY }
-        )
-        const refreshToken = jwt.sign({ _id: userDetails[0]._id, role: userDetails[0].role }, process.env.REFRESH_TOKEN_SECRET)
+        );
+        const refreshToken = jwt.sign(
+            { _id: userDetails[0]._id, role: userDetails[0].role, sessionId: sessionId },
+            process.env.REFRESH_TOKEN_SECRET,
+            { expiresIn: TOKEN_EXPIRY }
+        );
 
-        const updatedUser = await User.findOneAndUpdate(findCriteria, { accessToken: accessToken, refreshToken: refreshToken }, { new: true })
+        const updatedUser = await User.findOneAndUpdate(
+            findCriteria,
+            { accessToken: accessToken, refreshToken: refreshToken },
+            { new: true }
+        );
 
         let response = {
             info: "Welcome to motel",
@@ -122,17 +133,28 @@ exports.logIn = async (req, res) => {
 
         let isMatched = await bcrypt.compare(password, userDetails[0].password)
         if (isMatched) {
+            const sessionId = crypto.randomUUID();
             const accessToken = jwt.sign(
                 {
                     _id: userDetails[0]._id,
-                    role: userDetails[0].role
+                    role: userDetails[0].role,
+                    sessionId: sessionId
                 },
                 process.env.ACCESS_TOKEN_SECRET,
                 { expiresIn: TOKEN_EXPIRY }
-            )
-            const refreshToken = jwt.sign({ _id: userDetails[0]._id, role: userDetails[0].role }, process.env.REFRESH_TOKEN_SECRET)
+            );
+            const refreshToken = jwt.sign(
+                { _id: userDetails[0]._id, role: userDetails[0].role, sessionId: sessionId },
+                process.env.REFRESH_TOKEN_SECRET,
+                { expiresIn: TOKEN_EXPIRY }
+            );
 
-            const updatedUser = await User.findOneAndUpdate(findCriteria, { accessToken: accessToken, refreshToken: refreshToken }, { new: true })
+            // Storing the newest accessToken and refreshToken enforces single active session
+            const updatedUser = await User.findOneAndUpdate(
+                findCriteria,
+                { accessToken: accessToken, refreshToken: refreshToken },
+                { new: true }
+            );
             let response = {
                 info: "Successfully logged in",
                 success: 1,
@@ -164,10 +186,9 @@ exports.postUser = async (req, res) => {
 
 exports.refreshToken = async (req, res) => {
     const refreshToken = req.body.refreshToken;
-    console.log(refreshToken)
 
     if (!refreshToken) {
-        return res.sendStatus(404).send("Please Log in");
+        return res.status(404).send("Please Log in");
     } else {
         try {
             let decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
@@ -176,12 +197,11 @@ exports.refreshToken = async (req, res) => {
                 _id: new mongoose.Types.ObjectId(userId)
             };
             const userDetails = await User.findById(findCriteria);
-            console.log(userDetails.refreshToken, userDetails, "LINE 138")
-            if (userDetails.refreshToken !== refreshToken) {
+            if (!userDetails || userDetails.refreshToken !== refreshToken) {
                 return res.sendStatus(403);
             }
 
-            jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (error, user) => {
+            jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, async (error, user) => {
                 if (error) {
                     return res.sendStatus(401);
                 }
@@ -189,18 +209,21 @@ exports.refreshToken = async (req, res) => {
                 const accessToken = jwt.sign(
                     {
                         _id: userDetails._id,
-                        role: userDetails.role
+                        role: userDetails.role,
+                        sessionId: decoded.sessionId || crypto.randomUUID()
                     },
                     process.env.ACCESS_TOKEN_SECRET,
                     { expiresIn: TOKEN_EXPIRY }
                 );
-                console.log(accessToken, "AccessToken")
+
+                // Update active accessToken in DB to keep single-session consistency
+                await User.findByIdAndUpdate(userDetails._id, { accessToken: accessToken });
 
                 res.json({ accessToken: accessToken });
             });
         } catch (error) {
             console.error(error);
-            res.status(401).send("Invalid refresh token");
+            res.status(401).send("Invalid or expired refresh token");
         }
     }
 };

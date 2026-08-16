@@ -28,6 +28,8 @@ router.use(express.json());
 
 router.get("/get_all_listing", getAllListing);
 router.get("/get_author_houses", verifyJwtToken, getAuthorHouses);
+router.get("/listing/:id", getOneListing);
+router.get("/room_details/:id", getOneListing);
 router.post("/room_details", getOneListing);
 router.post("/get_listing_with_cat", getListingDataWithCat);
 

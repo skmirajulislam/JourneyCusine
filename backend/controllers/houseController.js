@@ -592,11 +592,11 @@ exports.getListingDataWithCat = async (req, res) => {
 
 exports.getOneListing = async (req, res) => {
     try {
-        const payload = req.body;
-        const listingId = payload.id;
+        const payload = req.body || {};
+        const listingId = req.params.id || payload.id || payload.houseId;
 
-        if (!listingId) {
-            return res.status(400).json({ error: "Listing ID is required" });
+        if (!listingId || !mongoose.Types.ObjectId.isValid(listingId)) {
+            return res.status(400).json({ error: "Valid listing ID is required" });
         }
 
         const listingDataDoc = await House.findById(listingId).lean();

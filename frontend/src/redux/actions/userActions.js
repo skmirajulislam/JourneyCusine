@@ -23,8 +23,8 @@ export const getUser = (force = false) => async (dispatch, getState) => {
         return;
     }
 
-    const token = localStorage.getItem("accessToken");
-    if (!token) {
+    const rawToken = localStorage.getItem("accessToken");
+    if (!rawToken) {
         dispatch({ type: "USER_LOG_OUT" });
         return;
     }
