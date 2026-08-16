@@ -167,9 +167,9 @@ const ChatDrawerModal = () => {
                     }`}
                   >
                     <div className="w-10 h-10 rounded-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center shrink-0 font-bold text-xs uppercase overflow-hidden">
-                      {partner?.profilePic ? (
+                      {partner?.profileImg ? (
                         <img
-                          src={partner.profilePic}
+                          src={partner.profileImg}
                           alt={partnerName}
                           className="w-full h-full object-cover"
                         />
@@ -230,9 +230,9 @@ const ChatDrawerModal = () => {
                   </button>
 
                   <div className="w-10 h-10 rounded-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center font-bold text-xs uppercase shrink-0 overflow-hidden">
-                    {otherParticipant?.profilePic ? (
+                    {otherParticipant?.profileImg ? (
                       <img
-                        src={otherParticipant.profilePic}
+                        src={otherParticipant.profileImg}
                         alt="Profile"
                         className="w-full h-full object-cover"
                       />

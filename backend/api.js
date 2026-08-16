@@ -130,7 +130,7 @@ io.on("connection", (socket) => {
 
       const populatedMessage = await Message.findById(newMessage._id).populate(
         "senderId",
-        "name emailId profilePic"
+        "name emailId profileImg"
       );
 
       // Broadcast message to the conversation room

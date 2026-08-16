@@ -33,7 +33,7 @@ exports.startConversation = async (req, res) => {
       participants: { $all: [currentObjId, hostObjId] },
       ...(listingObjId ? { listingId: listingObjId } : {}),
     })
-      .populate("participants", "name emailId profilePic role")
+      .populate("participants", "name emailId profileImg role")
       .populate("listingId", "title photos basePrice location houseType");
 
     if (!conversation) {
@@ -47,7 +47,7 @@ exports.startConversation = async (req, res) => {
       }).save();
 
       conversation = await Conversation.findById(conversation._id)
-        .populate("participants", "name emailId profilePic role")
+        .populate("participants", "name emailId profileImg role")
         .populate("listingId", "title photos basePrice location houseType");
     }
 
@@ -95,7 +95,7 @@ exports.getConversations = async (req, res) => {
     const conversations = await Conversation.find({
       participants: currentObjId,
     })
-      .populate("participants", "name emailId profilePic role")
+      .populate("participants", "name emailId profileImg role")
       .populate("listingId", "title photos basePrice location houseType")
       .sort({ "lastMessage.createdAt": -1, updated_at: -1 });
 
@@ -148,7 +148,7 @@ exports.getMessages = async (req, res) => {
     }
 
     const messages = await Message.find({ conversationId })
-      .populate("senderId", "name emailId profilePic")
+      .populate("senderId", "name emailId profileImg")
       .sort({ createdAt: 1 });
 
     return res.status(200).json({

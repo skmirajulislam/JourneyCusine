@@ -454,8 +454,12 @@ exports.updateUserCountry = async (req, res) => {
 
 exports.uploadProfileImage = async (req, res) => {
     try {
-        const profileImg = req.body.profileImg;
+        const profileImg = req.body.profileImg || req.body.url;
         const userId = req.user;
+
+        if (!profileImg) {
+            return res.status(400).json({ success: 0, error: "Image URL is required" });
+        }
 
         const updatedUser = await User.findByIdAndUpdate(
             userId,
