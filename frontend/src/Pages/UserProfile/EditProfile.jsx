@@ -10,9 +10,11 @@ import UserProfileOptions from "../../components/userProfile/UserProfileOptions"
 import { uploadFiles } from "../../utils/uploadthing";
 import { useAuth } from "../../hooks/useAuth";
 import { useCurrency } from "../../context/CurrencyContext";
+import { useQueryClient } from "@tanstack/react-query";
 import { FiGlobe } from "react-icons/fi";
 
 const EditProfile = () => {
+  const queryClient = useQueryClient();
   const { user, setUser } = useAuth();
   const { countriesList, supportedCurrencies, setCountry: setGlobalCountry, setCurrency: setGlobalCurrency, currency: currentGlobalCurrency, symbol } = useCurrency();
   const [showPopup, setShowPopup] = useState(false);
@@ -94,8 +96,12 @@ const EditProfile = () => {
             const res = await uploadFiles("imageUploader", {
               files: [cleanFile],
             });
-            if (res && res[0]?.url) {
-              uploadedUrl = res[0].url;
+            if (res && res[0]) {
+              uploadedUrl =
+                res[0].ufsUrl ||
+                res[0].url ||
+                res[0].appUrl ||
+                (res[0].key ? `https://utfs.io/f/${res[0].key}` : null);
             }
           } catch (uploadThingErr) {
             console.warn("UploadThing presign/upload fallback to base64:", uploadThingErr);
@@ -141,6 +147,7 @@ const EditProfile = () => {
           } else if (response.data?.profileImg) {
             setUser({ ...user, profileImg: response.data.profileImg });
           }
+          queryClient.invalidateQueries({ queryKey: ["authUser"] });
           toast.success("Profile image updated successfully!");
           setProfileImageLink(null);
         } catch (err) {
@@ -152,7 +159,7 @@ const EditProfile = () => {
       }
     }
     uploadImg();
-  }, [profileImageLink, user, setUser]);
+  }, [profileImageLink, user, setUser, queryClient]);
 
   const handleSaveName = async (e) => {
     e.preventDefault();
