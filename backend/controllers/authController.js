@@ -7,7 +7,7 @@ const crypto = require("crypto");
 const House = require("../models/house.model.js");
 require('dotenv').config() 
 
-const saltRounds = 10;
+const saltRounds = 12;
 // JWT expiration: 7 days (1 week) persistent session duration.
 // Only one active session is valid per user account at any moment.
 const TOKEN_EXPIRY = "7d";
