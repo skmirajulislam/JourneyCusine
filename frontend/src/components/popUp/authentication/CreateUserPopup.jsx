@@ -41,7 +41,6 @@ const CreateUserPopup = ({
   };
 
   const handleCreateUser = async (data) => {
-    console.log(data);
     let user = {
       name: {
         firstName: data.firstName,
@@ -57,13 +56,11 @@ const CreateUserPopup = ({
         headers: { "Content-Type": "application/json" },
       });
 
-      console.log(response);
       const responseData = response?.data;
       dispatch(userSignUp(responseData));
       let accessToken = localStorage.getItem("accessToken");
       let refreshToken = localStorage.getItem("refreshToken");
       if (responseData?.success === 1) {
-        console.log(refreshToken);
         toast.success(responseData.info);
         if (!accessToken) {
           localStorage.setItem(
@@ -81,7 +78,6 @@ const CreateUserPopup = ({
           );
         } else if (refreshToken) {
           refreshToken = responseData?.refreshToken;
-          console.log(refreshToken);
           localStorage.setItem("refreshToken", JSON.stringify(refreshToken));
         }
         showCreatePopUp(false);
@@ -106,22 +102,22 @@ const CreateUserPopup = ({
   };
 
   return (
-    <div className="overflow-y-auto max-h-[300px]">
+    <div className="pb-6 pt-2">
       <form
         onSubmit={handleSubmit(handleCreateUser)}
-        className="px-8 flex flex-col gap-6"
+        className="px-5 sm:px-8 flex flex-col gap-4"
       >
-        <div className=" flex flex-col gap-3">
+        <div className="flex flex-col gap-2.5">
           <input
             type="text"
-            className="w-full border-[1.4px] border-[#dddddd] p-3 rounded-lg"
+            className="w-full border-[1.5px] border-[#dddddd] dark:border-[#444444] bg-white dark:bg-[#2a2a2a] text-[#222222] dark:text-[#e5e7eb] placeholder:text-[#717171] dark:placeholder:text-[#888888] p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#ff385c]"
             placeholder="First name"
             {...register("firstName", { required: true, maxLength: 40 })}
             aria-invalid={errors.firstName ? "true" : "false"}
           />
           <input
             type="text"
-            className="w-full border-[1.4px] border-[#dddddd] p-3 rounded-lg"
+            className="w-full border-[1.5px] border-[#dddddd] dark:border-[#444444] bg-white dark:bg-[#2a2a2a] text-[#222222] dark:text-[#e5e7eb] placeholder:text-[#717171] dark:placeholder:text-[#888888] p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#ff385c]"
             placeholder="Last name"
             {...register("lastName", { required: true, maxLength: 40 })}
             aria-invalid={errors.lastName ? "true" : "false"}
@@ -130,27 +126,28 @@ const CreateUserPopup = ({
             errors.lastName?.type === "required" && (
               <div
                 role="alert"
-                className=" flex flex-row items-center gap-2 -mt-2"
+                className="flex flex-row items-center gap-2"
               >
                 <img
                   src={errorIcon}
-                  alt="First name is requires"
-                  className="w-5"
+                  alt="Name is required"
+                  className="w-4"
                 />
                 <p className="text-xs text-[#c13515]">Name is required</p>
               </div>
             )}
           <p
-            className={` text-xs text-[#717171] -mt-2 ${
-              errors.firstName || errors.lastName ? " hidden" : "block"
+            className={`text-xs text-[#717171] dark:text-[#a0a0a0] ${
+              errors.firstName || errors.lastName ? "hidden" : "block"
             }`}
           >
             Make sure it matches the name on your government ID.
           </p>
         </div>
+
         <div>
           <input
-            className="w-full border-[1.4px] border-[#dddddd] p-3 rounded-lg"
+            className="w-full border-[1.5px] border-[#dddddd] dark:border-[#444444] bg-white dark:bg-[#2a2a2a] text-[#222222] dark:text-[#e5e7eb] placeholder:text-[#717171] dark:placeholder:text-[#888888] p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#ff385c]"
             type={`${inputDateFocused ? "date" : "text"}`}
             aria-invalid={errors.birthDate ? "true" : "false"}
             placeholder="Birthdate"
@@ -164,28 +161,29 @@ const CreateUserPopup = ({
           {errors.birthDate?.type === "required" && (
             <div
               role="alert"
-              className=" flex flex-row items-center gap-2 mt-1"
+              className="flex flex-row items-center gap-2 mt-1"
             >
               <img
                 src={errorIcon}
-                alt="Last name is requires"
-                className="w-5"
+                alt="Birthdate is required"
+                className="w-4"
               />
               <p className="text-xs text-[#c13515]">Birth date is required</p>
             </div>
           )}
           <p
-            className={`text-xs text-[#717171] mt-[6px] ${
+            className={`text-xs text-[#717171] dark:text-[#a0a0a0] mt-1 ${
               errors.birthDate ? "hidden" : "block"
             }`}
           >
             To sign up, you need to be at least 18. Your birthday won’t be
-            shared with other people who use Motel.
+            shared with other people.
           </p>
         </div>
+
         <div>
           <input
-            className="w-full border-[1.4px] border-[#dddddd] p-3 rounded-lg"
+            className="w-full border-[1.5px] border-[#dddddd] dark:border-[#444444] bg-white dark:bg-[#2a2a2a] text-[#222222] dark:text-[#e5e7eb] placeholder:text-[#717171] dark:placeholder:text-[#888888] p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#ff385c]"
             type="email"
             defaultValue={loginEmail}
             placeholder="Email"
@@ -195,36 +193,37 @@ const CreateUserPopup = ({
           {errors.email?.type === "required" && (
             <div
               role="alert"
-              className=" flex flex-row items-center gap-2 mt-1"
+              className="flex flex-row items-center gap-2 mt-1"
             >
               <img
                 src={errorIcon}
-                alt="Last name is requires"
-                className="w-5"
+                alt="Email is required"
+                className="w-4"
               />
               <p className="text-xs text-[#c13515]">Email is required</p>
             </div>
           )}
           <p
-            className={`text-xs text-[#717171] mt-1 ${
+            className={`text-xs text-[#717171] dark:text-[#a0a0a0] mt-1 ${
               errors.email ? "hidden" : "block"
             }`}
           >
             We&apos;ll email you trip confirmations and receipts.
           </p>
         </div>
+
         <div className="relative">
           <input
             type={passwordVisible ? "text" : "password"}
             placeholder="Password"
-            className="w-full border-[1.5px] border-[#dddddd] p-3 rounded-lg transition-all duration-300"
+            className="w-full border-[1.5px] border-[#dddddd] dark:border-[#444444] bg-white dark:bg-[#2a2a2a] text-[#222222] dark:text-[#e5e7eb] placeholder:text-[#717171] dark:placeholder:text-[#888888] p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#ff385c]"
             {...register("password", {
               required: true,
               pattern: /^(?=.*[a-z]).{8,}$/,
             })}
           />
           <span
-            className="absolute top-[36%] right-3 transform -translate-y-1/2 text-[#222222] text-xs font-semibold underline cursor-pointer"
+            className="absolute top-[36%] right-3.5 transform -translate-y-1/2 text-[#222222] dark:text-[#e5e7eb] text-xs font-semibold underline cursor-pointer"
             onClick={togglePasswordVisibility}
           >
             {passwordVisible ? "Hide" : "Show"}
@@ -232,51 +231,41 @@ const CreateUserPopup = ({
           {errors.password && (
             <div
               role="alert"
-              className=" flex flex-row items-center gap-2 mt-1"
+              className="flex flex-row items-center gap-2 mt-1"
             >
               <img
                 src={errorIcon}
-                alt="Last name is requires"
-                className="w-5"
+                alt="Password requirement"
+                className="w-4"
               />
               <p className="text-xs text-[#c13515]">
-                At least 8 characters & Contains a number or symbol
+                At least 8 characters &amp; contains a number or symbol
               </p>
             </div>
           )}
           <p
-            className={`text-xs text-[#717171] mt-1 ${
-              errors.password ? "hidden" : "block opacity-60"
+            className={`text-xs text-[#717171] dark:text-[#a0a0a0] mt-1 ${
+              errors.password ? "hidden" : "block opacity-80"
             }`}
           >
-            At least 8 characters & Contains a number or symbol
+            At least 8 characters long
           </p>
         </div>
+
         <div>
-          <span className=" text-[#717171] text-xs font-medium">
+          <span className="text-[#717171] dark:text-[#a0a0a0] text-xs">
             By selecting{" "}
-            <span className="font-semibold text-[#222222]">
-              {" "}
+            <span className="font-semibold text-[#222222] dark:text-white">
               Agree and continue
             </span>
-            , I agree to
-            <Link className=" text-blue-600 underline font-medium">
-              {" "}
-              Motel Terms of Service, Payments Terms of Service,
-            </Link>{" "}
-            and Nondiscrimination Policy and acknowledge the Privacy Policy.
+            , I agree to the Terms of Service and acknowledge the Privacy Policy.
           </span>
         </div>
-        <div className=" flex flex-row items-center gap-5">
-          <input type="checkbox" className="h-5 w-5" />
-          <p className=" text-xs">
-            I don’t want to receive marketing messages from Motel.
-          </p>
-        </div>
-        <div>
+
+        <div className="pt-2">
           <button
-            className={`bg-[#ff385c] hover:bg-[#d90b63] transition-all duration-300 text-white font-medium rounded-lg p-3 w-full disabled:bg-[#dddddd] ${
-              isLoading ? " cursor-not-allowed" : ""
+            className={`bg-[#ff385c] hover:bg-[#d90b63] transition-all duration-300 text-white font-semibold rounded-xl p-3 w-full shadow-md disabled:bg-[#dddddd] cursor-pointer ${
+              isLoading ? "cursor-not-allowed" : ""
             }`}
             type="submit"
             disabled={isLoading}

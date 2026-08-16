@@ -1,27 +1,34 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import AuthenticationPopUp from "../popUp/authentication/AuthenticationPopUp";
 import MiniNavbar from "./DashboardMenu";
 import { getUser, userLogOut } from "../../redux/actions/userActions";
-import hamburgerMenu from "../../assets/basicIcon/hamburgerMenu.svg";
 import motelLogo from "../../assets/Travel_Logo.png";
-import userProfile from "../../assets/basicIcon/user-profile.png";
 import searchIcon from "../../assets/basicIcon/search.svg";
 import house from "../../assets/basicIcon/houseWhite.png";
 
 import { useTheme } from "../../context/ThemeContext.jsx";
 import { BsSun, BsMoonStars } from "react-icons/bs";
 import { FiX, FiSliders } from "react-icons/fi";
+import { Menu, User } from "lucide-react";
 import FilterPopUp from "../popUp/FilterPopUp/FilterPopUp";
+
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 const Navbar = () => {
   const { theme, toggleTheme } = useTheme();
   const user = useSelector((state) => state.user.userDetails);
-  const [showUserMenu, setShowUserMenu] = useState(false);
   const [showFilterPopup, setShowFilterPopup] = useState(false);
   const navigate = useNavigate();
-  const userMenuRef = useRef(null);
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchValue, setSearchValue] = useState(searchParams.get("search") || "");
@@ -112,21 +119,17 @@ const Navbar = () => {
     };
     window.addEventListener("open-auth-popup", handleOpenAuth);
     window.addEventListener("auth-session-expired", handleSessionExpired);
-    const handleOutsideClick = (event) => {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
-        setShowUserMenu(false);
-      }
-    };
-    document.addEventListener("mouseup", handleOutsideClick);
     return () => {
       window.removeEventListener("open-auth-popup", handleOpenAuth);
       window.removeEventListener("auth-session-expired", handleSessionExpired);
-      document.removeEventListener("mouseup", handleOutsideClick);
     };
   }, [dispatch]);
 
   return (
-    <nav
+    <motion.nav
+      initial={{ y: -10, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
       className={`border-b-[1.4px] border-[#f1f1f1] dark:border-neutral-800 sticky top-0 z-[99] bg-white dark:bg-[#121212] transition-colors ${inBookingPage && "hidden md:block"
         }`}
     >
@@ -148,26 +151,22 @@ const Navbar = () => {
               alt="Logo"
               className="w-9 sm:w-10 cursor-pointer"
               onClick={() => {
-                // setting cat to house for listing data fetching
                 JSON.stringify(localStorage.setItem("category", "House"));
-                // manually navigating bcz of avoiding asyncrounous nature and on click show default listing data
                 navigate("/");
               }}
             />
-            {/* if user is in hosting homes page we want only logo */}
             {inHostHomesLandingPage || isSmallDevice ? null : (
               <p className="text-xl text-[#ff385c] font-bold">Journey Cuisine</p>
             )}
           </span>
         </div>
-        {/* if not in the booking page then show the options 👇 */}
+        {/* if not in the booking page then show the options */}
         {inBookingPage ? (
           <div> </div>
         ) : (
           <>
             {/* searchbar (desktop) */}
             {inUserProfile || inUserDashboard || inHostHomesLandingPage ? (
-              // if user is in dahsboard
               <div>{inUserDashboard && <MiniNavbar />} </div>
             ) : (
               <div className="mx-auto lg:block hidden">
@@ -183,49 +182,66 @@ const Navbar = () => {
                       className="focus:outline-none border-0 focus:ring-0 shadow-none pl-3 pr-2 text-sm text-[#222222] dark:text-white bg-transparent w-[200px] xl:w-[260px]"
                       placeholder="Search by city, country, motel..."
                     />
-                    {searchValue && (
-                      <button
-                        type="button"
-                        onClick={handleClearSearch}
-                        className="text-[#888888] hover:text-[#222222] dark:hover:text-white p-1 mr-1"
-                        title="Clear search"
-                      >
-                        <FiX size={15} />
-                      </button>
-                    )}
-                    <button
+                    <AnimatePresence>
+                      {searchValue && (
+                        <motion.button
+                          initial={{ scale: 0, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          exit={{ scale: 0, opacity: 0 }}
+                          transition={{ duration: 0.15 }}
+                          type="button"
+                          onClick={handleClearSearch}
+                          className="text-[#888888] hover:text-[#222222] dark:hover:text-white p-1 mr-1 cursor-pointer"
+                          title="Clear search"
+                        >
+                          <FiX size={15} />
+                        </motion.button>
+                      )}
+                    </AnimatePresence>
+                    <Button
                       type="submit"
-                      className="bg-[#ff385c] hover:bg-[#d90b63] rounded-full p-2 text-white transition-colors cursor-pointer shadow-sm"
+                      variant="journey"
+                      size="icon"
+                      className="rounded-full w-8 h-8"
                       title="Search"
                     >
                       <img src={searchIcon} alt="Search motel" className="w-3.5 h-3.5" />
-                    </button>
+                    </Button>
                   </form>
 
                   {/* Filters Button */}
-                  <button
+                  <Button
                     type="button"
                     onClick={() => setShowFilterPopup(true)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-full border text-xs font-bold shadow-xs hover:shadow-md transition-all cursor-pointer ${
+                    variant="outline"
+                    size="sm"
+                    className={`rounded-full gap-2 text-xs font-bold ${
                       activeFilterCount > 0
-                        ? "border-[#ff385c] bg-[#ff385c]/10 text-[#ff385c] ring-1 ring-[#ff385c]"
-                        : "border-[#dddddd] dark:border-[#444444] bg-white dark:bg-[#222222] text-[#222222] dark:text-white hover:bg-neutral-50 dark:hover:bg-neutral-800"
+                        ? "border-[#ff385c] bg-[#ff385c]/10 text-[#ff385c] ring-1 ring-[#ff385c] hover:bg-[#ff385c]/15"
+                        : ""
                     }`}
                   >
                     <FiSliders size={14} className={activeFilterCount > 0 ? "text-[#ff385c]" : "text-[#717171] dark:text-[#a0a0a0]"} />
                     <span>Filters</span>
-                    {activeFilterCount > 0 && (
-                      <span className="w-5 h-5 rounded-full bg-[#ff385c] text-white text-[10px] font-extrabold flex items-center justify-center">
-                        {activeFilterCount}
-                      </span>
-                    )}
-                  </button>
+                    <AnimatePresence>
+                      {activeFilterCount > 0 && (
+                        <motion.span
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          exit={{ scale: 0 }}
+                          className="w-5 h-5 rounded-full bg-[#ff385c] text-white text-[10px] font-extrabold flex items-center justify-center"
+                        >
+                          {activeFilterCount}
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
+                  </Button>
                 </div>
               </div>
             )}
           </>
         )}
-        {/* if in the booking page don't show any option 👇  */}
+        {/* if in the booking page don't show any option */}
         {inBookingPage ? (
           <div> </div>
         ) : (
@@ -247,15 +263,16 @@ const Navbar = () => {
                     </p>
                   </Link>
                 ) : (
-                  <button
+                  <Button
                     onClick={() => setPopup(true)}
-                    className=" flex flex-row justify-between items-center gap-2 bg-[#ff385c] hover:bg-[#d90b63] transition-all duration-300 px-3 py-2 rounded-lg"
+                    variant="journey"
+                    className="gap-2"
                   >
                     <img src={house} alt="House setup" className=" w-4 md:w-5" />
-                    <p className=" font-semibold text-sm md:text-base text-white">
+                    <span className="font-semibold text-sm md:text-base">
                       Motel setup
-                    </p>
-                  </button>
+                    </span>
+                  </Button>
                 )}
               </div>
             ) : (
@@ -272,138 +289,116 @@ const Navbar = () => {
                   )}
 
                   {/* Theme toggle button */}
-                  <button
+                  <Button
                     type="button"
                     onClick={toggleTheme}
-                    className="p-2 rounded-full border border-[#dddddd] dark:border-[#444444] hover:bg-[#f1f1f1] dark:hover:bg-[#333333] transition-all cursor-pointer text-[#222222] dark:text-white flex items-center justify-center shrink-0"
+                    variant="outline"
+                    size="icon"
+                    className="rounded-full shrink-0"
                     title={theme === "light" ? "Switch to Dark mode" : "Switch to Light mode"}
                   >
                     {theme === "light" ? <BsMoonStars size={16} /> : <BsSun size={16} className="text-yellow-400" />}
-                  </button>
+                  </Button>
 
-                  <div
-                    className="border-[1px] border-[#dddddd] dark:border-[#444444] bg-white dark:bg-[#222222] rounded-full py-1 px-2.5 flex flex-row gap-2.5 items-center hover:shadow-md transition-all cursor-pointer relative shrink-0"
-                    onClick={() => {
-                      setShowUserMenu((prevValue) => !prevValue);
-                    }}
-                  >
-                    <img
-                      src={hamburgerMenu}
-                      alt="Motel user menu"
-                      className="w-3.5 dark:invert"
-                    />
-                    {user ? (
-                      user?.profileImg ? (
-                        <img
-                          src={user.profileImg}
-                          alt={user?.name?.firstName || "User profile"}
-                          className="w-7 h-7 rounded-full object-cover border border-neutral-300 dark:border-neutral-700"
-                        />
-                      ) : (
-                        <p className="bg-[#222222] dark:bg-[#444444] text-[#efefef] w-7 h-7 rounded-full text-xs font-bold flex items-center justify-center">
-                          {user.name?.firstName?.slice(0, 1) || "U"}
-                        </p>
-                      )
-                    ) : (
-                      <img
-                        src={userProfile}
-                        alt="user profile icon"
-                        className="w-7 h-7"
-                      />
-                    )}
-                  </div>
+                  {/* User menu dropdown */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="border-[1px] border-[#dddddd] dark:border-[#444444] bg-white dark:bg-[#222222] rounded-full py-1 px-2.5 flex flex-row gap-2.5 items-center hover:shadow-md transition-all cursor-pointer relative shrink-0 outline-none">
+                        <Menu className="w-3.5 h-3.5 text-[#222222] dark:text-white" />
+                        {user ? (
+                          user?.profileImg ? (
+                            <img
+                              src={user.profileImg}
+                              alt={user?.name?.firstName || "User profile"}
+                              className="w-7 h-7 rounded-full object-cover border border-neutral-300 dark:border-neutral-700"
+                            />
+                          ) : (
+                            <span className="bg-[#222222] dark:bg-[#444444] text-[#efefef] w-7 h-7 rounded-full text-xs font-bold flex items-center justify-center">
+                              {user.name?.firstName?.slice(0, 1) || "U"}
+                            </span>
+                          )
+                        ) : (
+                          <User className="w-7 h-7 text-[#717171] dark:text-[#a0a0a0] p-0.5" />
+                        )}
+                      </button>
+                    </DropdownMenuTrigger>
 
-                  {/* menu items code  */}
-
-                  {showUserMenu ? (
-                    <>
+                    <DropdownMenuContent align="end" className="w-[230px]">
                       {!user ? (
-                        <div
-                          ref={userMenuRef}
-                          className="shadow-md absolute right-9 top-[74px] bg-[#ffffff] border-[1px] border-[#dddddd] rounded-lg flex flex-col py-2 w-[230px] transition-all user__menu"
-                        >
-                          <Link
+                        <>
+                          <DropdownMenuItem
                             className="font-medium"
-                            onClick={() => {
-                              setShowUserMenu(false);
-                              setPopup(true);
-                            }}
+                            onClick={() => setPopup(true)}
                           >
                             Sign up
-                          </Link>
-                          <Link
-                            onClick={() => {
-                              setShowUserMenu(false);
-                              setPopup(true);
-                            }}
-                          >
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setPopup(true)}>
                             Login
-                          </Link>
-                          <hr className="h-[1.5px] bg-[#dddddd] my-1" />
-                          <Link
-                            onClick={() => {
-                              setShowUserMenu(false);
-                              setPopup(true);
-                            }}
-                          >
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => setPopup(true)}>
                             Motel your home
-                          </Link>
-                          <Link to="/contact">Contact the team</Link>
-                        </div>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => navigate("/contact")}>
+                            Contact the team
+                          </DropdownMenuItem>
+                        </>
                       ) : (
-                        // logged in user menu
-                        <div
-                          ref={userMenuRef}
-                          className="shadow-md absolute right-9 top-[70px] bg-[#ffffff] border-[1px] border-[#dddddd] rounded-lg flex flex-col py-2 w-[230px] transition-all user__menu"
-                          onClick={() => {
-                            setShowUserMenu((prev) => !prev);
-                          }}
-                        >
+                        <>
                           {user?.role === "host" || user?.role === "admin" ? (
-                            <>
-                              {!inUserDashboard ? (
-                                <Link
-                                  to={`/users/dashboard/${user._id}/overview=true`}
-                                  onClick={() => {
-                                    JSON.stringify(
-                                      sessionStorage.setItem("activePage", 1)
-                                    );
-                                  }}
-                                  className="font-medium"
-                                >
-                                  Dashboard
-                                </Link>
-                              ) : (
-                                <Link className="font-medium" to={"/"}>
-                                  Home
-                                </Link>
-                              )}
-                            </>
+                            !inUserDashboard ? (
+                              <DropdownMenuItem
+                                className="font-medium"
+                                onClick={() => {
+                                  JSON.stringify(sessionStorage.setItem("activePage", 1));
+                                  navigate(`/users/dashboard/${user._id}/overview=true`);
+                                }}
+                              >
+                                Dashboard
+                              </DropdownMenuItem>
+                            ) : (
+                              <DropdownMenuItem
+                                className="font-medium"
+                                onClick={() => navigate("/")}
+                              >
+                                Home
+                              </DropdownMenuItem>
+                            )
                           ) : (
-                            <Link className="font-medium">Notifications</Link>
+                            <DropdownMenuItem className="font-medium">
+                              Notifications
+                            </DropdownMenuItem>
                           )}
-                          <Link to="/trips" className="font-medium">
-                            Trips
-                          </Link>
-                          <Link to="/wishlists" className="font-medium">
-                            Wishlists
-                          </Link>
-                          <hr className="h-[1.5px] bg-[#dddddd] my-1" />
-                          <Link to={"/host/homes"}>Motel your home</Link>
-                          <Link to={`/users/show/${user._id}`}>Account</Link>
-                          <hr className="h-[1.5px] bg-[#dddddd] my-1" />
-                          <Link to="/contact">Contact the team</Link>
-                          <Link
-                            onClick={() => {
-                              handleLogout();
-                            }}
+                          <DropdownMenuItem
+                            className="font-medium"
+                            onClick={() => navigate("/trips")}
                           >
+                            Trips
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="font-medium"
+                            onClick={() => navigate("/wishlists")}
+                          >
+                            Wishlists
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => navigate("/host/homes")}>
+                            Motel your home
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => navigate(`/users/show/${user._id}`)}>
+                            Account
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => navigate("/contact")}>
+                            Contact the team
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={handleLogout}>
                             Log out
-                          </Link>
-                        </div>
+                          </DropdownMenuItem>
+                        </>
                       )}
-                    </>
-                  ) : null}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </>
             )}
@@ -429,33 +424,43 @@ const Navbar = () => {
                   className="focus:outline-none pl-1 pr-1 text-xs sm:text-sm text-[#222222] dark:text-white bg-transparent w-full"
                   placeholder="Search city, country, motel..."
                 />
-                {searchValue && (
-                  <button
-                    type="button"
-                    onClick={handleClearSearch}
-                    className="text-[#888888] hover:text-[#222222] dark:hover:text-white p-1"
-                    title="Clear search"
-                  >
-                    <FiX size={14} />
-                  </button>
-                )}
-                <button
+                <AnimatePresence>
+                  {searchValue && (
+                    <motion.button
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0, opacity: 0 }}
+                      transition={{ duration: 0.15 }}
+                      type="button"
+                      onClick={handleClearSearch}
+                      className="text-[#888888] hover:text-[#222222] dark:hover:text-white p-1 cursor-pointer"
+                      title="Clear search"
+                    >
+                      <FiX size={14} />
+                    </motion.button>
+                  )}
+                </AnimatePresence>
+                <Button
                   type="submit"
-                  className="bg-[#ff385c] hover:bg-[#d90b63] rounded-full p-1.5 text-white shrink-0 ml-1 cursor-pointer transition-colors shadow-xs"
+                  variant="journey"
+                  size="icon"
+                  className="rounded-full w-7 h-7 ml-1"
                   title="Search"
                 >
                   <img src={searchIcon} alt="Search" className="w-3 h-3" />
-                </button>
+                </Button>
               </form>
 
               {/* Mobile Filters Button */}
-              <button
+              <Button
                 type="button"
                 onClick={() => setShowFilterPopup(true)}
-                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-full border text-xs font-bold shrink-0 shadow-xs cursor-pointer transition-all ${
+                variant="outline"
+                size="sm"
+                className={`rounded-full gap-1.5 text-xs font-bold shrink-0 ${
                   activeFilterCount > 0
                     ? "border-[#ff385c] bg-[#ff385c]/10 text-[#ff385c] ring-1 ring-[#ff385c]"
-                    : "border-[#dddddd] dark:border-[#444444] bg-white dark:bg-[#222222] text-[#222222] dark:text-white"
+                    : ""
                 }`}
               >
                 <FiSliders
@@ -463,12 +468,19 @@ const Navbar = () => {
                   className={activeFilterCount > 0 ? "text-[#ff385c]" : "text-[#717171] dark:text-[#a0a0a0]"}
                 />
                 <span>Filters</span>
-                {activeFilterCount > 0 && (
-                  <span className="w-4 h-4 rounded-full bg-[#ff385c] text-white text-[9px] font-extrabold flex items-center justify-center">
-                    {activeFilterCount}
-                  </span>
-                )}
-              </button>
+                <AnimatePresence>
+                  {activeFilterCount > 0 && (
+                    <motion.span
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      exit={{ scale: 0 }}
+                      className="w-4 h-4 rounded-full bg-[#ff385c] text-white text-[9px] font-extrabold flex items-center justify-center"
+                    >
+                      {activeFilterCount}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </Button>
             </div>
           </div>
         )}
@@ -480,7 +492,7 @@ const Navbar = () => {
         activeFilters={activeFilters}
         onApplyFilters={handleApplyFilters}
       />
-    </nav>
+    </motion.nav>
   );
 };
 

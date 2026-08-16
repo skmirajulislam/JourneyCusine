@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import Category from "../components/Home/Category";
 import PriceWithTaxCard from "../components/Home/PriceWithTaxCard";
 import { useQuery } from "@tanstack/react-query";
@@ -20,6 +21,30 @@ import FilterPopUp, {
   AMENITIES_OPTIONS,
 } from "../components/popUp/FilterPopUp/FilterPopUp";
 import AiChatWidget from "../components/AiAssistant/AiChatWidget";
+import { Button } from "@/components/ui/button";
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.04,
+      delayChildren: 0.05,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 15 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.3,
+      ease: "easeOut",
+    },
+  },
+};
 
 const Home = () => {
   const user = useSelector((state) => state.user.userDetails);
@@ -239,80 +264,90 @@ const Home = () => {
       </section>
 
       {/* Active Search & Filters Pill Banner */}
-      {(searchQuery || activeFilterCount > 0) && (
-        <div className="mt-6 mb-2 p-4 rounded-2xl bg-neutral-100 dark:bg-[#1e1e1e] border border-neutral-200 dark:border-neutral-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-2 min-w-0">
-            {searchQuery && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white dark:bg-[#2a2a2a] text-xs font-bold text-[#111827] dark:text-white border border-neutral-200 dark:border-neutral-700 shadow-xs">
-                <FiSearch size={12} className="text-[#ff385c]" />
-                &ldquo;{searchQuery}&rdquo;
-                <button
-                  type="button"
-                  onClick={handleClearSearch}
-                  className="hover:text-red-500 ml-0.5 cursor-pointer"
-                >
-                  <FiX size={13} />
-                </button>
-              </span>
-            )}
-
-            {priceFilter !== "all" && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white dark:bg-[#2a2a2a] text-xs font-bold text-[#111827] dark:text-white border border-neutral-200 dark:border-neutral-700 shadow-xs">
-                Price: {selectedPriceLabel}
-                <button
-                  type="button"
-                  onClick={() => handleRemoveSingleFilter("price")}
-                  className="hover:text-red-500 ml-0.5 cursor-pointer"
-                >
-                  <FiX size={13} />
-                </button>
-              </span>
-            )}
-
-            {ratingFilter !== "all" && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white dark:bg-[#2a2a2a] text-xs font-bold text-[#111827] dark:text-white border border-neutral-200 dark:border-neutral-700 shadow-xs">
-                <AiFillStar className="text-amber-500" size={13} />
-                {selectedRatingLabel}
-                <button
-                  type="button"
-                  onClick={() => handleRemoveSingleFilter("rating")}
-                  className="hover:text-red-500 ml-0.5 cursor-pointer"
-                >
-                  <FiX size={13} />
-                </button>
-              </span>
-            )}
-
-            {amenitiesFilter.map((amenity) => (
-              <span
-                key={amenity}
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white dark:bg-[#2a2a2a] text-xs font-bold text-[#111827] dark:text-white border border-neutral-200 dark:border-neutral-700 shadow-xs"
-              >
-                {amenity}
-                <button
-                  type="button"
-                  onClick={() => handleRemoveSingleFilter("amenity", amenity)}
-                  className="hover:text-red-500 ml-0.5 cursor-pointer"
-                >
-                  <FiX size={13} />
-                </button>
-              </span>
-            ))}
-
-            <span className="text-xs font-semibold text-[#6b7280] dark:text-[#9ca3af] ml-1">
-              ({displayedListings.length} {displayedListings.length === 1 ? "stay" : "stays"} found)
-            </span>
-          </div>
-
-          <button
-            type="button"
-            onClick={handleClearAllFilters}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white dark:bg-[#2a2a2a] hover:bg-neutral-200 dark:hover:bg-[#333333] text-xs font-bold text-[#111827] dark:text-white shadow-xs border border-neutral-200 dark:border-neutral-700 transition-colors shrink-0 cursor-pointer"
+      <AnimatePresence>
+        {(searchQuery || activeFilterCount > 0) && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="mt-6 mb-2 p-4 rounded-2xl bg-neutral-100 dark:bg-[#1e1e1e] border border-neutral-200 dark:border-neutral-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
           >
-            <FiX size={14} /> Clear all filters
-          </button>
-        </div>
-      )}
+            <div className="flex flex-wrap items-center gap-2 min-w-0">
+              {searchQuery && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white dark:bg-[#2a2a2a] text-xs font-bold text-[#111827] dark:text-white border border-neutral-200 dark:border-neutral-700 shadow-xs">
+                  <FiSearch size={12} className="text-[#ff385c]" />
+                  &ldquo;{searchQuery}&rdquo;
+                  <button
+                    type="button"
+                    onClick={handleClearSearch}
+                    className="hover:text-red-500 ml-0.5 cursor-pointer"
+                  >
+                    <FiX size={13} />
+                  </button>
+                </span>
+              )}
+
+              {priceFilter !== "all" && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white dark:bg-[#2a2a2a] text-xs font-bold text-[#111827] dark:text-white border border-neutral-200 dark:border-neutral-700 shadow-xs">
+                  Price: {selectedPriceLabel}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveSingleFilter("price")}
+                    className="hover:text-red-500 ml-0.5 cursor-pointer"
+                  >
+                    <FiX size={13} />
+                  </button>
+                </span>
+              )}
+
+              {ratingFilter !== "all" && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white dark:bg-[#2a2a2a] text-xs font-bold text-[#111827] dark:text-white border border-neutral-200 dark:border-neutral-700 shadow-xs">
+                  <AiFillStar className="text-amber-500" size={13} />
+                  {selectedRatingLabel}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveSingleFilter("rating")}
+                    className="hover:text-red-500 ml-0.5 cursor-pointer"
+                  >
+                    <FiX size={13} />
+                  </button>
+                </span>
+              )}
+
+              {amenitiesFilter.map((amenity) => (
+                <span
+                  key={amenity}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white dark:bg-[#2a2a2a] text-xs font-bold text-[#111827] dark:text-white border border-neutral-200 dark:border-neutral-700 shadow-xs"
+                >
+                  {amenity}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveSingleFilter("amenity", amenity)}
+                    className="hover:text-red-500 ml-0.5 cursor-pointer"
+                  >
+                    <FiX size={13} />
+                  </button>
+                </span>
+              ))}
+
+              <span className="text-xs font-semibold text-[#6b7280] dark:text-[#9ca3af] ml-1">
+                ({displayedListings.length} {displayedListings.length === 1 ? "stay" : "stays"} found)
+              </span>
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleClearAllFilters}
+              className="gap-1.5 rounded-xl text-xs font-bold shrink-0"
+            >
+              <FiX size={14} /> Clear all filters
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* House Listings Grid */}
       {isLoading && !searchQuery ? (
@@ -328,7 +363,12 @@ const Home = () => {
       ) : (
         <>
           {displayedListings.length === 0 ? (
-            <div className="my-16 py-16 px-6 text-center rounded-3xl border border-dashed border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-[#181818] max-w-lg mx-auto">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3 }}
+              className="my-16 py-16 px-6 text-center rounded-3xl border border-dashed border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-[#181818] max-w-lg mx-auto"
+            >
               <div className="w-14 h-14 rounded-full bg-rose-50 dark:bg-rose-950/50 text-[#ff385c] flex items-center justify-center mx-auto mb-4">
                 <FiSliders size={26} />
               </div>
@@ -338,35 +378,43 @@ const Home = () => {
               <p className="text-xs text-[#6b7280] dark:text-[#9ca3af] mt-1.5 mb-6 max-w-sm mx-auto leading-relaxed">
                 Try loosening your price, rating, or amenities filters, or explore all available stays.
               </p>
-              <button
+              <Button
                 type="button"
+                variant="journey"
                 onClick={handleResetAll}
-                className="px-5 py-2.5 rounded-xl bg-[#ff385c] hover:bg-[#d90b63] text-white text-xs font-bold shadow-md transition-all cursor-pointer"
+                className="px-5 py-2.5 rounded-xl text-xs font-bold shadow-md"
               >
                 Reset all filters &amp; search
-              </button>
-            </div>
+              </Button>
+            </motion.div>
           ) : (
-            <section className="py-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 mx-auto gap-x-7 gap-y-10">
+            <motion.section
+              key={`${category}-${searchQuery}-${priceFilter}-${ratingFilter}-${amenitiesFilter.join(",")}`}
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              className="py-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 mx-auto gap-x-7 gap-y-10"
+            >
               {displayedListings.map((listing) => (
-                <Link
-                  to={`/rooms/${listing?._id}`}
-                  key={listing._id}
-                  onClick={(e) => {
-                    if (!user) {
-                      e.preventDefault();
-                      window.dispatchEvent(new Event("open-auth-popup"));
-                    }
-                  }}
-                  className="flex flex-col gap-3 rounded-xl w-full sm:max-w-[300px] md:w-full mx-auto group"
-                >
-                  <ListingPreviewCard
-                    listingData={listing}
-                    showBeforeTaxPrice={showBeforeTaxPrice}
-                  />
-                </Link>
+                <motion.div key={listing._id} variants={itemVariants}>
+                  <Link
+                    to={`/rooms/${listing?._id}`}
+                    onClick={(e) => {
+                      if (!user) {
+                        e.preventDefault();
+                        window.dispatchEvent(new Event("open-auth-popup"));
+                      }
+                    }}
+                    className="flex flex-col gap-3 rounded-xl w-full sm:max-w-[300px] md:w-full mx-auto group block"
+                  >
+                    <ListingPreviewCard
+                      listingData={listing}
+                      showBeforeTaxPrice={showBeforeTaxPrice}
+                    />
+                  </Link>
+                </motion.div>
               ))}
-            </section>
+            </motion.section>
           )}
         </>
       )}

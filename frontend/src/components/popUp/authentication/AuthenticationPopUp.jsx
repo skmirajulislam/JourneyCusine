@@ -1,7 +1,12 @@
-// import PropTypes from "prop-types";
-import { useState, useEffect, useRef } from "react";
-import closeIcon from "../../../assets/basicIcon/closeIcon.svg";
-import backIcon from "../../../assets/basicIcon/backIcon.png";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowLeft, X } from "lucide-react";
+import {
+  Dialog,
+  DialogPortal,
+  DialogOverlay,
+} from "@/components/ui/dialog";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
 
 import LogInPopup from "./LogInPopup";
 import CreateUserPopup from "./CreateUserPopup";
@@ -16,7 +21,6 @@ const AuthenticationPopUp = ({ popup, setPopup }) => {
   const [defaultPopup, setDefaultPopup] = useState(true);
   const [loginEmail, setLoginEmail] = useState(null);
   const [showErrorMessage, setShowErrorMessage] = useState(false);
-  const popUpRef = useRef(null);
 
   const handleCloseLoginPopup = () => {
     setShowLoginPopup(false);
@@ -24,116 +28,155 @@ const AuthenticationPopUp = ({ popup, setPopup }) => {
     setDefaultPopup(true);
   };
 
+  const handleClose = () => {
+    setPopup(false);
+    setShowCreateUserPopup(false);
+    setShowLoginPopup(false);
+    setProfilePopup(false);
+    setDefaultPopup(true);
+  };
+
+  // Reset internal state when dialog opens
   useEffect(() => {
-    const handleOutsideClick = (event) => {
-      if (popUpRef.current && !popUpRef.current.contains(event.target)) {
-        setPopup(false);
-        setShowCreateUserPopup(false);
-        setShowLoginPopup(false);
-        setProfilePopup(false);
-        setDefaultPopup(true);
-      }
-    };
-    document.addEventListener("mousedown", handleOutsideClick);
-    return () => {
-      document.removeEventListener("mousedown", handleOutsideClick);
-    };
-  }, [setPopup]);
+    if (popup) {
+      setDefaultPopup(true);
+      setShowLoginPopup(false);
+      setShowCreateUserPopup(false);
+      setProfilePopup(false);
+    }
+  }, [popup]);
+
+  const titleText = defaultPopup
+    ? "Log in or sign up"
+    : showLoginPopup
+    ? "Log in"
+    : showCreateUserPopup
+    ? "Finish signing up"
+    : profilePopup
+    ? "Create your profile"
+    : "Log in or sign up";
 
   return (
-    <>
-      {popup !== true ? null : (
-        <div className=" absolute inset-0 w-screen h-screen bg-[#0000005c] popup__overlay">
-          <div
-            ref={popUpRef}
-            className={`absolute left-[27.5%] right-[27.5%] top-[12%] ${
-              (showLoginPopup || profilePopup) && !showErrorMessage
-                ? " h-[60vh] popup__container__login"
-                : (showLoginPopup || profilePopup) && showErrorMessage
-                ? "h-[80vh]"
-                : "h-[80vh] popup__container"
-            } w-[45vw] bg-white dark:bg-[#1e1e1e] shadow-2xl rounded-xl overflow-hidden`}
-            style={{ height: "78vh", minHeight: "520px", width: "420px", maxWidth: "90vw", left: "calc(50% - 210px)" }}
-          >
-            {/* pop-up navbar */}
-            <div className=" flex items-center w-full py-4 border-b-[1px] border-[#dddddd] dark:border-[#333333] px-8 sticky top-0 bg-white dark:bg-[#1e1e1e]">
-              {defaultPopup || profilePopup ? (
-                <img
-                  src={closeIcon}
-                  alt="close icon"
-                  className="w-8 hover:bg-[#f1f1f1] dark:hover:bg-[#2a2a2a] transition-colors rounded-full p-2 cursor-pointer"
-                  onClick={() => {
-                    setPopup(false);
-                  }}
-                />
-              ) : (
-                <img
-                  src={backIcon}
-                  alt="close icon"
-                  className="w-8 hover:bg-[#f1f1f1] dark:hover:bg-[#2a2a2a] transition-colors rounded-full p-2 cursor-pointer"
-                  onClick={() => {
-                    handleCloseLoginPopup();
-                  }}
-                />
-              )}
-              <p className="text-base mx-auto font-semibold text-[#222222] dark:text-[#e5e7eb]">
-                {defaultPopup
-                  ? "Log in or sign up"
-                  : showLoginPopup
-                  ? "Log in"
-                  : showCreateUserPopup
-                  ? "Finish signing up"
-                  : profilePopup
-                  ? "Create your profile"
-                  : "Log in or sign up"}
-              </p>
-              <div className="w-[14px]"> </div>
+    <Dialog open={popup} onOpenChange={(open) => { if (!open) handleClose(); }}>
+      <AnimatePresence>
+        {popup && (
+          <DialogPortal forceMount>
+            <DialogOverlay />
+            <div className="fixed inset-0 z-[101] flex items-center justify-center p-4 sm:p-6 pointer-events-none">
+              <DialogPrimitive.Content asChild onEscapeKeyDown={handleClose} onPointerDownOutside={handleClose}>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 15 }}
+                  transition={{ type: "spring", damping: 25, stiffness: 350 }}
+                  className="pointer-events-auto w-full max-w-[420px] max-h-[88vh] bg-white dark:bg-[#1e1e1e] shadow-2xl rounded-2xl overflow-hidden border border-[#eeeeee] dark:border-[#333333] focus:outline-none flex flex-col"
+                >
+                  {/* Header */}
+                  <div className="flex items-center justify-between w-full py-4 border-b border-[#dddddd] dark:border-[#333333] px-6 sticky top-0 bg-white dark:bg-[#1e1e1e] z-10 shrink-0">
+                    {defaultPopup || profilePopup ? (
+                      <button
+                        type="button"
+                        onClick={handleClose}
+                        className="rounded-full p-1.5 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer text-[#222222] dark:text-white"
+                        aria-label="Close"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleCloseLoginPopup}
+                        className="rounded-full p-1.5 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer text-[#222222] dark:text-white"
+                        aria-label="Back"
+                      >
+                        <ArrowLeft className="w-5 h-5" />
+                      </button>
+                    )}
+                    <p className="text-base font-semibold text-[#222222] dark:text-[#e5e7eb] text-center flex-1">
+                      {titleText}
+                    </p>
+                    <div className="w-[32px]"> </div>
+                  </div>
+
+                  {/* Content with animated transitions */}
+                  <div className="overflow-y-auto flex-1 w-full">
+                    <AnimatePresence mode="wait">
+                      {defaultPopup && (
+                        <motion.div
+                          key="welcome"
+                          initial={{ opacity: 0, x: -15 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: 15 }}
+                          transition={{ duration: 0.18 }}
+                        >
+                          <WelcomePopup
+                            setDefaultPopup={setDefaultPopup}
+                            setShowLoginPopup={setShowLoginPopup}
+                            setShowCreateUserPopup={setShowCreateUserPopup}
+                            setLoginEmail={setLoginEmail}
+                          />
+                        </motion.div>
+                      )}
+                      {showLoginPopup && (
+                        <motion.div
+                          key="login"
+                          initial={{ opacity: 0, x: 15 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -15 }}
+                          transition={{ duration: 0.18 }}
+                        >
+                          <LogInPopup
+                            onBack={handleCloseLoginPopup}
+                            loginEmail={loginEmail}
+                            setDefaultPopup={setDefaultPopup}
+                            setShowLoginPopup={setShowLoginPopup}
+                            setPopup={setPopup}
+                            showErrorMessage={showErrorMessage}
+                            setShowErrorMessage={setShowErrorMessage}
+                          />
+                        </motion.div>
+                      )}
+                      {showCreateUserPopup && (
+                        <motion.div
+                          key="signup"
+                          initial={{ opacity: 0, x: 15 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -15 }}
+                          transition={{ duration: 0.18 }}
+                        >
+                          <CreateUserPopup
+                            onBack={handleCloseLoginPopup}
+                            loginEmail={loginEmail}
+                            setProfilePopup={setProfilePopup}
+                            showCreatePopUp={setShowCreateUserPopup}
+                            setPopup={setPopup}
+                          />
+                        </motion.div>
+                      )}
+                      {profilePopup && (
+                        <motion.div
+                          key="profile"
+                          initial={{ opacity: 0, y: 15 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -15 }}
+                          transition={{ duration: 0.18 }}
+                        >
+                          <CreateProfilePopup
+                            setShowProfilePopup={setProfilePopup}
+                            setPopup={setPopup}
+                            setDefaultPopup={setDefaultPopup}
+                          />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </motion.div>
+              </DialogPrimitive.Content>
             </div>
-            <div
-              className={`overflow-y-auto ${
-                showLoginPopup ? "h-[60vh]" : "h-[70vh]"
-              }`}
-            >
-              {!defaultPopup ? null : (
-                <WelcomePopup
-                  setDefaultPopup={setDefaultPopup}
-                  setShowLoginPopup={setShowLoginPopup}
-                  setShowCreateUserPopup={setShowCreateUserPopup}
-                  setLoginEmail={setLoginEmail}
-                />
-              )}
-              {!showLoginPopup ? null : (
-                <LogInPopup
-                  onBack={handleCloseLoginPopup}
-                  loginEmail={loginEmail}
-                  setDefaultPopup={setDefaultPopup}
-                  setShowLoginPopup={setShowLoginPopup}
-                  setPopup={setPopup}
-                  showErrorMessage={showErrorMessage}
-                  setShowErrorMessage={setShowErrorMessage}
-                />
-              )}
-              {!showCreateUserPopup ? null : (
-                <CreateUserPopup
-                  onBack={handleCloseLoginPopup}
-                  loginEmail={loginEmail}
-                  setProfilePopup={setProfilePopup}
-                  showCreatePopUp={setShowCreateUserPopup}
-                  setPopup={setPopup}
-                />
-              )}
-              {!profilePopup ? null : (
-                <CreateProfilePopup
-                  setShowProfilePopup={setProfilePopup}
-                  setPopup={setPopup}
-                  setDefaultPopup={setDefaultPopup}
-                />
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-    </>
+          </DialogPortal>
+        )}
+      </AnimatePresence>
+    </Dialog>
   );
 };
 export default AuthenticationPopUp;
