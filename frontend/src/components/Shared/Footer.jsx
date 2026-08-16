@@ -24,7 +24,7 @@ const Footer = () => {
   return (
     <footer
       ref={footerRef}
-      className="py-12 bg-[#f7f7f7] dark:bg-[#121212] border-t border-[#dddddd] dark:border-neutral-800 text-sm text-[#222222] dark:text-neutral-300 relative bottom-0 z-[20] transition-colors"
+      className="py-12 bg-[#f7f7f7] dark:bg-[#121212] border-t border-[#dddddd] dark:border-neutral-800 text-sm text-[#222222] dark:text-neutral-300 w-full mt-auto z-[20] transition-colors"
     >
       <section className="grid grid-cols-2 md:grid-cols-4 gap-8 justify-between max-w-screen-2xl mx-auto px-10">
         {/* Support */}
