@@ -21,7 +21,8 @@ const { verifyJwtToken } = require("../middleware/jwt.js");
 const { strictLimiter } = require("../middleware/rateLimiter.js");
 const router = express.Router();
 
-router.use(express.json());
+router.use(express.json({ limit: "20mb" }));
+router.use(express.urlencoded({ limit: "20mb", extended: true }));
 router.use(strictLimiter);
 
 router.post("/sign_up", signUp);

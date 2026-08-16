@@ -20,6 +20,7 @@ const EditProfile = () => {
   const [showPopup, setShowPopup] = useState(false);
   const [selectedOption, setSelectedOption] = useState(null);
   const [isImageLoading, setIsImgUploading] = useState(false);
+  const [previewImg, setPreviewImg] = useState(null);
 
   // Edit Name states
   const [showNameModal, setShowNameModal] = useState(false);
@@ -76,6 +77,10 @@ const EditProfile = () => {
       toast.error("Image size cannot exceed 8MB");
       return;
     }
+
+    // Immediately display preview in UI for instant responsiveness
+    const localPreview = URL.createObjectURL(file);
+    setPreviewImg(localPreview);
 
     try {
       setIsImgUploading(true);
@@ -205,10 +210,10 @@ const EditProfile = () => {
           {isMobile ? (
             <div className="flex flex-col items-center justify-center w-full mb-8">
               <div className="relative">
-                {user?.profileImg ? (
-                  <div className="w-[150px] h-[150px] rounded-full overflow-hidden border">
+                {previewImg || user?.profileImg ? (
+                  <div className="w-[150px] h-[150px] rounded-full overflow-hidden border border-neutral-200 dark:border-neutral-700 shadow-inner">
                     <img
-                      src={user.profileImg}
+                      src={previewImg || user.profileImg}
                       alt="User avatar"
                       className="w-full h-full object-cover"
                     />
@@ -249,10 +254,10 @@ const EditProfile = () => {
             <div className="w-[300px] shrink-0 sticky top-[100px]">
               <div className="flex flex-col gap-4 items-center shadow-lg rounded-3xl p-7 border border-[#dddddd] dark:border-[#333333] bg-white dark:bg-[#1e1e1e]">
                 <div className="relative">
-                  {user?.profileImg ? (
-                    <div className="w-[180px] h-[180px] rounded-full overflow-hidden border">
+                  {previewImg || user?.profileImg ? (
+                    <div className="w-[180px] h-[180px] rounded-full overflow-hidden border border-neutral-200 dark:border-neutral-700 shadow-inner">
                       <img
-                        src={user.profileImg}
+                        src={previewImg || user.profileImg}
                         alt="User avatar"
                         className="w-full h-full object-cover"
                       />
