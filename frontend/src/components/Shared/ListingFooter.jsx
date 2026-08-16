@@ -34,10 +34,10 @@ const ListingFooter = () => {
   const currentHouseId = localStorage.getItem("currentHouseId");
 
   useEffect(() => {
-    if (currentHouseId) {
+    if (currentHouseId && !currentListingHouse) {
       getHouseDetails(currentHouseId);
     }
-  }, [currentHouseId, getHouseDetails]);
+  }, [currentHouseId, currentListingHouse, getHouseDetails]);
 
   const steps = [
     "/become-a-host",

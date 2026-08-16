@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
  
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import api from "../backend";
 import { toast } from "react-hot-toast";
 
@@ -9,22 +9,15 @@ const ListingFlowContext = createContext(null);
 export const ListingFlowProvider = ({ children }) => {
   const [newHouse, setNewHouse] = useState(null);
   const [currentListingHouse, setCurrentListingHouse] = useState(null);
+  const isFetchingRef = useRef(false);
 
-  // Restore currentHouseId from localStorage on mount only if user is logged in
-  useEffect(() => {
-    const hasToken = localStorage.getItem("accessToken") || localStorage.getItem("refreshToken");
-    const houseId = localStorage.getItem("currentHouseId");
-    if (hasToken && houseId && !currentListingHouse) {
-      getHouseDetails(houseId);
-    }
-  }, [currentListingHouse]);
-
-  const getHouseDetails = async (id) => {
-    if (!id) return;
+  const getHouseDetails = useCallback(async (id) => {
+    if (!id || isFetchingRef.current) return;
     const hasToken = localStorage.getItem("accessToken") || localStorage.getItem("refreshToken");
     if (!hasToken) {
       return;
     }
+    isFetchingRef.current = true;
     try {
       const res = await api.post("/house/get_house_details", { houseId: id }, {
         headers: { "Content-Type": "application/json" },
@@ -37,8 +30,19 @@ export const ListingFlowProvider = ({ children }) => {
       if (error?.response?.status === 401 || error?.response?.status === 404) {
         localStorage.removeItem("currentHouseId");
       }
+    } finally {
+      isFetchingRef.current = false;
     }
-  };
+  }, []);
+
+  // Restore currentHouseId from localStorage on mount only if user is logged in
+  useEffect(() => {
+    const hasToken = localStorage.getItem("accessToken") || localStorage.getItem("refreshToken");
+    const houseId = localStorage.getItem("currentHouseId");
+    if (hasToken && houseId) {
+      getHouseDetails(houseId);
+    }
+  }, [getHouseDetails]);
 
   const createNewHouse = (houseData) => {
     setNewHouse(houseData);

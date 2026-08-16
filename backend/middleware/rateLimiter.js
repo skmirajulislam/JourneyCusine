@@ -1,12 +1,14 @@
 const rateLimit = require("express-rate-limit");
 
+const isDev = process.env.NODE_ENV !== "production";
+
 /**
  * Global API Rate Limiter
- * Allows up to 500 requests per 15 minutes per IP
+ * Allows generous capacity for interactive browsing and SPA queries
  */
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 500,
+  max: isDev ? 10000 : 3000,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
@@ -18,11 +20,11 @@ const apiLimiter = rateLimit({
 
 /**
  * Strict Mutation / Auth Rate Limiter
- * Allows up to 100 sensitive requests per 15 minutes
+ * Protects login/signup brute-force attempts
  */
 const strictLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: isDev ? 1000 : 200,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
@@ -33,12 +35,11 @@ const strictLimiter = rateLimit({
 });
 
 /**
- * Standard Feature Limiter (Trips, Chat, Loyalty, Notifications)
- * Allows up to 300 requests per 15 minutes
+ * Standard Feature Limiter (Trips, House Creation, Chat, Loyalty, Notifications)
  */
 const standardLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 300,
+  max: isDev ? 10000 : 2500,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
