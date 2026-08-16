@@ -38,7 +38,7 @@ export async function uploadToUploadThingDirect(file) {
     {
       method: "POST",
       headers: {
-        "x-uploadthing-version": "7.0.0",
+        "x-uploadthing-version": "7.7.4",
         "x-uploadthing-package": "@uploadthing/react",
         "Content-Type": "application/json",
       },
