@@ -22,9 +22,11 @@ const {
   getAuthorHouses,
 } = require("../controllers/houseController.js");
 const { verifyJwtToken } = require("../middleware/jwt.js");
+const { standardLimiter } = require("../middleware/rateLimiter.js");
 const router = express.Router();
 
 router.use(express.json());
+router.use(standardLimiter);
 
 router.get("/get_all_listing", getAllListing);
 router.get("/get_author_houses", verifyJwtToken, getAuthorHouses);

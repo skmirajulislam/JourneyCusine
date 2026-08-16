@@ -26,7 +26,7 @@ const Legal = () => {
       ...prev,
       security: labelValue,
     }));
-  }, [labelValue]);
+  }, [labelValue, setNewHouse]);
 
   return (
     <>

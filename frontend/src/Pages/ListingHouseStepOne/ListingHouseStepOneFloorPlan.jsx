@@ -20,7 +20,7 @@ const ListingHouseStepOneFloorPlan = () => {
       ...prev,
       floorPlan,
     }));
-  }, [bathroomsNumber, bedroomsNumber, bedsNumber, guestNumber]);
+  }, [bathroomsNumber, bedroomsNumber, bedsNumber, guestNumber, setNewHouse]);
 
   return (
     <section className="flex flex-col gap-10 max-w-screen-md mx-auto my-6 min-h-[70dvh] 2xl:h-[80vh]">

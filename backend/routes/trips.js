@@ -12,9 +12,11 @@ const {
   updateSplitStatus,
 } = require("../controllers/tripController.js");
 const { verifyJwtToken } = require("../middleware/jwt.js");
+const { standardLimiter } = require("../middleware/rateLimiter.js");
 
 const router = express.Router();
 router.use(express.json());
+router.use(standardLimiter);
 
 router.get("/", verifyJwtToken, getUserTrips);
 router.post("/", verifyJwtToken, createTrip);

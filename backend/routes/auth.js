@@ -18,9 +18,11 @@ const {
     updateUserCountry,
 } = require("../controllers/authController.js");
 const { verifyJwtToken } = require("../middleware/jwt.js");
+const { strictLimiter } = require("../middleware/rateLimiter.js");
 const router = express.Router();
 
 router.use(express.json());
+router.use(strictLimiter);
 
 router.post("/sign_up", signUp);
 router.post("/log_in", logIn);

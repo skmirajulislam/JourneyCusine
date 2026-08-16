@@ -45,7 +45,7 @@ const Pricing = () => {
       authorEarnedPrice: totalAuthorEarned,
       basePrice,
     }));
-  }, [basePrice, totalAuthorEarned, totalPriceBeforeTax]);
+  }, [basePrice, totalAuthorEarned, totalPriceBeforeTax, setNewHouse]);
 
   return (
     <div className="flex flex-col max-w-screen-md mx-auto my-6 min-h-[70vh]">

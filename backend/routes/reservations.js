@@ -12,9 +12,12 @@ const {
   processRefund,
 } = require("../controllers/reservationController.js");
 
+const { standardLimiter } = require("../middleware/rateLimiter.js");
+
 const router = express.Router();
 
 router.use(express.json());
+router.use(standardLimiter);
 
 // Public config endpoint for frontend to get Razorpay Key ID
 router.get("/config", getRazorpayKeyId);

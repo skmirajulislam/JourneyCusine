@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import api, { API } from "../backend";
 import { useAuth } from "../hooks/useAuth";
 import io from "socket.io-client";

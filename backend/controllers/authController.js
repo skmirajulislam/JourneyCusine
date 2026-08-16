@@ -39,7 +39,13 @@ exports.signUp = async (req, res, next) => {
         const passwordHash = await bcrypt.hash(payload.password, saltRounds);
         const { getCurrencyForCountry } = require("../utils/currency.js");
         const resolvedCountry = payload.country || "India";
+        const resolvedCountryCode = payload.countryCode || "IN";
         const resolvedCurrency = payload.currency || getCurrencyForCountry(resolvedCountry);
+        const resolvedPhone = payload.phoneNumber || {
+            dialCode: payload.dialCode || "+91",
+            number: payload.phone || payload.mobile || "",
+            fullNumber: `${payload.dialCode || "+91"} ${payload.phone || payload.mobile || ""}`.trim(),
+        };
 
         const userObj = {
             name: {
@@ -50,7 +56,9 @@ exports.signUp = async (req, res, next) => {
             birthDate: payload.birthDate,
             password: passwordHash,
             country: resolvedCountry,
+            countryCode: resolvedCountryCode,
             currency: resolvedCurrency,
+            phoneNumber: resolvedPhone,
         };
 
         const user = await User(userObj).save();

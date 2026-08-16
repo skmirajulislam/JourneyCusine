@@ -6,10 +6,12 @@ const {
   calculateSmartPricing,
 } = require("../controllers/aiController.js");
 const { verifyJwtToken } = require("../middleware/jwt.js");
+const { standardLimiter } = require("../middleware/rateLimiter.js");
 
 const router = express.Router();
 
 router.use(express.json({ limit: "20mb" }));
+router.use(standardLimiter);
 
 // Protected AI chat endpoint
 router.post("/chat", verifyJwtToken, handleAiChat);

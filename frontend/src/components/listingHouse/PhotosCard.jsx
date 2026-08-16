@@ -33,7 +33,7 @@ const PhotosCard = () => {
       ...prev,
       photos: images,
     }));
-  }, [images]);
+  }, [images, setNewHouse]);
 
   const convertFileToBase64 = (file) => {
     return new Promise((resolve, reject) => {

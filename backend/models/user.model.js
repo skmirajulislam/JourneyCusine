@@ -48,6 +48,11 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: "INR",
     },
+    phoneNumber: {
+        dialCode: { type: String, default: "+91" },
+        number: { type: String, default: "" },
+        fullNumber: { type: String, default: "" },
+    },
     offensiveWarnings: {
         type: Number,
         default: 0,

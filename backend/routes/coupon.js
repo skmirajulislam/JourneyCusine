@@ -7,9 +7,12 @@ const {
   validateCoupon,
 } = require("../controllers/couponController.js");
 
+const { standardLimiter } = require("../middleware/rateLimiter.js");
+
 const router = express.Router();
 
 router.use(express.json());
+router.use(standardLimiter);
 
 // Public / Guest coupon validation
 router.post("/validate", validateCoupon);

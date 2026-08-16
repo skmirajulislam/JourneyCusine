@@ -62,5 +62,8 @@
     "tailwindcss": "^3.4.3",
     "tailwindcss-animate": "^1.0.7",
     "vite": "^8.0.8"
+  },
+  "overrides": {
+    "effect": "^3.20.0"
   }
 }

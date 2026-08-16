@@ -37,7 +37,7 @@ const ListingFooter = () => {
     if (currentHouseId) {
       getHouseDetails(currentHouseId);
     }
-  }, [currentHouseId]);
+  }, [currentHouseId, getHouseDetails]);
 
   const steps = [
     "/become-a-host",

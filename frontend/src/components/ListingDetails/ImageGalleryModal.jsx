@@ -1,9 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { FiX, FiChevronLeft, FiChevronRight, FiGrid } from "react-icons/fi";
 
- 
 const ImageGalleryModal = ({ isOpen, onClose, photos = [], initialIndex = 0, title = "Property Photos" }) => {
   const [activeIndex, setActiveIndex] = useState(initialIndex);
+
+  const handlePrev = useCallback(() => {
+    setActiveIndex((prev) => (prev === 0 ? photos.length - 1 : prev - 1));
+  }, [photos?.length]);
+
+  const handleNext = useCallback(() => {
+    setActiveIndex((prev) => (prev === photos.length - 1 ? 0 : prev + 1));
+  }, [photos?.length]);
 
   useEffect(() => {
     if (isOpen) {
@@ -26,17 +33,9 @@ const ImageGalleryModal = ({ isOpen, onClose, photos = [], initialIndex = 0, tit
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, activeIndex, photos]);
+  }, [isOpen, onClose, handlePrev, handleNext]);
 
   if (!isOpen || !photos || photos.length === 0) return null;
-
-  const handlePrev = () => {
-    setActiveIndex((prev) => (prev === 0 ? photos.length - 1 : prev - 1));
-  };
-
-  const handleNext = () => {
-    setActiveIndex((prev) => (prev === photos.length - 1 ? 0 : prev + 1));
-  };
 
   return (
     <div className="fixed inset-0 z-[150] flex flex-col bg-black/95 text-white backdrop-blur-md animate-fadeIn select-none">

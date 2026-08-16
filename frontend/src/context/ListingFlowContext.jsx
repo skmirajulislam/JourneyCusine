@@ -17,7 +17,7 @@ export const ListingFlowProvider = ({ children }) => {
     if (hasToken && houseId && !currentListingHouse) {
       getHouseDetails(houseId);
     }
-  }, []);
+  }, [currentListingHouse]);
 
   const getHouseDetails = async (id) => {
     if (!id) return;

@@ -13,7 +13,7 @@ import { useChat } from "../../context/ChatContext.jsx";
 import { useNotifications } from "../../context/NotificationContext.jsx";
 import { useLoyalty } from "../../context/LoyaltyContext.jsx";
 import { BsSun, BsMoonStars } from "react-icons/bs";
-import { FiX, FiSliders, FiMessageSquare, FiBell, FiAward } from "react-icons/fi";
+import { FiX, FiSliders, FiMessageSquare, FiBell } from "react-icons/fi";
 import { Menu, User } from "lucide-react";
 import FilterPopUp from "../popUp/FilterPopUp/FilterPopUp";
 

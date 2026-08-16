@@ -62,17 +62,17 @@ const AuthenticationPopUp = ({ popup, setPopup }) => {
         {popup && (
           <DialogPortal forceMount>
             <DialogOverlay />
-            <div className="fixed inset-0 z-[2501] flex items-center justify-center p-4 sm:p-6 pointer-events-none">
+            <div className="fixed inset-0 z-[2501] flex items-center justify-center p-3 sm:p-6 pointer-events-none">
               <DialogPrimitive.Content asChild onEscapeKeyDown={handleClose} onPointerDownOutside={handleClose}>
                 <motion.div
                   initial={{ opacity: 0, scale: 0.95, y: 15 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95, y: 15 }}
                   transition={{ type: "spring", damping: 25, stiffness: 350 }}
-                  className="pointer-events-auto w-full max-w-[420px] max-h-[88vh] bg-white dark:bg-[#1e1e1e] shadow-2xl rounded-2xl overflow-hidden border border-[#eeeeee] dark:border-[#333333] focus:outline-none flex flex-col"
+                  className="pointer-events-auto w-full max-w-[460px] max-h-[92vh] sm:max-h-[88vh] bg-white dark:bg-[#1e1e1e] shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden border border-[#eeeeee] dark:border-[#333333] focus:outline-none flex flex-col"
                 >
                   {/* Header */}
-                  <div className="flex items-center justify-between w-full py-4 border-b border-[#dddddd] dark:border-[#333333] px-6 sticky top-0 bg-white dark:bg-[#1e1e1e] z-10 shrink-0">
+                  <div className="flex items-center justify-between w-full py-3.5 sm:py-4 border-b border-[#dddddd] dark:border-[#333333] px-5 sm:px-6 sticky top-0 bg-white/95 dark:bg-[#1e1e1e]/95 backdrop-blur-md z-20 shrink-0">
                     {defaultPopup || profilePopup ? (
                       <button
                         type="button"
@@ -92,7 +92,7 @@ const AuthenticationPopUp = ({ popup, setPopup }) => {
                         <ArrowLeft className="w-5 h-5" />
                       </button>
                     )}
-                    <p className="text-base font-semibold text-[#222222] dark:text-[#e5e7eb] text-center flex-1">
+                    <p className="text-sm sm:text-base font-semibold text-[#222222] dark:text-[#e5e7eb] text-center flex-1">
                       {titleText}
                     </p>
                     <div className="w-[32px]"> </div>

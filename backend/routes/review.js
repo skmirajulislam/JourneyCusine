@@ -7,10 +7,12 @@ const {
   editReview,
 } = require("../controllers/reviewController.js");
 const { verifyJwtToken } = require("../middleware/jwt.js");
+const { standardLimiter } = require("../middleware/rateLimiter.js");
 
 const router = express.Router();
 
 router.use(express.json());
+router.use(standardLimiter);
 
 // Public: Get all reviews for a motel listing
 router.get("/listing/:listingId", getListingReviews);
