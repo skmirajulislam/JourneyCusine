@@ -9,6 +9,23 @@ export default defineConfig({
     alias: {
       "@": fileURLToPath(new URL('./src', import.meta.url)),
     },
+    dedupe: ['react', 'react-dom', 'react/jsx-runtime'],
+  },
+  optimizeDeps: {
+    include: [
+      'react',
+      'react-dom',
+      'react/jsx-runtime',
+      '@radix-ui/react-dropdown-menu',
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-slot',
+      '@radix-ui/react-separator',
+      '@radix-ui/react-tooltip',
+      'socket.io-client',
+      'framer-motion',
+      'react-router-dom',
+      '@tanstack/react-query',
+    ],
   },
   server: {
     port: 3001,
