@@ -104,8 +104,13 @@ const PhotosCard = () => {
         files: [file],
       });
 
-      if (res && res[0]?.url) {
-        setImages((prev) => [...prev, res[0].url]);
+      const imgUrl =
+        res?.[0]?.ufsUrl ||
+        res?.[0]?.url ||
+        (res?.[0]?.key ? `https://utfs.io/f/${res[0].key}` : null);
+
+      if (imgUrl) {
+        setImages((prev) => [...prev, imgUrl]);
         toast.success("Image passed AI inspection and uploaded!");
       } else {
         toast.error("Upload failed, please try again.");
