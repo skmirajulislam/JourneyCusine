@@ -151,10 +151,14 @@ exports.getMessages = async (req, res) => {
       .populate("senderId", "name emailId profileImg")
       .sort({ createdAt: 1 });
 
+    const populatedConversation = await Conversation.findById(conversationId)
+      .populate("participants", "name emailId profileImg role")
+      .populate("listingId", "title photos basePrice location houseType");
+
     return res.status(200).json({
       success: 1,
       messages,
-      conversation,
+      conversation: populatedConversation,
     });
   } catch (error) {
     console.error("getMessages error:", error);

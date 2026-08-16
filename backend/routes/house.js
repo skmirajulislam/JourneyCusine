@@ -19,6 +19,7 @@ const {
   getOneListing,
   updateListing,
   deleteListing,
+  deleteImage,
   getAuthorHouses,
 } = require("../controllers/houseController.js");
 const { verifyJwtToken } = require("../middleware/jwt.js");
@@ -51,6 +52,9 @@ router.post("/save_prices", verifyJwtToken, savePrices);
 router.post("/save_security", verifyJwtToken, saveSecurity);
 router.post("/publish_list", verifyJwtToken, publishList);
 router.post("/publish_listing", verifyJwtToken, publishList);
+
+// Image deletion endpoint (UploadThing cloud + DB)
+router.post("/delete_image", verifyJwtToken, deleteImage);
 
 // Full update and deletion endpoints
 router.put("/update_listing/:id", verifyJwtToken, updateListing);

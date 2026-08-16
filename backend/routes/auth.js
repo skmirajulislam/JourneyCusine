@@ -16,6 +16,7 @@ const {
     getWishlist,
     updateUserName,
     updateUserCountry,
+    deleteProfileImage,
 } = require("../controllers/authController.js");
 const { verifyJwtToken } = require("../middleware/jwt.js");
 const { strictLimiter } = require("../middleware/rateLimiter.js");
@@ -31,6 +32,7 @@ router.post("/logout", verifyJwtToken, logOut);
 router.post("/get_user_details", verifyJwtToken, getUserDetails);
 router.post("/post", verifyJwtToken, postUser);
 router.post("/uploadimage", verifyJwtToken, uploadProfileImage);
+router.post("/delete_profile_image", verifyJwtToken, deleteProfileImage);
 router.post("/become_a_host", verifyJwtToken, userToHost);
 router.post("/updatename", verifyJwtToken, updateUserName);
 router.post("/updatecountry", verifyJwtToken, updateUserCountry);

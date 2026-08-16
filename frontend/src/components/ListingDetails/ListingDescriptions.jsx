@@ -195,7 +195,10 @@ const ListingDescriptions = ({ listingData, author }) => {
       </div>
 
       {/* Reviews & Guest Feedback Section */}
-      <PropertyReviews listingId={listingData?._id} />
+      <PropertyReviews
+        listingId={listingData?._id}
+        hostId={listingData?.author?._id || listingData?.author || author?._id}
+      />
 
       {/* full description modal */}
       <ListingDescriptionPopup description={listingData?.description} />

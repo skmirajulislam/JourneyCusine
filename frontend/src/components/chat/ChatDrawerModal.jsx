@@ -87,9 +87,21 @@ const ChatDrawerModal = () => {
     }
   };
 
-  const otherParticipant = activeConversation?.participants?.find(
-    (p) => String(p._id || p) !== String(user?._id)
-  );
+  const otherParticipant = useMemo(() => {
+    if (!activeConversation?.participants) return null;
+    const found = activeConversation.participants.find(
+      (p) => String(p?._id || p) !== String(user?._id)
+    );
+    if (typeof found === "object" && found !== null && found.name) {
+      return found;
+    }
+    // Fallback: lookup in conversations cache
+    const matchedConv = conversations.find((c) => c._id === activeConversation._id);
+    const populatedFromConv = matchedConv?.participants?.find(
+      (p) => typeof p === "object" && String(p?._id) !== String(user?._id)
+    );
+    return populatedFromConv || (typeof found === "object" ? found : null);
+  }, [activeConversation, conversations, user?._id]);
 
   return (
     <div

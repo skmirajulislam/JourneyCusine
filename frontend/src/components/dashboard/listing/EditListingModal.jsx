@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { FiX, FiTrash2, FiPlus, FiCheck, FiCoffee, FiMapPin } from "react-icons/fi";
+import { useState, useRef } from "react";
+import { FiX, FiTrash2, FiPlus, FiCheck, FiCoffee, FiMapPin, FiUploadCloud } from "react-icons/fi";
 import { Sparkles } from "lucide-react";
 import { AiOutlineMinus, AiOutlinePlus } from "react-icons/ai";
 import { IoRestaurantOutline } from "react-icons/io5";
@@ -7,6 +7,7 @@ import { PulseLoader } from "react-spinners";
 import { toast } from "react-hot-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import api from "../../../backend";
+import { uploadToUploadThingDirect } from "../../../utils/uploadthing";
 
 const sanitizeImageUrl = (url) => {
   if (!url || typeof url !== "string") return "";
@@ -134,6 +135,10 @@ const EditListingModal = ({ listing, onClose }) => {
     return Array.isArray(listing?.photos) ? [...listing.photos] : [];
   });
   const [newPhotoUrl, setNewPhotoUrl] = useState("");
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const [isUploadingFiles, setIsUploadingFiles] = useState(false);
+  const [uploadCount, setUploadCount] = useState(0);
+  const fileInputRef = useRef(null);
 
   // Cuisine Offerings (Add-ons)
   const [cuisineOfferings, setCuisineOfferings] = useState(() => {
@@ -169,6 +174,45 @@ const EditListingModal = ({ listing, onClose }) => {
     }
   };
 
+  const handleFileUpload = async (filesList) => {
+    const validFiles = Array.from(filesList).filter((f) =>
+      f.type.startsWith("image/")
+    );
+    if (validFiles.length === 0) {
+      toast.error("Please drop or select valid image files (PNG, JPG, WebP)");
+      return;
+    }
+
+    setIsUploadingFiles(true);
+    setUploadCount(validFiles.length);
+    const toastId = toast.loading(`Uploading ${validFiles.length} photo(s) to cloud...`);
+
+    try {
+      const uploadedUrls = [];
+      for (const file of validFiles) {
+        try {
+          const url = await uploadToUploadThingDirect(file);
+          if (url) uploadedUrls.push(url);
+        } catch (err) {
+          console.error("File upload error:", err);
+        }
+      }
+
+      if (uploadedUrls.length > 0) {
+        setPhotos((prev) => [...prev, ...uploadedUrls]);
+        toast.success(`Successfully uploaded ${uploadedUrls.length} photo(s)!`, { id: toastId });
+      } else {
+        toast.error("Failed to upload photos to cloud. Please try again.", { id: toastId });
+      }
+    } catch (err) {
+      console.error("Upload error:", err);
+      toast.error("Upload error: " + (err.message || "Failed to upload"), { id: toastId });
+    } finally {
+      setIsUploadingFiles(false);
+      setUploadCount(0);
+    }
+  };
+
   const handleAddPhoto = () => {
     const validated = sanitizeImageUrl(newPhotoUrl);
     if (!validated) {
@@ -183,8 +227,26 @@ const EditListingModal = ({ listing, onClose }) => {
     setNewPhotoUrl("");
   };
 
-  const handleRemovePhoto = (index) => {
-    setPhotos(photos.filter((_, idx) => idx !== index));
+  const handleRemovePhoto = async (index) => {
+    const photoToDelete = photos[index];
+    setPhotos((prev) => prev.filter((_, idx) => idx !== index));
+
+    if (photoToDelete && listing?._id) {
+      try {
+        const res = await api.post("/house/delete_image", {
+          houseId: listing._id,
+          imageUrl: photoToDelete,
+        });
+        if (res.data?.success === 1) {
+          toast.success(res.data.message || "Image deleted");
+          queryClient.invalidateQueries({ queryKey: ["listingData", listing._id] });
+          queryClient.invalidateQueries({ queryKey: ["authorHouses"] });
+          queryClient.invalidateQueries({ queryKey: ["roomDetails", listing._id] });
+        }
+      } catch (err) {
+        console.error("Cloud image delete error:", err);
+      }
+    }
   };
 
   // Cuisine Offering Handlers
@@ -727,38 +789,113 @@ const EditListingModal = ({ listing, onClose }) => {
 
               {/* Photos */}
               <div>
-                <label className="block text-xs font-bold text-[#111827] dark:text-white uppercase tracking-wider mb-2">
-                  Motel Photos ({photos.length})
-                </label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
-                  {photos.map((url, idx) => (
-                    <div key={idx} className="relative group rounded-xl overflow-hidden aspect-[4/3] bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">
-                      <img src={sanitizeImageUrl(url) || "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80"} alt={`Listing ${idx + 1}`} className="w-full h-full object-cover" />
-                      <button
-                        type="button"
-                        onClick={() => handleRemovePhoto(idx)}
-                        className="absolute top-1.5 right-1.5 p-1.5 rounded-full bg-black/60 hover:bg-red-600 text-white transition-all opacity-90 group-hover:opacity-100 cursor-pointer shadow-sm"
-                        title="Remove Photo"
-                      >
-                        <FiTrash2 size={13} />
-                      </button>
-                    </div>
-                  ))}
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-xs font-bold text-[#111827] dark:text-white uppercase tracking-wider">
+                    Motel Photos ({photos.length})
+                  </label>
+                  {isUploadingFiles && (
+                    <span className="text-xs font-semibold text-[#ff385c] flex items-center gap-1.5 animate-pulse">
+                      <PulseLoader size={4} color="#ff385c" />
+                      <span>Uploading {uploadCount} file(s)...</span>
+                    </span>
+                  )}
                 </div>
+
+                {/* Photo Previews Grid */}
+                {photos.length > 0 && (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
+                    {photos.map((url, idx) => (
+                      <div
+                        key={idx}
+                        className="relative group rounded-xl overflow-hidden aspect-[4/3] bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700"
+                      >
+                        <img
+                          src={
+                            sanitizeImageUrl(url) ||
+                            "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80"
+                          }
+                          alt={`Listing ${idx + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleRemovePhoto(idx)}
+                          className="absolute top-1.5 right-1.5 p-1.5 rounded-full bg-black/60 hover:bg-red-600 text-white transition-all opacity-90 group-hover:opacity-100 cursor-pointer shadow-xs"
+                          title="Delete Photo"
+                        >
+                          <FiTrash2 size={13} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Drag & Drop Upload Dropzone */}
+                <div
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setIsDraggingOver(true);
+                  }}
+                  onDragLeave={(e) => {
+                    e.preventDefault();
+                    setIsDraggingOver(false);
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setIsDraggingOver(false);
+                    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                      handleFileUpload(e.dataTransfer.files);
+                    }
+                  }}
+                  onClick={() => fileInputRef.current?.click()}
+                  className={`border-2 border-dashed rounded-2xl p-4 sm:p-5 text-center cursor-pointer transition-all duration-200 mb-3 ${
+                    isDraggingOver
+                      ? "border-[#ff385c] bg-rose-50/70 dark:bg-rose-950/40 scale-[1.01]"
+                      : "border-neutral-300 dark:border-neutral-700 hover:border-[#ff385c]/60 bg-neutral-50/50 dark:bg-[#202020] hover:bg-neutral-100/70 dark:hover:bg-[#252525]"
+                  }`}
+                >
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files.length > 0) {
+                        handleFileUpload(e.target.files);
+                        e.target.value = "";
+                      }
+                    }}
+                  />
+                  <div className="flex flex-col items-center justify-center gap-1.5 text-neutral-600 dark:text-neutral-300">
+                    <div className="w-10 h-10 rounded-full bg-rose-100 dark:bg-rose-950/60 text-[#ff385c] flex items-center justify-center mb-1">
+                      <FiUploadCloud size={20} />
+                    </div>
+                    <p className="text-xs font-bold text-[#111827] dark:text-white">
+                      <span>Drag &amp; drop photos here, or </span>
+                      <span className="text-[#ff385c] underline">browse files</span>
+                    </p>
+                    <p className="text-[10px] text-neutral-400">
+                      Supports JPG, PNG, WEBP • Direct UploadThing cloud upload
+                    </p>
+                  </div>
+                </div>
+
+                {/* Alternative: Add Image by URL */}
                 <div className="flex gap-2">
                   <input
                     type="url"
                     value={newPhotoUrl}
                     onChange={(e) => setNewPhotoUrl(e.target.value)}
-                    placeholder="Paste image URL..."
-                    className="flex-1 p-2.5 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-[#2a2a2a] text-xs focus:outline-none focus:ring-2 focus:ring-[#ff385c]"
+                    placeholder="Or paste an image URL..."
+                    className="flex-1 p-2.5 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-[#2a2a2a] text-xs focus:outline-hidden focus:ring-2 focus:ring-[#ff385c]"
                   />
                   <button
                     type="button"
                     onClick={handleAddPhoto}
-                    className="flex items-center gap-1 px-4 py-2.5 rounded-xl bg-neutral-800 dark:bg-neutral-700 hover:bg-black text-white font-bold text-xs cursor-pointer"
+                    className="flex items-center gap-1 px-4 py-2.5 rounded-xl bg-neutral-800 dark:bg-neutral-700 hover:bg-black text-white font-bold text-xs cursor-pointer shadow-xs"
                   >
-                    <FiPlus size={14} /> Add Image
+                    <FiPlus size={14} /> Add URL
                   </button>
                 </div>
               </div>

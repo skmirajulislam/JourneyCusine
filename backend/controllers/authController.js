@@ -5,7 +5,35 @@ const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const crypto = require("crypto");
 const House = require("../models/house.model.js");
-require('dotenv').config() 
+const { UTApi } = require("uploadthing/server");
+require('dotenv').config();
+
+// Helper to extract UploadThing key from CDN URL
+const extractUploadThingKey = (url) => {
+    if (!url || typeof url !== "string") return null;
+    const isUploadThing =
+        url.includes("utfs.io") ||
+        url.includes("ufs.sh") ||
+        url.includes("uploadthing.com") ||
+        url.includes("uploadthing-prod") ||
+        url.includes("ingest.uploadthing.com");
+
+    if (!isUploadThing) return null;
+
+    const match = url.match(/\/f\/([^?#]+)/);
+    if (match && match[1]) {
+        return match[1];
+    }
+
+    try {
+        const parsed = new URL(url);
+        const parts = parsed.pathname.split("/").filter(Boolean);
+        return parts[parts.length - 1] || null;
+    } catch (e) {
+        const parts = url.split("/").filter(Boolean);
+        return parts[parts.length - 1] || null;
+    }
+};
 
 const saltRounds = 12;
 // JWT expiration: 7 days (1 week) persistent session duration.
@@ -455,10 +483,28 @@ exports.updateUserCountry = async (req, res) => {
 exports.uploadProfileImage = async (req, res) => {
     try {
         const profileImg = req.body.profileImg || req.body.url;
-        const userId = req.user;
+        const userId = req.user || req.body.id;
 
         if (!profileImg) {
             return res.status(400).json({ success: 0, error: "Image URL is required" });
+        }
+
+        // Fetch existing user to check if there is an existing profile image in UploadThing
+        const existingUser = await User.findById(userId);
+        const previousProfileImg = existingUser?.profileImg;
+
+        // If re-uploading and user had a previous image in UploadThing, delete it from cloud storage
+        if (previousProfileImg && previousProfileImg !== profileImg) {
+            const prevKey = extractUploadThingKey(previousProfileImg);
+            if (prevKey) {
+                try {
+                    const token = process.env.UPLOADTHING_TOKEN;
+                    const utapi = new UTApi(token ? { token } : {});
+                    await utapi.deleteFiles(prevKey);
+                } catch (delErr) {
+                    console.error("Failed to delete previous profile image from UploadThing:", delErr);
+                }
+            }
         }
 
         const updatedUser = await User.findByIdAndUpdate(
@@ -469,7 +515,8 @@ exports.uploadProfileImage = async (req, res) => {
 
         let response = {
             success: 1,
-            info: "Successfully uploaded",
+            info: "Profile image updated successfully",
+            message: "Profile image updated and previous cloud image deleted",
             profileImg: updatedUser ? updatedUser.profileImg : profileImg,
             user_details: updatedUser
         };
@@ -477,6 +524,44 @@ exports.uploadProfileImage = async (req, res) => {
     } catch (error) {
         console.error("Error uploading profile image:", error);
         res.status(500).json({ success: 0, error: "Failed to upload image" });
+    }
+};
+
+exports.deleteProfileImage = async (req, res) => {
+    try {
+        const userId = req.user || req.body.id;
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ success: 0, error: "User not found" });
+        }
+
+        if (user.profileImg) {
+            const prevKey = extractUploadThingKey(user.profileImg);
+            if (prevKey) {
+                try {
+                    const token = process.env.UPLOADTHING_TOKEN;
+                    const utapi = new UTApi(token ? { token } : {});
+                    await utapi.deleteFiles(prevKey);
+                } catch (delErr) {
+                    console.error("Failed to delete profile image from UploadThing:", delErr);
+                }
+            }
+        }
+
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            { $set: { profileImg: "" } },
+            { new: true }
+        );
+
+        res.status(200).json({
+            success: 1,
+            message: "Profile image removed from cloud and database",
+            user_details: updatedUser
+        });
+    } catch (error) {
+        console.error("Error deleting profile image:", error);
+        res.status(500).json({ success: 0, error: "Failed to delete profile image" });
     }
 };
 

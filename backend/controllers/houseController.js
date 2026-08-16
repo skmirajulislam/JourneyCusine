@@ -3,7 +3,53 @@ const User = require("../models/user.model.js");
 const House = require("../models/house.model.js");
 const Reservation = require("../models/reservation.model.js");
 const Review = require("../models/review.model.js");
-require('dotenv').config() 
+const { UTApi } = require("uploadthing/server");
+require('dotenv').config();
+
+// Helper to extract UploadThing key from CDN URL
+const extractUploadThingKey = (url) => {
+    if (!url || typeof url !== "string") return null;
+    const isUploadThing =
+        url.includes("utfs.io") ||
+        url.includes("ufs.sh") ||
+        url.includes("uploadthing.com") ||
+        url.includes("uploadthing-prod") ||
+        url.includes("ingest.uploadthing.com");
+
+    if (!isUploadThing) return null;
+
+    const match = url.match(/\/f\/([^?#]+)/);
+    if (match && match[1]) {
+        return match[1];
+    }
+
+    try {
+        const parsed = new URL(url);
+        const parts = parsed.pathname.split("/").filter(Boolean);
+        return parts[parts.length - 1] || null;
+    } catch (e) {
+        const parts = url.split("/").filter(Boolean);
+        return parts[parts.length - 1] || null;
+    }
+};
+
+// Helper to delete from Cloud storage if hosted on UploadThing
+const deleteFromCloudIfUploadThing = async (imageUrl) => {
+    const fileKey = extractUploadThingKey(imageUrl);
+    if (!fileKey) {
+        return { deletedFromCloud: false, provider: "external" };
+    }
+
+    try {
+        const token = process.env.UPLOADTHING_TOKEN;
+        const utapi = new UTApi(token ? { token } : {});
+        await utapi.deleteFiles(fileKey);
+        return { deletedFromCloud: true, provider: "uploadthing", fileKey };
+    } catch (err) {
+        console.error("UploadThing cloud deletion error:", err);
+        return { deletedFromCloud: false, provider: "uploadthing", error: err.message };
+    }
+};
 
 exports.saveHouseStructure = async (req, res) => {
     try {
@@ -675,6 +721,15 @@ exports.updateListing = async (req, res) => {
             updateData.authorEarnedPrice = Math.round(basePrice * 0.97);
         }
 
+        // Clean up any removed UploadThing photos from the cloud
+        if (Array.isArray(updateData.photos) && Array.isArray(house.photos)) {
+            const newPhotoSet = new Set(updateData.photos);
+            const removedPhotos = house.photos.filter((p) => !newPhotoSet.has(p));
+            for (const removedUrl of removedPhotos) {
+                await deleteFromCloudIfUploadThing(removedUrl);
+            }
+        }
+
         const allowedFields = [
             "title", "description", "houseType", "privacyType", "location",
             "floorPlan", "amenities", "photos", "highlights", "cuisineSpecialties",
@@ -705,6 +760,73 @@ exports.updateListing = async (req, res) => {
     }
 };
 
+/**
+ * Delete a specific image from Cloud storage (UploadThing) and Database
+ * POST /house/delete_image
+ * Body: { houseId, imageUrl }
+ */
+exports.deleteImage = async (req, res) => {
+    try {
+        const userId = req.user;
+        const { houseId, imageUrl } = req.body;
+
+        if (!imageUrl || typeof imageUrl !== "string") {
+            return res.status(400).json({ success: 0, message: "Valid image URL is required" });
+        }
+
+        let deletedFromCloud = false;
+        let provider = "external";
+
+        // 1. Check if the image is in UploadThing cloud
+        const cloudRes = await deleteFromCloudIfUploadThing(imageUrl);
+        deletedFromCloud = cloudRes.deletedFromCloud;
+        provider = cloudRes.provider;
+
+        let updatedPhotos = [];
+
+        // 2. If houseId is provided, remove image from listing in database
+        if (houseId && mongoose.Types.ObjectId.isValid(houseId)) {
+            const house = await House.findById(new mongoose.Types.ObjectId(houseId));
+            if (!house) {
+                return res.status(404).json({ success: 0, message: "Listing not found" });
+            }
+
+            // Check authorization (must be author of the listing)
+            if (house.author && String(house.author) !== String(userId)) {
+                return res.status(403).json({ success: 0, message: "Unauthorized to modify this listing" });
+            }
+
+            const updatedHouse = await House.findByIdAndUpdate(
+                house._id,
+                { $pull: { photos: imageUrl } },
+                { new: true }
+            );
+            updatedPhotos = updatedHouse ? updatedHouse.photos : [];
+        }
+
+        if (deletedFromCloud) {
+            return res.status(200).json({
+                success: 1,
+                message: "Image deleted from UploadThing cloud and database",
+                deletedFromCloud: true,
+                provider,
+                photos: updatedPhotos,
+            });
+        } else {
+            return res.status(200).json({
+                success: 1,
+                message: "Image removed from database",
+                deletedFromCloud: false,
+                provider,
+                photos: updatedPhotos,
+            });
+        }
+    } catch (error) {
+        console.error("deleteImage error:", error);
+        return res.status(500).json({ success: 0, message: error.message || "Failed to delete image" });
+    }
+};
+
 exports.deleteListing = async (req, res) => {
     try {
         const userId = req.user;
@@ -725,6 +847,13 @@ exports.deleteListing = async (req, res) => {
             return res.status(403).json({ success: 0, message: "Unauthorized to delete this listing" });
         }
 
+        // Clean up all UploadThing photos for this listing from the cloud
+        if (Array.isArray(house.photos)) {
+            for (const photoUrl of house.photos) {
+                await deleteFromCloudIfUploadThing(photoUrl);
+            }
+        }
+
         await House.findByIdAndDelete(houseObjId);
 
         // Also clean up any reservations associated with this house
@@ -734,7 +863,7 @@ exports.deleteListing = async (req, res) => {
             console.error("Reservation cleanup error:", rErr);
         }
 
-        res.status(200).json({ success: 1, message: "Listing deleted successfully" });
+        res.status(200).json({ success: 1, message: "Listing and cloud photos deleted successfully" });
     } catch (error) {
         console.error("deleteListing error:", error);
         res.status(500).json({ success: 0, message: "Failed to delete listing" });

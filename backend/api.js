@@ -133,9 +133,13 @@ io.on("connection", (socket) => {
         "name emailId profileImg"
       );
 
+      const populatedConversation = await Conversation.findById(conversation._id)
+        .populate("participants", "name emailId profileImg role")
+        .populate("listingId", "title photos basePrice location houseType");
+
       // Broadcast message to the conversation room
       io.to(`conversation_${conversationId}`).emit("receive_message", populatedMessage);
-      io.to(`conversation_${conversationId}`).emit("conversation_updated", conversation);
+      io.to(`conversation_${conversationId}`).emit("conversation_updated", populatedConversation || conversation);
     } catch (err) {
       console.error("socket send_message error:", err);
     }

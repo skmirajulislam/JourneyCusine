@@ -139,9 +139,18 @@ const addReview = async (req, res) => {
       return res.status(400).json({ message: "Review comment cannot be empty." });
     }
 
-    const numRating = Math.max(1, Math.min(5, Number(rating) || 5));
+    // 1. Check if user is the host of this property
+    if (mongoose.Types.ObjectId.isValid(listingId)) {
+      const house = await House.findById(new mongoose.Types.ObjectId(listingId));
+      if (house && house.author && String(house.author) === String(userId)) {
+        return res.status(403).json({
+          message: "Hosts cannot review their own motel listings. You can only view guest reviews.",
+          isHost: true,
+        });
+      }
+    }
 
-    // 1. Check if user is suspended
+    // 2. Check if user is suspended
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found." });

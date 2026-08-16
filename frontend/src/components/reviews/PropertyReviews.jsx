@@ -22,9 +22,14 @@ import {
 } from "react-icons/fi";
 import AuthenticationPopUp from "../popUp/authentication/AuthenticationPopUp";
 
-const PropertyReviews = ({ listingId }) => {
+const PropertyReviews = ({ listingId, hostId }) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+
+  const isHost = useMemo(() => {
+    if (!user?._id || !hostId) return false;
+    return String(user._id) === String(hostId);
+  }, [user?._id, hostId]);
 
   const { data: reviewsData = {}, isLoading, refetch: fetchReviews } = useQuery({
     queryKey: ["listingReviews", listingId],
@@ -65,6 +70,11 @@ const PropertyReviews = ({ listingId }) => {
 
   const handleSubmitReview = async (e) => {
     e.preventDefault();
+
+    if (isHost) {
+      toast.error("Hosts cannot review their own motel listings.");
+      return;
+    }
 
     if (!user) {
       setShowAuthPopup(true);
@@ -271,85 +281,102 @@ const PropertyReviews = ({ listingId }) => {
         )}
       </div>
 
-      {/* Review Submission Form */}
-      <div className="bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#2f2f2f] rounded-3xl p-6 sm:p-7 shadow-xs mb-10">
-        <h3 className="text-base font-bold text-gray-900 dark:text-white mb-2">
-          Leave a Review
-        </h3>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
-          Honest feedback (positive or negative) is encouraged! Inappropriate or abusive profanity will be automatically blurred by AI moderation.
-        </p>
-
-        <form onSubmit={handleSubmitReview} className="space-y-4">
-          {/* Star Rating Selector */}
-          <div className="flex items-center gap-3">
-            <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-              Your Rating:
-            </span>
-            <div className="flex items-center gap-1">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <button
-                  key={star}
-                  type="button"
-                  onClick={() => setRating(star)}
-                  onMouseEnter={() => setHoverRating(star)}
-                  onMouseLeave={() => setHoverRating(0)}
-                  className="p-1 text-2xl transition-transform hover:scale-125 focus:outline-hidden cursor-pointer"
-                >
-                  {(hoverRating || rating) >= star ? (
-                    <AiFillStar className="text-amber-400" />
-                  ) : (
-                    <AiOutlineStar className="text-gray-300 dark:text-gray-600" />
-                  )}
-                </button>
-              ))}
-            </div>
-            <span className="text-xs font-bold text-amber-600 dark:text-amber-400">
-              {rating} / 5 Stars
+      {/* Review Submission Form (For Guests) OR Host Insights Card (For Host) */}
+      {isHost ? (
+        <div className="bg-white dark:bg-[#1a1a1a] border border-amber-200/80 dark:border-amber-900/40 rounded-3xl p-6 sm:p-7 shadow-xs mb-10">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 font-bold text-xs inline-flex items-center gap-1.5">
+              <span>👑</span>
+              <span>Host Feedback View</span>
             </span>
           </div>
+          <h3 className="text-base font-bold text-gray-900 dark:text-white mb-1.5">
+            Guest Reviews &amp; Feedback for Your Property
+          </h3>
+          <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+            As the host of this motel listing, you can monitor guest reviews, ratings, and feedback below. Self-reviewing is disabled to ensure honest and transparent feedback across the platform.
+          </p>
+        </div>
+      ) : (
+        <div className="bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#2f2f2f] rounded-3xl p-6 sm:p-7 shadow-xs mb-10">
+          <h3 className="text-base font-bold text-gray-900 dark:text-white mb-2">
+            Leave a Review
+          </h3>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+            Honest feedback (positive or negative) is encouraged! Inappropriate or abusive profanity will be automatically blurred by AI moderation.
+          </p>
 
-          {/* Comment input textarea */}
-          <div className="relative">
-            <textarea
-              rows={3}
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder="Write your honest review (cleanliness, comfort, service, location)..."
-              maxLength={1000}
-              className="w-full px-4 py-3 rounded-2xl border border-gray-300 dark:border-[#383838] bg-neutral-50 dark:bg-[#222222] text-gray-900 dark:text-white placeholder-gray-400 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#ff385c]/40 transition"
-            />
-            <div className="flex justify-between items-center text-[11px] text-gray-400 mt-1 px-1">
-              <span className="flex items-center gap-1">
-                <FiShield size={12} className="text-emerald-500" />
-                Protected by Gemini AI Content Moderation
+          <form onSubmit={handleSubmitReview} className="space-y-4">
+            {/* Star Rating Selector */}
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                Your Rating:
               </span>
-              <span>{comment.length} / 1000 characters</span>
+              <div className="flex items-center gap-1">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setRating(star)}
+                    onMouseEnter={() => setHoverRating(star)}
+                    onMouseLeave={() => setHoverRating(0)}
+                    className="p-1 text-2xl transition-transform hover:scale-125 focus:outline-hidden cursor-pointer"
+                  >
+                    {(hoverRating || rating) >= star ? (
+                      <AiFillStar className="text-amber-400" />
+                    ) : (
+                      <AiOutlineStar className="text-gray-300 dark:text-gray-600" />
+                    )}
+                  </button>
+                ))}
+              </div>
+              <span className="text-xs font-bold text-amber-600 dark:text-amber-400">
+                {rating} / 5 Stars
+              </span>
             </div>
-          </div>
 
-          {/* Submit button */}
-          <div className="flex justify-end">
-            <button
-              type="submit"
-              disabled={isSubmitting || !comment.trim()}
-              className="px-6 py-2.5 rounded-xl bg-[#ff385c] hover:bg-[#e00b41] disabled:opacity-50 text-white text-xs font-bold transition flex items-center gap-2 cursor-pointer shadow-xs"
-            >
-              {isSubmitting ? (
-                <>
-                  <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>AI Scanning & Posting...</span>
-                </>
-              ) : (
-                <>
-                  <FiSend size={13} />
-                  <span>Post Review</span>
-                </>
-              )}
-            </button>
-          </div>
-        </form>
-      </div>
+            {/* Comment input textarea */}
+            <div className="relative">
+              <textarea
+                rows={3}
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder="Write your honest review (cleanliness, comfort, service, location)..."
+                maxLength={1000}
+                className="w-full px-4 py-3 rounded-2xl border border-gray-300 dark:border-[#383838] bg-neutral-50 dark:bg-[#222222] text-gray-900 dark:text-white placeholder-gray-400 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#ff385c]/40 transition"
+              />
+              <div className="flex justify-between items-center text-[11px] text-gray-400 mt-1 px-1">
+                <span className="flex items-center gap-1">
+                  <FiShield size={12} className="text-emerald-500" />
+                  Protected by Gemini AI Content Moderation
+                </span>
+                <span>{comment.length} / 1000 characters</span>
+              </div>
+            </div>
+
+            {/* Submit button */}
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                disabled={isSubmitting || !comment.trim()}
+                className="px-6 py-2.5 rounded-xl bg-[#ff385c] hover:bg-[#e00b41] disabled:opacity-50 text-white text-xs font-bold transition flex items-center gap-2 cursor-pointer shadow-xs"
+              >
+                {isSubmitting ? (
+                  <>
+                    <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>AI Scanning & Posting...</span>
+                  </>
+                ) : (
+                  <>
+                    <FiSend size={13} />
+                    <span>Post Review</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {/* Reviews List */}
       <div className="space-y-6">
