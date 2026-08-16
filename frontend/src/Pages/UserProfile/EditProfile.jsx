@@ -7,7 +7,7 @@ import api from "../../backend";
 import UserProfilePopup from "../../components/popUp/userProfilePopup/UserProfilePopup.jsx";
 import UserAbout from "../../components/userProfile/UserAbout";
 import UserProfileOptions from "../../components/userProfile/UserProfileOptions";
-import { uploadFiles } from "../../utils/uploadthing";
+import { uploadToUploadThingDirect } from "../../utils/uploadthing";
 import { useAuth } from "../../hooks/useAuth";
 import { useCurrency } from "../../context/CurrencyContext";
 import { useQueryClient } from "@tanstack/react-query";
@@ -84,25 +84,12 @@ const EditProfile = () => {
 
     try {
       setIsImgUploading(true);
-      const ext = (file.name?.split(".").pop() || "jpg").toLowerCase();
-      const cleanFile = new File([file], `profile_${Date.now()}.${ext}`, {
-        type: file.type || "image/jpeg",
-      });
 
       let uploadedUrl = null;
       try {
-        const res = await uploadFiles("imageUploader", {
-          files: [cleanFile],
-        });
-        if (res && res[0]) {
-          uploadedUrl =
-            res[0].ufsUrl ||
-            res[0].url ||
-            res[0].appUrl ||
-            (res[0].key ? `https://utfs.io/f/${res[0].key}` : null);
-        }
+        uploadedUrl = await uploadToUploadThingDirect(file);
       } catch (uploadThingErr) {
-        console.warn("UploadThing CDN fallback to base64:", uploadThingErr);
+        console.warn("Direct UploadThing upload notice:", uploadThingErr);
       }
 
       if (!uploadedUrl) {
