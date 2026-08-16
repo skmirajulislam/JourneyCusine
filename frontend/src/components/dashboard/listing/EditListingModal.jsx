@@ -107,7 +107,12 @@ const EditListingModal = ({ listing, onClose }) => {
   const [description, setDescription] = useState(listing?.description || "");
   const [houseType, setHouseType] = useState(listing?.houseType || "House");
   const [privacyType, setPrivacyType] = useState(listing?.privacyType || "An entire place");
-  const [status, setStatus] = useState(listing?.status || "In progress");
+  const [status, setStatus] = useState(() => {
+    if (listing?.status === "published" || listing?.status === "Live" || listing?.status === "Complete") {
+      return "Complete";
+    }
+    return listing?.status || "In progress";
+  });
   const [basePrice, setBasePrice] = useState(listing?.basePrice || 50);
 
   // Floor plan
@@ -490,8 +495,8 @@ const EditListingModal = ({ listing, onClose }) => {
                     onChange={(e) => setStatus(e.target.value)}
                     className="w-full p-3 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-[#2a2a2a] text-[#111827] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#ff385c]"
                   >
+                    <option value="Complete">Published (Live)</option>
                     <option value="In progress">In progress (Draft)</option>
-                    <option value="published">Published (Live)</option>
                     <option value="hidden">Hidden (Paused)</option>
                   </select>
                 </div>

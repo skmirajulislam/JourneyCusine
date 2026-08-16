@@ -688,6 +688,10 @@ exports.updateListing = async (req, res) => {
             }
         }
 
+        if (sanitizedFields.status === "published" || sanitizedFields.status === "Live") {
+            sanitizedFields.status = "Complete";
+        }
+
         const updatedHouse = await House.findByIdAndUpdate(
             houseObjId,
             { $set: sanitizedFields },

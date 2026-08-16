@@ -109,7 +109,7 @@ const ListingTable = () => {
 
                       {/* Status */}
                       <td className="px-6 py-4 w-[130px] text-xs font-semibold text-neutral-700 dark:text-neutral-300">
-                        {listing?.status === "Complete" ? (
+                        {["Complete", "published", "Live"].includes(listing?.status) ? (
                           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 font-bold">
                             <AiFillCheckCircle size={14} /> Live
                           </span>
@@ -128,7 +128,7 @@ const ListingTable = () => {
 
                       {/* Instant Book */}
                       <td className="px-6 py-4 w-[130px]">
-                        {listing?.status === "Complete" ? (
+                        {["Complete", "published", "Live"].includes(listing?.status) ? (
                           <div className="flex flex-row gap-1.5 items-center text-xs font-bold text-emerald-600 dark:text-emerald-400">
                             <AiFillCheckCircle size={16} />
                             <span>On</span>
