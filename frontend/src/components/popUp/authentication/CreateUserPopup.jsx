@@ -1,4 +1,4 @@
-/* eslint-disable react/prop-types */
+ 
 import axios from "axios";
 import { useState } from "react";
 import { useForm } from "react-hook-form";

@@ -1,4 +1,4 @@
-/* eslint-disable react/prop-types */
+ 
 import Cards from "../../components/dashboard/Cards";
 import revenueIcon from "../../assets/basicIcon/dollar.png";
 import booking from "../../assets/basicIcon/booking.png";

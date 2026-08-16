@@ -1,4 +1,4 @@
-/* eslint-disable react/prop-types */
+ 
 import { useAuth } from "../../hooks/useAuth";
 import { profileOptions } from "./userProfileApi";
 

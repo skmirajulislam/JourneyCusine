@@ -10,7 +10,7 @@ import UserProfileOptions from "../../components/userProfile/UserProfileOptions"
 import { uploadFiles } from "../../utils/uploadthing";
 import { useAuth } from "../../hooks/useAuth";
 import { useCurrency } from "../../context/CurrencyContext";
-import { FiGlobe, FiDollarSign } from "react-icons/fi";
+import { FiGlobe } from "react-icons/fi";
 
 const EditProfile = () => {
   const { user, setUser } = useAuth();

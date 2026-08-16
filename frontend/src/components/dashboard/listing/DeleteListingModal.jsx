@@ -1,4 +1,4 @@
-/* eslint-disable react/prop-types */
+ 
 import { useState } from "react";
 import { FiTrash2, FiAlertTriangle, FiX } from "react-icons/fi";
 import { PulseLoader } from "react-spinners";

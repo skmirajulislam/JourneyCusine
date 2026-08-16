@@ -1,4 +1,4 @@
-/* eslint-disable react/prop-types */
+ 
 import { useEffect, useState, useMemo } from "react";
 import {
   BarChart,
@@ -11,6 +11,21 @@ import {
 } from "recharts";
 import { useCurrency } from "../../context/CurrencyContext";
 import { convertPrice, formatCurrency, getCurrencySymbol } from "../../utils/currency";
+
+const MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
 
 const Charts = ({ reservations = [] }) => {
   const { currency: hostCurrency } = useCurrency();
@@ -49,23 +64,8 @@ const Charts = ({ reservations = [] }) => {
     }
   }, [reservations, hostCurrency]);
 
-  const months = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ];
-
   const chartData = useMemo(() => {
-    return months.map((month, index) => ({
+    return MONTHS.map((month, index) => ({
       name: month,
       earned: monthlyEarnings[index],
     }));

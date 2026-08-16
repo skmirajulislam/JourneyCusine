@@ -1,4 +1,4 @@
-/* eslint-disable react/prop-types */
+ 
 
 const OverviewCard = ({ img, head, desc, num }) => {
   return (

@@ -1,6 +1,5 @@
 import { Suspense, lazy } from "react";
 import { createBrowserRouter } from "react-router-dom";
-import { API } from "../../backend";
 import EditProfile from "../../Pages/UserProfile/EditProfile";
 import MainLayout from "../../layout/MainLayout";
 import UserProfile from "../../Pages/UserProfile/UserProfile";
@@ -47,6 +46,9 @@ const ListingHousePhotos = lazy(() =>
 );
 const HouseTitle = lazy(() =>
   import("../../Pages/ListingHouseStepTwo/HouseTitle")
+);
+const Highlight = lazy(() =>
+  import("../../Pages/ListingHouseStepTwo/Highlight")
 );
 const Home = lazy(() => import("../../Pages/Home"));
 const ListingDetails = lazy(() => import("../../Pages/ListingDetails"));

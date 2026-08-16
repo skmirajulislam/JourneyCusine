@@ -4,7 +4,7 @@ import { FadeLoader } from "react-spinners";
 import { useAuth } from "../hooks/useAuth";
 import api from "../backend";
 import { toast } from "react-hot-toast";
-import { FiCheckCircle, FiCalendar, FiCreditCard, FiArrowRight } from "react-icons/fi";
+import { FiCheckCircle, FiCalendar, FiArrowRight } from "react-icons/fi";
 
 const RazorpayIcon = ({ size = 16, className = "" }) => (
   <svg

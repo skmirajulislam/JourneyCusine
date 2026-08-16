@@ -1,4 +1,4 @@
-/* eslint-disable react/prop-types */
+ 
 import { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "../../hooks/useAuth";

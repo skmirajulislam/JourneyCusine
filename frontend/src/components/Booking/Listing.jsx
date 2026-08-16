@@ -1,7 +1,7 @@
-/* eslint-disable react/prop-types */
+ 
 import { useState } from "react";
 import { AiFillStar } from "react-icons/ai";
-import { FiTag, FiCheckCircle, FiX, FiAlertCircle } from "react-icons/fi";
+import { FiTag, FiCheckCircle, FiX } from "react-icons/fi";
 import { PulseLoader } from "react-spinners";
 import { toast } from "react-hot-toast";
 import api from "../../backend";

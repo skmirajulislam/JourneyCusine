@@ -1,4 +1,4 @@
-/* eslint-disable react/prop-types */
+ 
 const PriceWithTaxCard = ({ style, setShowBeforeTaxPrice }) => {
   return (
     <div className={`${style}`}>

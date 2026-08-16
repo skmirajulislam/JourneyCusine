@@ -1,4 +1,4 @@
-/* eslint-disable react/prop-types */
+ 
 import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
 import { Icon } from "leaflet";
 import { useTheme } from "../context/ThemeContext";

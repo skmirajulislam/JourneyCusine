@@ -1,5 +1,4 @@
-/* eslint-disable react/prop-types */
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import {
   AreaChart,
   Area,
@@ -11,7 +10,13 @@ import {
   Legend,
 } from "recharts";
 import { useCurrency } from "../../context/CurrencyContext";
-import { FiTrendingUp, FiTrendingDown } from "react-icons/fi";
+import { getCurrencySymbol, convertPrice, formatCurrency } from "../../utils/currency";
+import { FiTrendingUp } from "react-icons/fi";
+
+const MONTHS = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+];
 
 const ProfitLossTrendChart = ({ reservations = [] }) => {
   const { currency: hostCurrency } = useCurrency();
@@ -23,22 +28,17 @@ const ProfitLossTrendChart = ({ reservations = [] }) => {
   const currentYear = now.getFullYear();
   const currentMonth = now.getMonth();
 
-  const months = [
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-  ];
-
   // Helper to convert any USD or native price to host currency
-  const toHostCur = (amountUSD, nativeAmount, nativeCur) => {
+  const toHostCur = useCallback((amountUSD, nativeAmount, nativeCur) => {
     if (nativeAmount !== undefined && nativeCur === hostCurrency) {
       return nativeAmount;
     }
     return convertPrice(amountUSD || 0, "USD", hostCurrency);
-  };
+  }, [hostCurrency]);
 
   // Build monthly data for Gross Revenue, Refunds, and Net Profit
   const trendData = useMemo(() => {
-    const data = months.map((monthName, idx) => ({
+    const data = MONTHS.map((monthName, idx) => ({
       month: monthName,
       monthIndex: idx,
       grossRevenue: 0,
@@ -78,7 +78,7 @@ const ProfitLossTrendChart = ({ reservations = [] }) => {
     }
 
     return data;
-  }, [reservations, hostCurrency, currentYear, currentMonth, timeframe]);
+  }, [reservations, hostCurrency, currentYear, currentMonth, timeframe, toHostCur]);
 
   // Summary Totals
   const totals = useMemo(() => {

@@ -13,7 +13,7 @@ import CreateUserPopup from "./CreateUserPopup";
 import WelcomePopup from "./WelcomePopup";
 import CreateProfilePopup from "./CreateProfilePopup";
 
-// eslint-disable-next-line react/prop-types
+ 
 const AuthenticationPopUp = ({ popup, setPopup }) => {
   const [showCreateUserPopup, setShowCreateUserPopup] = useState(false);
   const [showLoginPopup, setShowLoginPopup] = useState(false);

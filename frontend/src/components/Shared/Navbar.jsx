@@ -29,7 +29,7 @@ const Navbar = () => {
   const [showFilterPopup, setShowFilterPopup] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const [searchValue, setSearchValue] = useState(searchParams.get("search") || "");
   const pathName = location.pathname;
   const inUserProfile = pathName?.includes("/users/show/");

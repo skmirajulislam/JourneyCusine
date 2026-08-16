@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { FiX, FiChevronLeft, FiChevronRight, FiGrid } from "react-icons/fi";
 
-/* eslint-disable react/prop-types */
+ 
 const ImageGalleryModal = ({ isOpen, onClose, photos = [], initialIndex = 0, title = "Property Photos" }) => {
   const [activeIndex, setActiveIndex] = useState(initialIndex);
 

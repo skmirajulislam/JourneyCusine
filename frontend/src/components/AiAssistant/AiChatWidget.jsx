@@ -1,11 +1,10 @@
-/* eslint-disable react/prop-types */
+ 
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import {
   FiSend,
   FiX,
-  FiMinus,
   FiRotateCcw,
   FiLock,
   FiMapPin,

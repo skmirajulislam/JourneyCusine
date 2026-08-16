@@ -3,8 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Category from "../components/Home/Category";
 import PriceWithTaxCard from "../components/Home/PriceWithTaxCard";
 import { useQuery } from "@tanstack/react-query";
-import { API } from "../backend";
-import axios from "axios";
+import api from "../backend";
 import HomePageSkeleton from "../components/skeletonLoading/HomePageSkeleton";
 import ListingPreviewCard from "../components/Home/ListingPreviewCard";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -18,7 +17,6 @@ import { AiFillStar } from "react-icons/ai";
 import FilterPopUp, {
   PRICE_OPTIONS,
   RATING_OPTIONS,
-  AMENITIES_OPTIONS,
 } from "../components/popUp/FilterPopUp/FilterPopUp";
 import AiChatWidget from "../components/AiAssistant/AiChatWidget";
 import { Button } from "@/components/ui/button";
@@ -48,18 +46,17 @@ const itemVariants = {
 
 const Home = () => {
   const { user } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+
   const [hasScroll, setHasScroll] = useState(false);
   const [showBeforeTaxPrice, setShowBeforeTaxPrice] = useState(false);
   const [showFilterPopup, setShowFilterPopup] = useState(false);
-  const category = localStorage.getItem("category");
-  const { isLoading, data } = useGetSubCatListing(category);
-
-  const location = useLocation();
-  const navigate = useNavigate();
 
   // Extract search and filter parameters from URL
   const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const searchQuery = searchParams.get("search") || "";
+  const categoryParam = searchParams.get("category") || "House";
   const priceFilter = searchParams.get("price") || "all";
   const ratingFilter = searchParams.get("rating") || "all";
   const amenitiesFilter = useMemo(
@@ -72,7 +69,7 @@ const Home = () => {
     (ratingFilter !== "all" ? 1 : 0) +
     amenitiesFilter.length;
 
-  // Fetching all listing data
+  // TanStack Queries in fixed top-level order
   const allListingData = useQuery({
     queryKey: ["allListing"],
     queryFn: async () => {
@@ -82,6 +79,8 @@ const Home = () => {
     staleTime: 5 * 60 * 1000,
     gcTime: 15 * 60 * 1000,
   });
+
+  const { isLoading: isCategoryLoading, data: categoryData = [] } = useGetSubCatListing(categoryParam);
 
   const handleScrollTracking = () => {
     const scrollPosition = window.scrollY;
@@ -121,8 +120,8 @@ const Home = () => {
     } else {
       // If viewing specific category and not default House
       const currentCat = searchParams.get("category");
-      if (currentCat && currentCat !== "House" && Array.isArray(data)) {
-        candidates = data;
+      if (currentCat && currentCat !== "House" && Array.isArray(categoryData)) {
+        candidates = categoryData;
       }
     }
 
@@ -170,7 +169,7 @@ const Home = () => {
     }
 
     return candidates;
-  }, [searchQuery, allListingData.data, data, searchParams, priceFilter, ratingFilter, amenitiesFilter]);
+  }, [searchQuery, allListingData.data, categoryData, searchParams, priceFilter, ratingFilter, amenitiesFilter]);
 
   const handleClearSearch = () => {
     const newParams = new URLSearchParams(searchParams);
@@ -352,7 +351,7 @@ const Home = () => {
       </AnimatePresence>
 
       {/* House Listings Grid */}
-      {isLoading && !searchQuery ? (
+      {isCategoryLoading && !searchQuery ? (
         <>
           {window.innerWidth <= 1080 ? (
             <div className="flex justify-center items-center h-[80dvh]">
@@ -391,7 +390,7 @@ const Home = () => {
             </motion.div>
           ) : (
             <motion.section
-              key={`${category}-${searchQuery}-${priceFilter}-${ratingFilter}-${amenitiesFilter.join(",")}`}
+              key={`${categoryParam}-${searchQuery}-${priceFilter}-${ratingFilter}-${amenitiesFilter.join(",")}`}
               variants={containerVariants}
               initial="hidden"
               animate="visible"

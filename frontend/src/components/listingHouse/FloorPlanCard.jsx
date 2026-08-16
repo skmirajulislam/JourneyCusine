@@ -1,4 +1,4 @@
-/* eslint-disable react/prop-types */
+ 
 import { BiPlus, BiMinus } from "react-icons/bi";
 
 const FloorPlanCard = ({ name, number, setNumber, filter }) => {

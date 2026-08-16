@@ -4,7 +4,7 @@ import { FiGrid } from "react-icons/fi";
 import { Link, useNavigate } from "react-router-dom";
 import ImageGalleryModal from "./ImageGalleryModal";
 
-/* eslint-disable react/prop-types */
+ 
 const ListingsPhotos = ({ listingData }) => {
   const navigate = useNavigate();
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);

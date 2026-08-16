@@ -4,7 +4,7 @@ import { amenities } from "./amenitiesApi";
 import { AiOutlineRight } from "react-icons/ai";
 import PropertyReviews from "../reviews/PropertyReviews";
 
-/* eslint-disable react/prop-types */
+ 
 const ListingDescriptions = ({ listingData, author }) => {
   const latitude = Number(listingData?.location?.city?.latitude);
   const longitude = Number(listingData?.location?.city?.longitude);

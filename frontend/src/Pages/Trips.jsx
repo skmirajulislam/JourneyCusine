@@ -33,6 +33,7 @@ import { toast } from "react-hot-toast";
 import api, { API } from "../backend";
 import { useTheme } from "../context/ThemeContext";
 import { useCurrency } from "../context/CurrencyContext";
+import AuthenticationPopUp from "../components/popUp/authentication/AuthenticationPopUp";
 
 // Custom Leaflet Motel Marker Icon with Dynamic Width and Theme Awareness
 const createMotelIcon = (formattedPrice, isDark = false) => {

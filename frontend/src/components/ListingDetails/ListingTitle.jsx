@@ -4,7 +4,7 @@ import { toast } from "react-hot-toast";
 import { useAuth } from "../../hooks/useAuth";
 import AuthenticationPopUp from "../popUp/authentication/AuthenticationPopUp";
 
-/* eslint-disable react/prop-types */
+ 
 const ListingTitle = ({ listingData }) => {
   const { user, toggleWishlist } = useAuth();
   const [showAuthPopup, setShowAuthPopup] = useState(false);

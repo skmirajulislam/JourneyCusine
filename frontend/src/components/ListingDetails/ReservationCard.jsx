@@ -15,7 +15,7 @@ import { useAuth } from "../../hooks/useAuth";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 
-/* eslint-disable react/prop-types */
+ 
 const ReservationCard = ({ listingData }) => {
   // refs
   const calendarRef = useRef();

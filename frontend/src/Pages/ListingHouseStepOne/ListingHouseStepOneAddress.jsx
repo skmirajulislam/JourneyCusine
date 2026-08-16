@@ -1,12 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useListingFlow } from "../../context/ListingFlowContext";
 import { City, Country, State } from "country-state-city";
 import Select from "react-select";
 
 const ListingHouseStepOneAddress = () => {
   const { newHouse, currentListingHouse, setNewHouse } = useListingFlow();
-  const existingLoc =
-    newHouse?.location || currentListingHouse?.location || {};
+  const existingLoc = useMemo(
+    () => newHouse?.location || currentListingHouse?.location || {},
+    [newHouse?.location, currentListingHouse?.location]
+  );
 
   const [formData, setFormData] = useState({
     country: existingLoc.country || "",

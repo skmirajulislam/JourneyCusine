@@ -1,4 +1,4 @@
-/* eslint-disable react/prop-types */
+ 
 import { FiTrendingUp, FiTrendingDown, FiMinus } from "react-icons/fi";
 
 const Cards = ({ title, icon, heading, subHead, delta, isPositive, isNeutral }) => {

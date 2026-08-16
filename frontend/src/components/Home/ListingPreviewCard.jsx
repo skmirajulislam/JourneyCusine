@@ -1,4 +1,4 @@
-/* eslint-disable react/prop-types */
+ 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AiFillStar, AiOutlineHeart, AiFillHeart } from "react-icons/ai";

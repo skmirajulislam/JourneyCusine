@@ -1,4 +1,4 @@
-/* eslint-disable react/prop-types */
+ 
 import { Link } from "react-router-dom";
 import { useAuth } from "../../../hooks/useAuth";
 import motelLogo from "../../../assets/basicIcon/motel-logo.png";

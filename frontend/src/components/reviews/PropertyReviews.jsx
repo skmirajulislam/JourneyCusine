@@ -1,4 +1,4 @@
-/* eslint-disable react/prop-types */
+ 
 import { useState, useMemo } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -42,7 +42,7 @@ const PropertyReviews = ({ listingId }) => {
     staleTime: 3 * 60 * 1000,
   });
 
-  const reviews = reviewsData.reviews || [];
+  const reviews = useMemo(() => reviewsData.reviews || [], [reviewsData.reviews]);
   const totalReviews = reviewsData.totalReviews || 0;
   const avgRating = reviewsData.avgRating || 0;
 
