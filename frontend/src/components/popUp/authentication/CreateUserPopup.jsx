@@ -100,38 +100,24 @@ const CreateUserPopup = ({
       setCountry(selectedCountryObj.name);
       setCurrency(selectedCountryObj.currency);
 
-      let accessToken = localStorage.getItem("accessToken");
-      let refreshToken = localStorage.getItem("refreshToken");
       if (responseData?.success === 1) {
-        toast.success(responseData.info || "Account created successfully!");
-        if (!accessToken) {
-          localStorage.setItem(
-            "accessToken",
-            JSON.stringify(responseData?.accessToken)
-          );
-        } else if (accessToken) {
-          accessToken = responseData?.accessToken;
-          localStorage.setItem("accessToken", JSON.stringify(accessToken));
+        toast.success(responseData.info || "Welcome to Journey Cuisine! You are now logged in.");
+        if (responseData?.accessToken) {
+          localStorage.setItem("accessToken", JSON.stringify(responseData.accessToken));
         }
-        if (!refreshToken) {
-          localStorage.setItem(
-            "refreshToken",
-            JSON.stringify(responseData?.refreshToken)
-          );
-        } else if (refreshToken) {
-          refreshToken = responseData?.refreshToken;
-          localStorage.setItem("refreshToken", JSON.stringify(refreshToken));
+        if (responseData?.refreshToken) {
+          localStorage.setItem("refreshToken", JSON.stringify(responseData.refreshToken));
         }
+        
+        // Immediately sync user in auth state
+        setUser(responseData);
+
+        // Close all authentication popups so user directly enters the app
         showCreatePopUp(false);
+        setProfilePopup(false);
         setPopup(false);
-        setTimeout(() => {
-          setProfilePopup(true);
-          setPopup(true);
-        }, 3000);
       }
-      setTimeout(() => {
-        reset();
-      }, 100);
+      reset();
     } catch (error) {
       console.log(error);
       localStorage.removeItem("accessToken");
