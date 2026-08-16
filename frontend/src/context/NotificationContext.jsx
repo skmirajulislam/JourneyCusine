@@ -48,6 +48,10 @@ export const NotificationProvider = ({ children }) => {
 
     const socket = io(socketServerUrl, {
       transports: ["websocket", "polling"],
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      timeout: 10000,
     });
 
     socket.emit("register_user", user._id || user.id);
