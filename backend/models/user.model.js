@@ -166,6 +166,11 @@ const userSchema = new mongoose.Schema({
     }
 }, { timestamps: { createdAt: "created_at", updatedAt: "updated_at" } });
 
-const User = mongoose.model("User", userSchema, "users");
+const User = mongoose.models.User || mongoose.model("User", userSchema, "users");
+
+// Register userDB alias to ensure compatibility with all populate queries
+if (!mongoose.models.userDB) {
+    mongoose.model("userDB", userSchema, "users");
+}
 
 module.exports = User;

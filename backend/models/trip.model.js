@@ -54,7 +54,7 @@ const collaboratorSchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "userDB",
+      ref: "User",
     },
     email: {
       type: String,
@@ -95,7 +95,7 @@ const shortlistSchema = new mongoose.Schema(
     },
     votes: [
       {
-        userId: { type: mongoose.Schema.Types.ObjectId, ref: "userDB" },
+        userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
         userName: String,
         voteType: { type: String, enum: ["love", "like", "dislike"], default: "love" },
       },
@@ -108,7 +108,7 @@ const tripSchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "userDB",
+      ref: "User",
       required: true,
     },
     name: {

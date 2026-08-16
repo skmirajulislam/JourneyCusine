@@ -10,6 +10,7 @@ import {
   FiHome,
   FiCheck,
   FiUser,
+  FiTrash2,
 } from "react-icons/fi";
 import { useCurrency } from "../../context/CurrencyContext";
 
@@ -31,6 +32,7 @@ const ChatDrawerModal = () => {
     selectConversation,
     messages,
     sendMessage,
+    deleteConversation,
     isLoadingMessages,
     isTyping,
     typingUser,
@@ -153,14 +155,13 @@ const ChatDrawerModal = () => {
                   : "Host";
 
                 return (
-                  <button
+                  <div
                     key={conv._id}
-                    type="button"
                     onClick={() => {
                       selectConversation(conv);
                       setMobileShowThread(true);
                     }}
-                    className={`w-full p-3 rounded-2xl text-left transition-all flex items-start gap-3 cursor-pointer ${
+                    className={`group relative w-full p-3 rounded-2xl text-left transition-all flex items-start gap-3 cursor-pointer ${
                       isSelected
                         ? "bg-white dark:bg-[#222222] shadow-xs border border-neutral-200 dark:border-neutral-700"
                         : "hover:bg-neutral-100 dark:hover:bg-[#1a1a1a]"
@@ -178,7 +179,7 @@ const ChatDrawerModal = () => {
                       )}
                     </div>
 
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 pr-5">
                       <div className="flex items-center justify-between">
                         <h4 className="text-xs font-bold text-neutral-900 dark:text-white truncate">
                           {partnerName}
@@ -203,7 +204,19 @@ const ChatDrawerModal = () => {
                         {conv.lastMessage?.text || "Started conversation"}
                       </p>
                     </div>
-                  </button>
+
+                    <button
+                      type="button"
+                      title="Delete conversation"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteConversation(conv._id);
+                      }}
+                      className="absolute right-2 top-3 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-neutral-400 hover:text-rose-500 transition-all cursor-pointer"
+                    >
+                      <FiTrash2 size={13} />
+                    </button>
+                  </div>
                 );
               })
             )}

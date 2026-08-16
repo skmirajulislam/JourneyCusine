@@ -5,7 +5,7 @@ const conversationSchema = new mongoose.Schema(
     participants: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "userDB",
+        ref: "User",
         required: true,
       },
     ],
@@ -15,7 +15,7 @@ const conversationSchema = new mongoose.Schema(
     },
     lastMessage: {
       text: { type: String, default: "" },
-      senderId: { type: mongoose.Schema.Types.ObjectId, ref: "userDB" },
+      senderId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
       createdAt: { type: Date, default: Date.now },
     },
     unreadCount: {

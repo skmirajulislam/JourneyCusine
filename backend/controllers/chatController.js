@@ -207,7 +207,7 @@ exports.sendMessage = async (req, res) => {
 
     const populatedMessage = await Message.findById(newMessage._id).populate(
       "senderId",
-      "name emailId profilePic"
+      "name emailId profileImg"
     );
 
     return res.status(200).json({
@@ -217,5 +217,51 @@ exports.sendMessage = async (req, res) => {
   } catch (error) {
     console.error("sendMessage error:", error);
     return res.status(500).json({ success: 0, message: error.message || "Failed to send message" });
+  }
+};
+
+/**
+ * Delete a conversation
+ * DELETE /chat/conversations/:conversationId
+ */
+exports.deleteConversation = async (req, res) => {
+  try {
+    const currentUserId = req.user;
+    const { conversationId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(conversationId)) {
+      return res.status(400).json({ success: 0, message: "Invalid conversation ID" });
+    }
+
+    const conversation = await Conversation.findById(conversationId);
+    if (!conversation) {
+      return res.status(404).json({ success: 0, message: "Conversation not found" });
+    }
+
+    const isParticipant = conversation.participants.some(
+      (p) => String(p?._id || p) === String(currentUserId)
+    );
+    if (!isParticipant) {
+      return res.status(403).json({ success: 0, message: "Unauthorized to delete this conversation" });
+    }
+
+    // Delete all messages belonging to this conversation
+    await Message.deleteMany({
+      $or: [
+        { conversationId: String(conversationId) },
+        { conversationId: new mongoose.Types.ObjectId(conversationId) },
+      ],
+    });
+
+    // Delete the conversation document
+    await Conversation.findByIdAndDelete(conversationId);
+
+    return res.status(200).json({
+      success: 1,
+      message: "Conversation deleted successfully",
+    });
+  } catch (error) {
+    console.error("deleteConversation error:", error);
+    return res.status(500).json({ success: 0, message: error.message || "Failed to delete conversation" });
   }
 };

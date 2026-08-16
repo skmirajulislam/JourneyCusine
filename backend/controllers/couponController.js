@@ -217,8 +217,12 @@ const validateCoupon = async (req, res) => {
             error: "This coupon is only valid for a specific motel property",
           });
         }
-      } else {
-        // Must belong to the same host
+      } else if (
+        coupon.hostId &&
+        String(coupon.hostId).toUpperCase() !== "SYSTEM" &&
+        String(coupon.hostId).toUpperCase() !== "GLOBAL"
+      ) {
+        // Must belong to the same host if host-specific
         const houseAuthor = house.author ? String(house.author) : "";
         const couponHost = String(coupon.hostId);
         if (houseAuthor && houseAuthor !== couponHost) {
@@ -266,9 +270,64 @@ const validateCoupon = async (req, res) => {
   }
 };
 
+// Seed common platform promo codes if they do not exist
+const seedDefaultCoupons = async () => {
+  try {
+    const defaultCoupons = [
+      {
+        code: "WELCOME10",
+        hostId: "SYSTEM",
+        discountType: "percentage",
+        discountRate: 10,
+        maxUsage: 10000,
+        expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year
+        isActive: true,
+      },
+      {
+        code: "FOODIE10",
+        hostId: "SYSTEM",
+        discountType: "fixed",
+        discountRate: 10,
+        maxUsage: 10000,
+        expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+        isActive: true,
+      },
+      {
+        code: "JOURNEY20",
+        hostId: "SYSTEM",
+        discountType: "percentage",
+        discountRate: 20,
+        maxUsage: 10000,
+        expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+        isActive: true,
+      },
+      {
+        code: "CHEF25",
+        hostId: "SYSTEM",
+        discountType: "fixed",
+        discountRate: 25,
+        maxUsage: 10000,
+        expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+        isActive: true,
+      },
+    ];
+
+    for (const c of defaultCoupons) {
+      await Coupon.findOneAndUpdate(
+        { code: c.code },
+        { $setOnInsert: c },
+        { upsert: true, new: true }
+      );
+    }
+  } catch (err) {
+    console.error("Error seeding default coupons:", err.message);
+  }
+};
+
 module.exports = {
   createCoupon,
   getHostCoupons,
   deleteCoupon,
   validateCoupon,
+  seedDefaultCoupons,
 };

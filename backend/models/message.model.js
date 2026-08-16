@@ -10,7 +10,7 @@ const messageSchema = new mongoose.Schema(
     },
     senderId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "userDB",
+      ref: "User",
       required: true,
     },
     text: {
@@ -21,7 +21,7 @@ const messageSchema = new mongoose.Schema(
     readBy: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "userDB",
+        ref: "User",
       },
     ],
   },

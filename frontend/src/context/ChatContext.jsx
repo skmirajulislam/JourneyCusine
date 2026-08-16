@@ -63,7 +63,25 @@ export const ChatProvider = ({ children }) => {
     // Handle incoming message in active conversation
     socket.on("receive_message", (message) => {
       setMessages((prev) => {
+        // If exact ID exists, do nothing
         if (prev.some((m) => m._id === message._id)) return prev;
+
+        // If an optimistic temporary message matches, replace it with the real saved message
+        const optIndex = prev.findIndex(
+          (m) =>
+            m.isOptimistic &&
+            m.conversationId === message.conversationId &&
+            m.text === message.text &&
+            String(m.senderId?._id || m.senderId) ===
+              String(message.senderId?._id || message.senderId)
+        );
+
+        if (optIndex !== -1) {
+          const updated = [...prev];
+          updated[optIndex] = message;
+          return updated;
+        }
+
         return [...prev, message];
       });
 
@@ -136,6 +154,24 @@ export const ChatProvider = ({ children }) => {
       setActiveConversation(conversation);
       setIsLoadingMessages(true);
 
+      // Immediately clear unread count for this conversation in frontend state
+      setConversations((prev) =>
+        prev.map((c) => {
+          if (c._id === conversation._id) {
+            const updatedUnread = { ...(c.unreadCount || {}) };
+            if (user?._id) {
+              updatedUnread[user._id] = 0;
+              updatedUnread[String(user._id)] = 0;
+            }
+            return {
+              ...c,
+              unreadCount: updatedUnread,
+            };
+          }
+          return c;
+        })
+      );
+
       // Join socket room
       if (socketRef.current) {
         if (activeConversation?._id) {
@@ -148,6 +184,11 @@ export const ChatProvider = ({ children }) => {
         const res = await api.get(`/chat/messages/${conversation._id}`);
         if (res.data?.success === 1) {
           setMessages(res.data.messages || []);
+          if (res.data.conversation) {
+            setConversations((prev) =>
+              prev.map((c) => (c._id === conversation._id ? res.data.conversation : c))
+            );
+          }
         }
       } catch (err) {
         console.error("load messages error:", err);
@@ -156,17 +197,55 @@ export const ChatProvider = ({ children }) => {
         setIsLoadingMessages(false);
       }
     },
-    [activeConversation?._id]
+    [activeConversation?._id, user?._id]
   );
 
   // Send a message
   const sendMessage = async (text) => {
-    if (!text.trim() || !activeConversation?._id || !user?._id) return;
+    if (!text || !text.trim() || !activeConversation?._id || !user?._id) return;
+
+    const trimmedText = text.trim();
+    const tempId = `temp_${Date.now()}_${Math.random()}`;
+
+    const optimisticMsg = {
+      _id: tempId,
+      conversationId: activeConversation._id,
+      senderId: {
+        _id: user._id,
+        name: user.name,
+        emailId: user.emailId,
+        profileImg: user.profileImg,
+      },
+      text: trimmedText,
+      createdAt: new Date().toISOString(),
+      readBy: [user._id],
+      isOptimistic: true,
+    };
+
+    // Instantly append message to thread (0ms latency)
+    setMessages((prev) => [...prev, optimisticMsg]);
+
+    // Instantly update conversations list lastMessage in sidebar
+    setConversations((prev) =>
+      prev.map((c) => {
+        if (c._id === activeConversation._id) {
+          return {
+            ...c,
+            lastMessage: {
+              text: trimmedText,
+              senderId: user._id,
+              createdAt: new Date().toISOString(),
+            },
+          };
+        }
+        return c;
+      })
+    );
 
     const messageData = {
       conversationId: activeConversation._id,
       senderId: user._id,
-      text: text.trim(),
+      text: trimmedText,
     };
 
     // Emit via socket for real-time delivery
@@ -176,8 +255,10 @@ export const ChatProvider = ({ children }) => {
       // Fallback REST call
       try {
         const res = await api.post("/chat/messages", messageData);
-        if (res.data?.success === 1) {
-          setMessages((prev) => [...prev, res.data.message]);
+        if (res.data?.success === 1 && res.data.message) {
+          setMessages((prev) =>
+            prev.map((m) => (m._id === tempId ? res.data.message : m))
+          );
         }
       } catch (err) {
         console.error("sendMessage error:", err);
@@ -218,11 +299,41 @@ export const ChatProvider = ({ children }) => {
     }
   };
 
+  const deleteConversation = async (conversationId) => {
+    try {
+      const res = await api.delete(`/chat/conversations/${conversationId}`);
+      if (res.data?.success === 1) {
+        setConversations((prev) => prev.filter((c) => c._id !== conversationId));
+        if (activeConversation?._id === conversationId) {
+          setActiveConversation(null);
+          setMessages([]);
+        }
+        toast.success("Conversation removed");
+      }
+    } catch (err) {
+      console.error("deleteConversation error:", err);
+      toast.error(err.response?.data?.message || "Failed to delete conversation");
+    }
+  };
+
   // Calculate total unread messages
   const unreadTotal = conversations.reduce((total, conv) => {
-    if (user?._id && conv.unreadCount && typeof conv.unreadCount === "object") {
-      const count = conv.unreadCount[user._id] || 0;
-      return total + count;
+    // If the conversation is currently active and open, its messages are already viewed
+    if (isChatOpen && activeConversation?._id === conv._id) {
+      return total;
+    }
+
+    if (user?._id && conv.unreadCount) {
+      let count = 0;
+      if (conv.unreadCount instanceof Map) {
+        count = conv.unreadCount.get(String(user._id)) || conv.unreadCount.get(user._id) || 0;
+      } else if (typeof conv.unreadCount === "object") {
+        count =
+          conv.unreadCount[user._id] ||
+          conv.unreadCount[String(user._id)] ||
+          0;
+      }
+      return total + (Number(count) > 0 ? Number(count) : 0);
     }
     return total;
   }, 0);
@@ -241,6 +352,7 @@ export const ChatProvider = ({ children }) => {
         selectConversation,
         sendMessage,
         openChatWithHost,
+        deleteConversation,
         unreadTotal,
         socket: socketRef.current,
         fetchConversations,

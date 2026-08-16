@@ -8,11 +8,11 @@ const reservationSchema = new mongoose.Schema(
     },
     authorId: {
       type: String,
-      ref: "userDB",
+      ref: "User",
     },
     guestId: {
       type: String,
-      ref: "userDB",
+      ref: "User",
     },
     guestEmail: {
       type: String,

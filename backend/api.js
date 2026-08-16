@@ -166,6 +166,8 @@ async function main() {
 
   try {
     await mongoose.connect(mongoUri);
+    const { seedDefaultCoupons } = require("./controllers/couponController.js");
+    await seedDefaultCoupons();
     const port = process.env.PORT || 5001;
     server.listen(port, () => {
       console.log(`Server is running with Socket.io on port ${port}`);

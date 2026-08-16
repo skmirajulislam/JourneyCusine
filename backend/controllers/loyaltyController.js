@@ -1,4 +1,5 @@
 const User = require("../models/user.model.js");
+const Coupon = require("../models/coupon.model.js");
 
 const ALL_PASSPORT_BADGES = [
   {
@@ -233,6 +234,24 @@ exports.redeemVoucher = async (req, res) => {
 
     user.loyaltyPoints -= selected.points;
     await user.save();
+
+    // Create active system coupon valid for 30 days
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 30);
+
+    const newCoupon = new Coupon({
+      code: selected.code,
+      hostId: "SYSTEM",
+      listingId: null, // Valid across all listings and hosts
+      discountType: "fixed",
+      discountRate: selected.discount,
+      maxUsage: 1,
+      usageCount: 0,
+      expiresAt: expiresAt,
+      isActive: true,
+    });
+
+    await newCoupon.save();
 
     res.status(200).json({
       success: 1,
