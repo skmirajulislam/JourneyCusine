@@ -218,7 +218,8 @@ const addReview = async (req, res) => {
         const avg = (
           allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length
         ).toFixed(1);
-        await House.findByIdAndUpdate(listingId, { ratings: Number(avg) });
+        const houseObjId = new mongoose.Types.ObjectId(String(listingId));
+        await House.findByIdAndUpdate(houseObjId, { ratings: Number(avg) });
       }
     } catch (err) {
       console.error("Error updating house rating:", err);

@@ -157,9 +157,11 @@ io.on("connection", (socket) => {
 
 async function main() {
   let mongoUri = process.env.MONGODB_URI || "";
-  if (!mongoUri || mongoUri.endsWith("mongodb.net/")) {
-    const dbName = process.env.DB_NAME || "motel-develpoment-db";
-    mongoUri = mongoUri ? `${mongoUri}${dbName}` : `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.tkzvadc.mongodb.net/${dbName}`;
+  const dbName = process.env.DB_NAME || "motel-develpoment-db";
+  if (!mongoUri) {
+    mongoUri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.tkzvadc.mongodb.net/${dbName}`;
+  } else if (mongoUri.endsWith("/")) {
+    mongoUri = `${mongoUri}${dbName}`;
   }
 
   try {

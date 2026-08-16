@@ -8,6 +8,13 @@ import { toast } from "react-hot-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import api from "../../../backend";
 
+const sanitizeImageUrl = (url) => {
+  if (!url || typeof url !== "string") return "";
+  const trimmed = url.trim();
+  if (/^(https?:\/\/|data:image\/|\/)/i.test(trimmed)) return trimmed;
+  return "";
+};
+
 const AVAILABLE_AMENITIES = [
   "Wifi",
   "TV",
@@ -148,13 +155,16 @@ const EditListingModal = ({ listing, onClose }) => {
   };
 
   const handleAddPhoto = () => {
-    const trimmed = newPhotoUrl.trim();
-    if (!trimmed) return;
-    if (photos.includes(trimmed)) {
+    const validated = sanitizeImageUrl(newPhotoUrl);
+    if (!validated) {
+      toast.error("Please enter a valid HTTP(S) image URL");
+      return;
+    }
+    if (photos.includes(validated)) {
       toast.error("Photo URL already added");
       return;
     }
-    setPhotos([...photos, trimmed]);
+    setPhotos([...photos, validated]);
     setNewPhotoUrl("");
   };
 
@@ -708,7 +718,7 @@ const EditListingModal = ({ listing, onClose }) => {
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
                   {photos.map((url, idx) => (
                     <div key={idx} className="relative group rounded-xl overflow-hidden aspect-[4/3] bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">
-                      <img src={url} alt={`Listing ${idx + 1}`} className="w-full h-full object-cover" />
+                      <img src={sanitizeImageUrl(url) || "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80"} alt={`Listing ${idx + 1}`} className="w-full h-full object-cover" />
                       <button
                         type="button"
                         onClick={() => handleRemovePhoto(idx)}

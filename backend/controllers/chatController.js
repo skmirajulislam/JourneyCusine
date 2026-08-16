@@ -170,13 +170,12 @@ exports.getMessages = async (req, res) => {
 exports.sendMessage = async (req, res) => {
   try {
     const currentUserId = req.user;
-    const { conversationId, text } = req.body;
-
-    if (!conversationId || !text || !text.trim()) {
-      return res.status(400).json({ success: 0, message: "Conversation ID and text are required" });
+    if (!conversationId || typeof conversationId !== "string" || !mongoose.Types.ObjectId.isValid(conversationId) || !text || typeof text !== "string" || !text.trim()) {
+      return res.status(400).json({ success: 0, message: "Valid conversation ID and text are required" });
     }
 
-    const conversation = await Conversation.findById(conversationId);
+    const convObjId = new mongoose.Types.ObjectId(conversationId);
+    const conversation = await Conversation.findById(convObjId);
     if (!conversation) {
       return res.status(404).json({ success: 0, message: "Conversation not found" });
     }

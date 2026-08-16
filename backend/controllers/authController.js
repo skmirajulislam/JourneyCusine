@@ -62,29 +62,26 @@ exports.signUp = async (req, res, next) => {
         };
 
         const user = await User(userObj).save();
-        const findCriteria = {
-            emailId: payload.emailId
-        }
-        const userDetails = await User.find(findCriteria);
+        const userDetails = await User.findById(user._id);
 
         const sessionId = crypto.randomUUID();
         const accessToken = jwt.sign(
             {
-                _id: userDetails[0]._id,
-                role: userDetails[0].role,
+                _id: userDetails._id,
+                role: userDetails.role,
                 sessionId: sessionId
             },
             process.env.ACCESS_TOKEN_SECRET,
             { expiresIn: TOKEN_EXPIRY }
         );
         const refreshToken = jwt.sign(
-            { _id: userDetails[0]._id, role: userDetails[0].role, sessionId: sessionId },
+            { _id: userDetails._id, role: userDetails.role, sessionId: sessionId },
             process.env.REFRESH_TOKEN_SECRET,
             { expiresIn: TOKEN_EXPIRY }
         );
 
-        const updatedUser = await User.findOneAndUpdate(
-            findCriteria,
+        const updatedUser = await User.findByIdAndUpdate(
+            user._id,
             { accessToken: accessToken, refreshToken: refreshToken },
             { new: true }
         );
@@ -110,13 +107,21 @@ exports.signUp = async (req, res, next) => {
 };
 
 exports.logIn = async (req, res) => {
-    const payload = req.body;
-    const email = payload.email;
-    const password = payload.password;
+    const payload = req.body || {};
+    const email = typeof payload.email === "string" ? payload.email.toLowerCase().trim() : "";
+    const password = typeof payload.password === "string" ? payload.password : "";
 
     try {
+        if (!email || !password) {
+            return res.status(400).json({
+                info: "Email and password are required",
+                success: 0,
+                status: 400
+            });
+        }
+
         // Check if email is permanently blacklisted
-        const isBlocked = await BlockedEmail.findOne({ email: (email || "").toLowerCase().trim() });
+        const isBlocked = await BlockedEmail.findOne({ email });
         if (isBlocked) {
             return res.status(403).json({
                 info: "This email address has been permanently blacklisted from Journey Cuisine due to violations of community safety guidelines.",
@@ -126,12 +131,9 @@ exports.logIn = async (req, res) => {
             });
         }
 
-        const findCriteria = {
-            emailId: email
-        }
-        const userDetails = await User.find(findCriteria).limit(1).exec();
+        const user = await User.findOne({ emailId: email }).exec();
 
-        if (!userDetails || userDetails.length === 0) {
+        if (!user) {
             return res.status(404).json({
                 info: "User not found",
                 success: 0,
@@ -139,27 +141,27 @@ exports.logIn = async (req, res) => {
             });
         }
 
-        let isMatched = await bcrypt.compare(password, userDetails[0].password)
+        let isMatched = await bcrypt.compare(password, user.password);
         if (isMatched) {
             const sessionId = crypto.randomUUID();
             const accessToken = jwt.sign(
                 {
-                    _id: userDetails[0]._id,
-                    role: userDetails[0].role,
+                    _id: user._id,
+                    role: user.role,
                     sessionId: sessionId
                 },
                 process.env.ACCESS_TOKEN_SECRET,
                 { expiresIn: TOKEN_EXPIRY }
             );
             const refreshToken = jwt.sign(
-                { _id: userDetails[0]._id, role: userDetails[0].role, sessionId: sessionId },
+                { _id: user._id, role: user.role, sessionId: sessionId },
                 process.env.REFRESH_TOKEN_SECRET,
                 { expiresIn: TOKEN_EXPIRY }
             );
 
             // Storing the newest accessToken and refreshToken enforces single active session
-            const updatedUser = await User.findOneAndUpdate(
-                findCriteria,
+            const updatedUser = await User.findByIdAndUpdate(
+                user._id,
                 { accessToken: accessToken, refreshToken: refreshToken },
                 { new: true }
             );
@@ -552,11 +554,9 @@ exports.getWishlist = async (req, res) => {
 exports.userToHost = async (req, res) => {
     try {
         const userId = req.user;
-        const role = req.body.role;
-        const findCriteria = {
-            _id: new mongoose.Types.ObjectId(userId)
-        };
-        const updatedUserDetails = await User.findOneAndUpdate(findCriteria, { role: role }, { new: true });
+        const role = typeof req.body?.role === "string" ? req.body.role : "host";
+        const userObjId = new mongoose.Types.ObjectId(userId);
+        const updatedUserDetails = await User.findByIdAndUpdate(userObjId, { role: role }, { new: true });
 
         const id = {
             author: updatedUserDetails._id

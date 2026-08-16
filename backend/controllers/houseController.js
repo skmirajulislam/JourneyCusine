@@ -650,9 +650,14 @@ exports.updateListing = async (req, res) => {
     try {
         const userId = req.user;
         const { id } = req.params;
-        const updateData = req.body;
+        const updateData = req.body || {};
 
-        const house = await House.findById(id);
+        if (!id || typeof id !== "string" || !mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ success: 0, message: "Invalid listing ID format" });
+        }
+
+        const houseObjId = new mongoose.Types.ObjectId(id);
+        const house = await House.findById(houseObjId);
         if (!house) {
             return res.status(404).json({ success: 0, message: "Listing not found" });
         }
@@ -671,7 +676,7 @@ exports.updateListing = async (req, res) => {
         }
 
         const updatedHouse = await House.findByIdAndUpdate(
-            id,
+            houseObjId,
             { $set: updateData },
             { new: true }
         );
@@ -688,7 +693,12 @@ exports.deleteListing = async (req, res) => {
         const userId = req.user;
         const { id } = req.params;
 
-        const house = await House.findById(id);
+        if (!id || typeof id !== "string" || !mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ success: 0, message: "Invalid listing ID format" });
+        }
+
+        const houseObjId = new mongoose.Types.ObjectId(id);
+        const house = await House.findById(houseObjId);
         if (!house) {
             return res.status(404).json({ success: 0, message: "Listing not found" });
         }
@@ -698,11 +708,11 @@ exports.deleteListing = async (req, res) => {
             return res.status(403).json({ success: 0, message: "Unauthorized to delete this listing" });
         }
 
-        await House.findByIdAndDelete(id);
+        await House.findByIdAndDelete(houseObjId);
 
         // Also clean up any reservations associated with this house
         try {
-            await Reservation.deleteMany({ listingId: id });
+            await Reservation.deleteMany({ listingId: String(id) });
         } catch (rErr) {
             console.error("Reservation cleanup error:", rErr);
         }

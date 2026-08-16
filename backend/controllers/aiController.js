@@ -794,11 +794,11 @@ async function generateLocalConciergeReply(userMessage, listings, history = [], 
       query.includes("how much for") ||
       query.includes("split cost") ||
       query.includes("total price for")) &&
-    query.match(/(\d+)\s*(night|nights|day|days)/);
+    /\b\d{1,4}\s*(?:night|nights|day|days)\b/i.test(query);
 
   if (isCostCalcQuery) {
-    const nightsMatch = query.match(/(\d+)\s*(night|nights|day|days)/);
-    const guestsMatch = query.match(/(\d+)\s*(guest|guests|people|person|persons)/);
+    const nightsMatch = query.match(/\b(\d{1,4})\s*(?:night|nights|day|days)\b/i);
+    const guestsMatch = query.match(/\b(\d{1,4})\s*(?:guest|guests|people|person|persons)\b/i);
     const numNights = nightsMatch ? parseInt(nightsMatch[1], 10) : 3;
     const numGuests = guestsMatch ? parseInt(guestsMatch[1], 10) : 2;
 
@@ -909,7 +909,7 @@ async function generateLocalConciergeReply(userMessage, listings, history = [], 
     query.includes("days trip") ||
     query.includes("day trip");
 
-  const daysMatch = query.match(/(\d+)\s*(day|days|night|nights)/);
+  const daysMatch = query.match(/\b(\d{1,4})\s*(?:day|days|night|nights)\b/i);
   const numDays = daysMatch ? parseInt(daysMatch[1], 10) : 0;
 
   const knownPlacesList = [
@@ -940,9 +940,9 @@ async function generateLocalConciergeReply(userMessage, listings, history = [], 
   // Dynamic entity extraction if not in knownPlacesList (e.g. "Ranchi", "Raipur", "Shimla", "Ooty")
   if (!detectedPlanLocation) {
     const patterns = [
-      /(?:trip|vacation|tour|itinerary|holiday|stay|travel|visit|days?|nights?)\s+(?:in|to|for|at|around)\s+([a-zA-Z\s]+?)(?:\s+(?:for|with|in|\d+\s*days?|\d+\s*nights?)|$)/i,
-      /plan\s+(?:a\s+)?(?:(?:\d+)\s*(?:days?|nights?)\s+)?(?:trip\s+)?(?:in|to|for|around)\s+([a-zA-Z\s]+)/i,
-      /(?:in|to|for|at)\s+([a-zA-Z\s]+?)(?:\s+for\s+\d+\s*days?|$)/i,
+      /\b(?:trip|vacation|tour|itinerary|holiday|stay|travel|visit)\s+(?:in|to|for|at|around)\s+([a-zA-Z]+(?:\s+[a-zA-Z]+){0,3})/i,
+      /\bplan\s+(?:a\s+)?(?:(?:\d{1,2})\s+(?:days?|nights?)\s+)?(?:trip\s+)?(?:in|to|for|around)\s+([a-zA-Z]+(?:\s+[a-zA-Z]+){0,3})/i,
+      /\b(?:in|to|for|at)\s+([a-zA-Z]+(?:\s+[a-zA-Z]+){0,3})/i,
     ];
 
     for (const pat of patterns) {

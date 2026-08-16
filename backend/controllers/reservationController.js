@@ -43,9 +43,9 @@ exports.createRazorpayOrder = async (req, res) => {
 
     if (payload.amount && !isNaN(payload.amount)) {
       totalAmountInTargetCurrency = Number(payload.amount);
-    } else if (payload.listingId && payload.nightStaying) {
+    } else if (payload.listingId && typeof payload.listingId === "string" && mongoose.Types.ObjectId.isValid(payload.listingId) && payload.nightStaying) {
       try {
-        const listing = await House.findById(payload.listingId);
+        const listing = await House.findById(new mongoose.Types.ObjectId(payload.listingId));
         if (listing && listing.basePrice) {
           const baseUSD = parseInt(listing.basePrice, 10);
           const nights = parseInt(payload.nightStaying, 10) || 1;
@@ -150,7 +150,12 @@ exports.verifyRazorpayPayment = async (req, res) => {
       });
     }
 
-    const listingDetails = await House.findById(listingId);
+    if (!listingId || typeof listingId !== "string" || !mongoose.Types.ObjectId.isValid(listingId)) {
+      return res.status(400).json({ success: 0, error: "Invalid listing ID format" });
+    }
+
+    const listingObjId = new mongoose.Types.ObjectId(listingId);
+    const listingDetails = await House.findById(listingObjId);
     if (!listingDetails) {
       return res.status(404).json({ success: 0, error: "Listing not found" });
     }
@@ -161,8 +166,9 @@ exports.verifyRazorpayPayment = async (req, res) => {
     let guestCountry = "India";
     let guestCurrency = clientGuestCurrency || "INR";
 
-    if (guestId) {
-      const guestUser = await User.findById(guestId);
+    if (guestId && typeof guestId === "string" && mongoose.Types.ObjectId.isValid(guestId)) {
+      const guestObjId = new mongoose.Types.ObjectId(guestId);
+      const guestUser = await User.findById(guestObjId);
       if (guestUser) {
         guestEmail = guestUser.emailId;
         guestName =
@@ -177,8 +183,9 @@ exports.verifyRazorpayPayment = async (req, res) => {
     let hostCountry = "India";
     let hostCurrency = "INR";
 
-    if (resolvedAuthorId) {
-      const hostUser = await User.findById(resolvedAuthorId);
+    if (resolvedAuthorId && typeof resolvedAuthorId === "string" && mongoose.Types.ObjectId.isValid(resolvedAuthorId)) {
+      const hostObjId = new mongoose.Types.ObjectId(resolvedAuthorId);
+      const hostUser = await User.findById(hostObjId);
       if (hostUser) {
         hostCountry = hostUser.country || "India";
         hostCurrency = hostUser.currency || getCurrencyForCountry(hostCountry);
@@ -331,7 +338,12 @@ exports.newReservation = async (req, res) => {
       payload.orderId || Math.floor(100000000 + Math.random() * 900000000);
     const guestId = req.user || payload.guestId;
 
-    const listingDetails = await House.findById(listingId);
+    if (!listingId || typeof listingId !== "string" || !mongoose.Types.ObjectId.isValid(listingId)) {
+      return res.status(400).json({ message: "Invalid listing ID format" });
+    }
+
+    const listingObjId = new mongoose.Types.ObjectId(listingId);
+    const listingDetails = await House.findById(listingObjId);
     if (!listingDetails) {
       return res.status(404).json({ message: "Listing not found" });
     }
@@ -341,8 +353,9 @@ exports.newReservation = async (req, res) => {
     let guestCountry = "India";
     let guestCurrency = payload.currency || "INR";
 
-    if (guestId) {
-      const guestUser = await User.findById(guestId);
+    if (guestId && typeof guestId === "string" && mongoose.Types.ObjectId.isValid(guestId)) {
+      const guestObjId = new mongoose.Types.ObjectId(guestId);
+      const guestUser = await User.findById(guestObjId);
       if (guestUser) {
         guestEmail = guestUser.emailId;
         guestName =
@@ -354,8 +367,9 @@ exports.newReservation = async (req, res) => {
 
     const resolvedAuthorId = authorId || listingDetails.author || listingDetails.authorId;
     let hostCurrency = "INR";
-    if (resolvedAuthorId) {
-      const hostUser = await User.findById(resolvedAuthorId);
+    if (resolvedAuthorId && typeof resolvedAuthorId === "string" && mongoose.Types.ObjectId.isValid(resolvedAuthorId)) {
+      const hostObjId = new mongoose.Types.ObjectId(resolvedAuthorId);
+      const hostUser = await User.findById(hostObjId);
       if (hostUser) {
         hostCurrency = hostUser.currency || getCurrencyForCountry(hostUser.country || "India");
       }
@@ -633,14 +647,14 @@ exports.processRefund = async (req, res) => {
  */
 exports.getAllReservations = async (req, res) => {
   try {
-    const payload = req.body;
-    const listingId = payload.id;
+    const payload = req.body || {};
+    const listingId = typeof payload.id === "string" ? payload.id.trim() : "";
 
-    const findCriteria = {
-      listingId: listingId,
-    };
+    if (!listingId) {
+      return res.status(400).json({ error: "Listing ID is required" });
+    }
 
-    const reservationsData = await reservationDB.find(findCriteria);
+    const reservationsData = await reservationDB.find({ listingId: listingId });
     return res.status(200).send(reservationsData);
   } catch (error) {
     console.error("getAllReservations error:", error);

@@ -202,7 +202,11 @@ const validateCoupon = async (req, res) => {
 
     // Verify applicability to listing if listingId is provided
     if (listingId) {
-      const house = await House.findById(listingId);
+      if (typeof listingId !== "string" || !mongoose.Types.ObjectId.isValid(listingId)) {
+        return res.status(400).json({ error: "Invalid listing ID format" });
+      }
+      const listingObjId = new mongoose.Types.ObjectId(listingId);
+      const house = await House.findById(listingObjId);
       if (!house) {
         return res.status(404).json({ error: "Motel listing not found" });
       }
