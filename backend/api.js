@@ -34,10 +34,13 @@ const io = new Server(server, {
   },
 });
 
+const { apiLimiter } = require("./middleware/rateLimiter.js");
+
 // parse Data
 app.use(express.json({ limit: "20mb" }));
 app.use(cors());
 app.use(express.urlencoded({ limit: "20mb", extended: true }));
+app.use(apiLimiter);
 
 // UploadThing route handler
 app.use(
