@@ -16,7 +16,13 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useCurrency } from "@/context/CurrencyContext";
 
-export const PRICE_OPTIONS = [];
+export const PRICE_PRESETS = [
+  { id: "all", label: "All Prices", min: 0, max: 1000 },
+  { id: "budget", label: "Under $100", min: 0, max: 100 },
+  { id: "mid", label: "$100 - $300", min: 100, max: 300 },
+  { id: "luxury", label: "$300+", min: 300, max: 1000 },
+];
+export const PRICE_OPTIONS = PRICE_PRESETS;
 
 export const RATING_PRESETS = [
   { id: "0", label: "Any rating", minRating: 0 },
@@ -66,23 +72,22 @@ const FilterPopUp = ({
 
   const ceilingPrice = Math.max(10, Math.ceil(maxPossiblePrice));
 
-  // Parse Initial Price State
-  const initialMinPrice = () => {
+  const [minPrice, setMinPrice] = useState(() => {
     if (activeFilters.minPrice !== undefined && activeFilters.minPrice !== "") {
       return Math.min(Number(activeFilters.minPrice) || 0, ceilingPrice);
     }
     return 0;
-  };
+  });
 
-  const initialMaxPrice = () => {
+  const [maxPrice, setMaxPrice] = useState(() => {
     if (activeFilters.maxPrice !== undefined && activeFilters.maxPrice !== "") {
       const parsed = Number(activeFilters.maxPrice);
       return isNaN(parsed) || parsed >= ceilingPrice ? ceilingPrice : parsed;
     }
     return ceilingPrice;
-  };
+  });
 
-  const initialRating = () => {
+  const [minRating, setMinRating] = useState(() => {
     if (activeFilters.minRating !== undefined && activeFilters.minRating !== "") {
       return Number(activeFilters.minRating) || 0;
     }
@@ -90,18 +95,33 @@ const FilterPopUp = ({
       return Number(activeFilters.rating) || 0;
     }
     return 0;
-  };
+  });
 
-  const [minPrice, setMinPrice] = useState(initialMinPrice);
-  const [maxPrice, setMaxPrice] = useState(initialMaxPrice);
-  const [minRating, setMinRating] = useState(initialRating);
   const [selectedAmenities, setSelectedAmenities] = useState(activeFilters.amenities || []);
 
   useEffect(() => {
     if (isOpen) {
-      setMinPrice(initialMinPrice());
-      setMaxPrice(initialMaxPrice());
-      setMinRating(initialRating());
+      const minP =
+        activeFilters.minPrice !== undefined && activeFilters.minPrice !== ""
+          ? Math.min(Number(activeFilters.minPrice) || 0, ceilingPrice)
+          : 0;
+
+      const parsedMax =
+        activeFilters.maxPrice !== undefined && activeFilters.maxPrice !== ""
+          ? Number(activeFilters.maxPrice)
+          : ceilingPrice;
+      const maxP = isNaN(parsedMax) || parsedMax >= ceilingPrice ? ceilingPrice : parsedMax;
+
+      let r = 0;
+      if (activeFilters.minRating !== undefined && activeFilters.minRating !== "") {
+        r = Number(activeFilters.minRating) || 0;
+      } else if (activeFilters.rating && activeFilters.rating !== "all") {
+        r = Number(activeFilters.rating) || 0;
+      }
+
+      setMinPrice(minP);
+      setMaxPrice(maxP);
+      setMinRating(r);
       setSelectedAmenities(activeFilters.amenities || []);
     }
   }, [isOpen, activeFilters, ceilingPrice]);

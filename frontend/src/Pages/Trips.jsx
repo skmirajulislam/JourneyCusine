@@ -1077,7 +1077,7 @@ const Trips = () => {
 
                       {/* Paste Other Invite Code Shortcut */}
                       <div className="mt-3 pt-2.5 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between text-[11px]">
-                        <span className="text-neutral-500">Have another trip's invite code?</span>
+                        <span className="text-neutral-500">Have another trip&apos;s invite code?</span>
                         <button
                           type="button"
                           onClick={() => {

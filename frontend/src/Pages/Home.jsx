@@ -14,7 +14,7 @@ import { FadeLoader } from "react-spinners";
 import { fuzzySearchListings } from "../utils/fuzzySearch";
 import { FiSearch, FiX, FiSliders } from "react-icons/fi";
 import { AiFillStar } from "react-icons/ai";
-import FilterPopUp from "../components/popUp/FilterPopUp/FilterPopUp";
+import FilterPopUp, { PRICE_PRESETS } from "../components/popUp/FilterPopUp/FilterPopUp";
 import AiChatWidget from "../components/AiAssistant/AiChatWidget";
 import { Button } from "@/components/ui/button";
 import { useCurrency } from "../context/CurrencyContext";

@@ -294,7 +294,7 @@ exports.getUserDetails = async (req, res) => {
             _id: new mongoose.Types.ObjectId(userId)
         };
 
-        const userDetails = await User.findById(findCriteria);
+        const userDetails = await User.findById(findCriteria).select("-password -accessToken -refreshToken");
         const housesData = await House.find({
             $or: [
                 { author: userId ? userId.toString() : "" },

@@ -262,7 +262,7 @@ const AiChatWidget = () => {
           : "Sorry, I had trouble connecting to the concierge. Please try again in a moment.";
 
       if (err.response?.status === 401) {
-        setShowAuthPopup(true);
+        window.dispatchEvent(new Event("open-auth-popup"));
       }
 
       setMessages((prev) => [
@@ -395,7 +395,7 @@ const AiChatWidget = () => {
                 </p>
                 <button
                   type="button"
-                  onClick={() => setShowAuthPopup(true)}
+                  onClick={() => window.dispatchEvent(new Event("open-auth-popup"))}
                   className="w-full max-w-xs py-3 rounded-2xl bg-[#ff385c] hover:bg-[#d90b63] text-white text-xs font-bold shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
                 >
                   <IoAirplane size={16} className="-rotate-45" /> Log In / Register to Chat

@@ -714,7 +714,7 @@ exports.getOneListing = async (req, res) => {
 
         if (listingData.author) {
             try {
-                authorDetails = await User.findById(listingData.author).select("-password -token");
+                authorDetails = await User.findById(listingData.author).select("-password -accessToken -refreshToken -token");
             } catch (err) {
                 console.error("Error finding author by ID:", err);
             }
@@ -724,7 +724,7 @@ exports.getOneListing = async (req, res) => {
         if (!authorDetails) {
             authorDetails = await User.findOne({
                 $or: [{ role: "host" }, { role: "admin" }]
-            }).select("-password -token");
+            }).select("-password -accessToken -refreshToken -token");
         }
 
         let response = {
