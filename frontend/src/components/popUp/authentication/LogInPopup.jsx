@@ -17,6 +17,7 @@ const LogInPopup = ({
   setDefaultPopup,
   setShowErrorMessage,
   showErrorMessage,
+  onForgotPassword,
 }) => {
   const {
     handleSubmit,
@@ -157,12 +158,13 @@ const LogInPopup = ({
           </button>
         </form>
         <div className="flex flex-col gap-2 my-4">
-          <Link
-            to={"/"}
-            className="text-xs text-[#222222] dark:text-[#e5e7eb] font-semibold underline hover:text-[#ff385c] transition-colors"
+          <button
+            type="button"
+            onClick={onForgotPassword}
+            className="text-xs text-[#222222] dark:text-[#e5e7eb] font-semibold underline hover:text-[#ff385c] transition-colors text-left cursor-pointer"
           >
             Forgot password?
-          </Link>
+          </button>
         </div>
       </div>
       <div className=" pt-4 px-8 italic pb-7">

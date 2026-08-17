@@ -20,7 +20,6 @@ import {
   FiInfo,
   FiCheck,
 } from "react-icons/fi";
-import AuthenticationPopUp from "../popUp/authentication/AuthenticationPopUp";
 
 const PropertyReviews = ({ listingId, hostId }) => {
   const { user } = useAuth();
@@ -56,7 +55,6 @@ const PropertyReviews = ({ listingId, hostId }) => {
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showAuthPopup, setShowAuthPopup] = useState(false);
 
   // Edit review state
   const [editingReviewId, setEditingReviewId] = useState(null);
@@ -77,7 +75,7 @@ const PropertyReviews = ({ listingId, hostId }) => {
     }
 
     if (!user) {
-      setShowAuthPopup(true);
+      window.dispatchEvent(new Event("open-auth-popup"));
       return;
     }
 
@@ -177,7 +175,7 @@ const PropertyReviews = ({ listingId, hostId }) => {
 
   const handleToggleLike = async (reviewId) => {
     if (!user) {
-      setShowAuthPopup(true);
+      window.dispatchEvent(new Event("open-auth-popup"));
       return;
     }
 
@@ -650,14 +648,6 @@ const PropertyReviews = ({ listingId, hostId }) => {
             </button>
           </div>
         </div>
-      )}
-
-      {/* Auth Popup */}
-      {showAuthPopup && (
-        <AuthenticationPopUp
-          popup={showAuthPopup}
-          setPopup={setShowAuthPopup}
-        />
       )}
     </section>
   );

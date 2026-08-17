@@ -5,7 +5,6 @@ import { AiFillStar, AiOutlineHeart, AiFillHeart } from "react-icons/ai";
 import { Check } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useAuth } from "../../hooks/useAuth";
-import AuthenticationPopUp from "../popUp/authentication/AuthenticationPopUp";
 import { useCurrency } from "../../context/CurrencyContext";
 import { useActiveReservations } from "../../hooks/useActiveReservations";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +13,6 @@ const ListingPreviewCard = ({ listingData, showBeforeTaxPrice }) => {
   const { user, toggleWishlist } = useAuth();
   const { formatPrice } = useCurrency();
   const { isListingReserved } = useActiveReservations();
-  const [showAuthPopup, setShowAuthPopup] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
   const baseUSD = Number(listingData?.basePrice) || 0;
@@ -33,7 +31,7 @@ const ListingPreviewCard = ({ listingData, showBeforeTaxPrice }) => {
     e.stopPropagation();
 
     if (!user) {
-      setShowAuthPopup(true);
+      window.dispatchEvent(new Event("open-auth-popup"));
       return;
     }
     if (!houseId || isUpdating) return;
@@ -149,13 +147,6 @@ const ListingPreviewCard = ({ listingData, showBeforeTaxPrice }) => {
           </div>
         </motion.div>
       </div>
-
-      {showAuthPopup && (
-        <AuthenticationPopUp
-          popup={showAuthPopup}
-          setPopup={setShowAuthPopup}
-        />
-      )}
     </>
   );
 };

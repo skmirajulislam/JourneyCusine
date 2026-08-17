@@ -12,17 +12,23 @@ import LogInPopup from "./LogInPopup";
 import CreateUserPopup from "./CreateUserPopup";
 import WelcomePopup from "./WelcomePopup";
 import CreateProfilePopup from "./CreateProfilePopup";
+import ForgotPasswordPopup from "./ForgotPasswordPopup";
 
- 
 const AuthenticationPopUp = ({ popup, setPopup }) => {
   const [showCreateUserPopup, setShowCreateUserPopup] = useState(false);
   const [showLoginPopup, setShowLoginPopup] = useState(false);
+  const [showForgotPasswordPopup, setShowForgotPasswordPopup] = useState(false);
   const [profilePopup, setProfilePopup] = useState(false);
   const [defaultPopup, setDefaultPopup] = useState(true);
   const [loginEmail, setLoginEmail] = useState(null);
   const [showErrorMessage, setShowErrorMessage] = useState(false);
 
   const handleCloseLoginPopup = () => {
+    if (showForgotPasswordPopup) {
+      setShowForgotPasswordPopup(false);
+      setShowLoginPopup(true);
+      return;
+    }
     setShowLoginPopup(false);
     setShowCreateUserPopup(false);
     setDefaultPopup(true);
@@ -32,6 +38,7 @@ const AuthenticationPopUp = ({ popup, setPopup }) => {
     setPopup(false);
     setShowCreateUserPopup(false);
     setShowLoginPopup(false);
+    setShowForgotPasswordPopup(false);
     setProfilePopup(false);
     setDefaultPopup(true);
   };
@@ -41,6 +48,7 @@ const AuthenticationPopUp = ({ popup, setPopup }) => {
     if (popup) {
       setDefaultPopup(true);
       setShowLoginPopup(false);
+      setShowForgotPasswordPopup(false);
       setShowCreateUserPopup(false);
       setProfilePopup(false);
     }
@@ -48,6 +56,8 @@ const AuthenticationPopUp = ({ popup, setPopup }) => {
 
   const titleText = defaultPopup
     ? "Log in or sign up"
+    : showForgotPasswordPopup
+    ? "Reset password"
     : showLoginPopup
     ? "Log in"
     : showCreateUserPopup
@@ -133,6 +143,28 @@ const AuthenticationPopUp = ({ popup, setPopup }) => {
                             setPopup={setPopup}
                             showErrorMessage={showErrorMessage}
                             setShowErrorMessage={setShowErrorMessage}
+                            onForgotPassword={() => {
+                              setShowLoginPopup(false);
+                              setShowForgotPasswordPopup(true);
+                            }}
+                          />
+                        </motion.div>
+                      )}
+                      {showForgotPasswordPopup && (
+                        <motion.div
+                          key="forgot-password"
+                          initial={{ opacity: 0, x: 15 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -15 }}
+                          transition={{ duration: 0.18 }}
+                        >
+                          <ForgotPasswordPopup
+                            loginEmail={loginEmail}
+                            onBackToLogin={() => {
+                              setShowForgotPasswordPopup(false);
+                              setShowLoginPopup(true);
+                            }}
+                            onSuccessClose={handleClose}
                           />
                         </motion.div>
                       )}

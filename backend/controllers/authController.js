@@ -670,3 +670,121 @@ exports.userToHost = async (req, res) => {
         res.status(500).json({ success: 0, error: "Failed to update role" });
     }
 };
+
+exports.verifyPhoneForReset = async (req, res) => {
+    try {
+        const { email, phoneNumber } = req.body;
+        if (!email || !phoneNumber) {
+            return res.status(400).json({ success: 0, message: "Email and registered phone number are required." });
+        }
+
+        const user = await User.findOne({ emailId: email.trim().toLowerCase() });
+        if (!user) {
+            return res.status(404).json({ success: 0, message: "No account found with this email address." });
+        }
+
+        // Normalize numbers for comparison (keep digits only)
+        const cleanInput = phoneNumber.replace(/\D/g, "");
+        const cleanUserNumber = (user.phoneNumber?.number || "").replace(/\D/g, "");
+        const cleanUserFull = (user.phoneNumber?.fullNumber || "").replace(/\D/g, "");
+
+        // If user hasn't set a phone number yet or test user
+        const isMatch =
+            (cleanUserNumber && (cleanUserNumber === cleanInput || cleanInput.endsWith(cleanUserNumber) || cleanUserNumber.endsWith(cleanInput))) ||
+            (cleanUserFull && (cleanUserFull === cleanInput || cleanInput.endsWith(cleanUserFull) || cleanUserFull.endsWith(cleanInput))) ||
+            (cleanInput.length >= 7 && (cleanUserNumber === "" && cleanUserFull === "")); // Allow setting if none was registered previously
+
+        if (!isMatch) {
+            return res.status(400).json({
+                success: 0,
+                message: "Phone number does not match our registered records for this account.",
+            });
+        }
+
+        return res.status(200).json({
+            success: 1,
+            message: "Phone number verified successfully!",
+        });
+    } catch (error) {
+        console.error("verifyPhoneForReset error:", error);
+        return res.status(500).json({ success: 0, message: "Error verifying phone number. Please try again." });
+    }
+};
+
+exports.resetPasswordWithPhone = async (req, res) => {
+    try {
+        const { email, phoneNumber, newPassword } = req.body;
+        if (!email || !phoneNumber || !newPassword) {
+            return res.status(400).json({ success: 0, message: "All fields are required." });
+        }
+        if (newPassword.length < 8) {
+            return res.status(400).json({ success: 0, message: "Password must be at least 8 characters long." });
+        }
+
+        const user = await User.findOne({ emailId: email.trim().toLowerCase() });
+        if (!user) {
+            return res.status(404).json({ success: 0, message: "No account found with this email address." });
+        }
+
+        // Validate phone match again
+        const cleanInput = phoneNumber.replace(/\D/g, "");
+        const cleanUserNumber = (user.phoneNumber?.number || "").replace(/\D/g, "");
+        const cleanUserFull = (user.phoneNumber?.fullNumber || "").replace(/\D/g, "");
+
+        const isMatch =
+            (cleanUserNumber && (cleanUserNumber === cleanInput || cleanInput.endsWith(cleanUserNumber) || cleanUserNumber.endsWith(cleanInput))) ||
+            (cleanUserFull && (cleanUserFull === cleanInput || cleanInput.endsWith(cleanUserFull) || cleanUserFull.endsWith(cleanInput))) ||
+            (cleanInput.length >= 7 && (cleanUserNumber === "" && cleanUserFull === ""));
+
+        if (!isMatch) {
+            return res.status(400).json({
+                success: 0,
+                message: "Phone verification failed. Please try again.",
+            });
+        }
+
+        const saltRounds = 12;
+        const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+        const sessionId = crypto.randomUUID();
+        const accessToken = jwt.sign(
+            { id: user._id, sessionId },
+            process.env.JWT_SECRET,
+            { expiresIn: "7d" }
+        );
+        const refreshToken = jwt.sign(
+            { id: user._id, sessionId },
+            process.env.JWT_SECRET,
+            { expiresIn: "7d" }
+        );
+
+        user.password = hashedPassword;
+        user.accessToken = accessToken;
+        user.refreshToken = refreshToken;
+
+        // If phone wasn't set earlier, save the verified phone
+        if (!user.phoneNumber || !user.phoneNumber.number) {
+            user.phoneNumber = {
+                dialCode: "+91",
+                number: cleanInput.slice(-10),
+                fullNumber: phoneNumber,
+            };
+        }
+
+        await user.save();
+
+        const userObj = user.toObject();
+        delete userObj.password;
+
+        return res.status(200).json({
+            success: 1,
+            message: "🎉 Password successfully updated!",
+            user_details: userObj,
+            accessToken,
+            refreshToken,
+        });
+    } catch (error) {
+        console.error("resetPasswordWithPhone error:", error);
+        return res.status(500).json({ success: 0, message: "Failed to reset password. Please try again." });
+    }
+};

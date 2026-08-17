@@ -7,6 +7,7 @@ import Overview from "../../Pages/Dashboard/Overview";
 import MotelYourHome from "../../Pages/MotelYourHome";
 import Reservations from "../../Pages/Dashboard/Reservations";
 import Listing from "../../Pages/Dashboard/Listing";
+import ProtectedRoute from "../ProtectedRoute";
 import CreateNewListLayout from "../../layout/CreateNewListLayout";
 import ListHouseOverview from "../../Pages/ListHouseOverview";
 import ListHouseStepOne from "../../Pages/ListingHouseStepOne/ListHouseStepOne";
@@ -125,69 +126,113 @@ const router = createBrowserRouter([
       {
         path: "/book/stays/:id",
         element: (
-          <Suspense
-            fallback={
-              <div className=" flex justify-center items-center w-full h-[60dvh]">
-                <FadeLoader color="#000" />
-              </div>
-            }
-          >
-            <Book />
-          </Suspense>
+          <ProtectedRoute>
+            <Suspense
+              fallback={
+                <div className=" flex justify-center items-center w-full h-[60dvh]">
+                  <FadeLoader color="#000" />
+                </div>
+              }
+            >
+              <Book />
+            </Suspense>
+          </ProtectedRoute>
         ),
       },
       {
         path: "/users/show/:id",
-        element: <UserProfile />,
+        element: (
+          <ProtectedRoute>
+            <UserProfile />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "/user/profile",
-        element: <UserProfile />,
+        element: (
+          <ProtectedRoute>
+            <UserProfile />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "/users/profile",
-        element: <UserProfile />,
+        element: (
+          <ProtectedRoute>
+            <UserProfile />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "/profile",
-        element: <UserProfile />,
+        element: (
+          <ProtectedRoute>
+            <UserProfile />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "/my-bookings",
-        element: <UserProfile />,
+        element: (
+          <ProtectedRoute>
+            <UserProfile />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "/users/show/:id/editMode=true",
-        element: <EditProfile />,
+        element: (
+          <ProtectedRoute>
+            <EditProfile />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "/users/dashboard/:id/overview=true",
-        element: <Overview />,
+        element: (
+          <ProtectedRoute>
+            <Overview />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "/users/dashboard/:id/reservations",
-        element: <Reservations />,
+        element: (
+          <ProtectedRoute>
+            <Reservations />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "/users/dashboard/:id/listing=true",
-        element: <Listing />,
+        element: (
+          <ProtectedRoute>
+            <Listing />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "/host/homes",
-        element: <MotelYourHome />,
+        element: (
+          <ProtectedRoute>
+            <MotelYourHome />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "/wishlists",
         element: (
-          <Suspense
-            fallback={
-              <div className=" flex justify-center items-center w-full h-[60dvh]">
-                <FadeLoader color="#ff385c" />
-              </div>
-            }
-          >
-            <Wishlist />
-          </Suspense>
+          <ProtectedRoute>
+            <Suspense
+              fallback={
+                <div className=" flex justify-center items-center w-full h-[60dvh]">
+                  <FadeLoader color="#ff385c" />
+                </div>
+              }
+            >
+              <Wishlist />
+            </Suspense>
+          </ProtectedRoute>
         ),
       },
       {
@@ -268,7 +313,11 @@ const router = createBrowserRouter([
   },
   {
     path: "/become-a-host",
-    element: <CreateNewListLayout />,
+    element: (
+      <ProtectedRoute>
+        <CreateNewListLayout />
+      </ProtectedRoute>
+    ),
     children: [
       {
         path: "/become-a-host",

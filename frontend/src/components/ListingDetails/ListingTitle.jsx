@@ -2,12 +2,9 @@ import { useState } from "react";
 import { AiFillStar, AiOutlineHeart, AiFillHeart } from "react-icons/ai";
 import { toast } from "react-hot-toast";
 import { useAuth } from "../../hooks/useAuth";
-import AuthenticationPopUp from "../popUp/authentication/AuthenticationPopUp";
 
- 
 const ListingTitle = ({ listingData }) => {
   const { user, toggleWishlist } = useAuth();
-  const [showAuthPopup, setShowAuthPopup] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
   const houseId = listingData?._id;
@@ -17,7 +14,7 @@ const ListingTitle = ({ listingData }) => {
 
   const handleToggleWishlist = async () => {
     if (!user) {
-      setShowAuthPopup(true);
+      window.dispatchEvent(new Event("open-auth-popup"));
       return;
     }
     if (!houseId || isUpdating) return;
@@ -90,13 +87,6 @@ const ListingTitle = ({ listingData }) => {
           </div>
         </div>
       </div>
-
-      {showAuthPopup && (
-        <AuthenticationPopUp
-          popup={showAuthPopup}
-          setPopup={setShowAuthPopup}
-        />
-      )}
     </>
   );
 };

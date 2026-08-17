@@ -19,7 +19,6 @@ import {
 import { IoAirplane } from "react-icons/io5";
 import { PulseLoader } from "react-spinners";
 import api from "../../backend";
-import AuthenticationPopUp from "../popUp/authentication/AuthenticationPopUp";
 
 const QUICK_PROMPT_CHIPS = [
   "🏖️ Stays with Pool",
@@ -98,7 +97,6 @@ const AiChatWidget = () => {
 
   const [isOpen, setIsOpen] = useState(false);
   const [isFlying, setIsFlying] = useState(false);
-  const [showAuthPopup, setShowAuthPopup] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState(null);
   const [isListening, setIsListening] = useState(false);
 
@@ -198,7 +196,7 @@ const AiChatWidget = () => {
     if (!promptToSend || !promptToSend.trim()) return;
 
     if (!user) {
-      setShowAuthPopup(true);
+      window.dispatchEvent(new Event("open-auth-popup"));
       return;
     }
 
@@ -601,14 +599,6 @@ const AiChatWidget = () => {
           </div>
         )}
       </div>
-
-      {/* Authentication Modal */}
-      {showAuthPopup && (
-        <AuthenticationPopUp
-          popup={showAuthPopup}
-          setPopup={setShowAuthPopup}
-        />
-      )}
     </>
   );
 };

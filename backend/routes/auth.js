@@ -17,6 +17,8 @@ const {
     updateUserName,
     updateUserCountry,
     deleteProfileImage,
+    verifyPhoneForReset,
+    resetPasswordWithPhone,
 } = require("../controllers/authController.js");
 const { verifyJwtToken } = require("../middleware/jwt.js");
 const { strictLimiter } = require("../middleware/rateLimiter.js");
@@ -28,6 +30,8 @@ router.use(strictLimiter);
 
 router.post("/sign_up", signUp);
 router.post("/log_in", logIn);
+router.post("/forgot_password/verify_phone", verifyPhoneForReset);
+router.post("/forgot_password/reset_password", resetPasswordWithPhone);
 router.post("/logout", verifyJwtToken, logOut);
 router.post("/get_user_details", verifyJwtToken, getUserDetails);
 router.post("/post", verifyJwtToken, postUser);

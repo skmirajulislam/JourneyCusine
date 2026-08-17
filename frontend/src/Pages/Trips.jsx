@@ -39,7 +39,6 @@ import { toast } from "react-hot-toast";
 import api, { API } from "../backend";
 import { useTheme } from "../context/ThemeContext";
 import { useCurrency } from "../context/CurrencyContext";
-import AuthenticationPopUp from "../components/popUp/authentication/AuthenticationPopUp";
 
 // Custom Leaflet Motel Marker Icon with Dynamic Width and Theme Awareness
 const createMotelIcon = (formattedPrice, isDark = false) => {
@@ -235,7 +234,6 @@ const Trips = () => {
   const [activeTrip, setActiveTrip] = useState(null);
   const [motels, setMotels] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [showAuthPopup, setShowAuthPopup] = useState(false);
 
   // Mobile View Mode: 'split' on desktop, 'list' or 'map' on mobile
   const [mobileView, setMobileView] = useState("list"); // 'map' or 'list'
@@ -394,7 +392,7 @@ const Trips = () => {
   // Handle map click to drop a new pin
   const handleMapClick = (latlng) => {
     if (!user) {
-      setShowAuthPopup(true);
+      window.dispatchEvent(new Event("open-auth-popup"));
       return;
     }
     if (!activeTrip && trips.length === 0) {
@@ -665,7 +663,7 @@ const Trips = () => {
   const handleJoinByCode = async (e) => {
     if (e) e.preventDefault();
     if (!user) {
-      setShowAuthPopup(true);
+      window.dispatchEvent(new Event("open-auth-popup"));
       return;
     }
     if (!inputInviteCode || !inputInviteCode.trim()) {
@@ -712,7 +710,7 @@ const Trips = () => {
   // Add a motel directly to active trip
   const handleAddMotelToTrip = (motel) => {
     if (!user) {
-      setShowAuthPopup(true);
+      window.dispatchEvent(new Event("open-auth-popup"));
       return;
     }
     if (!activeTrip && trips.length === 0) {
@@ -736,7 +734,7 @@ const Trips = () => {
   // Fetch wishlist items for import picker
   const handleOpenWishlistPicker = async () => {
     if (!user) {
-      setShowAuthPopup(true);
+      window.dispatchEvent(new Event("open-auth-popup"));
       return;
     }
     try {
@@ -833,7 +831,7 @@ const Trips = () => {
                   type="button"
                   onClick={() => {
                     if (!user) {
-                      setShowAuthPopup(true);
+                      window.dispatchEvent(new Event("open-auth-popup"));
                       return;
                     }
                     setShowJoinModal(true);
@@ -848,7 +846,7 @@ const Trips = () => {
                   type="button"
                   onClick={() => {
                     if (!user) {
-                      setShowAuthPopup(true);
+                      window.dispatchEvent(new Event("open-auth-popup"));
                       return;
                     }
                     setShowNewTripModal(true);
@@ -1084,7 +1082,7 @@ const Trips = () => {
                           type="button"
                           onClick={() => {
                             if (!user) {
-                              setShowAuthPopup(true);
+                              window.dispatchEvent(new Event("open-auth-popup"));
                               return;
                             }
                             setShowJoinModal(true);
@@ -1450,7 +1448,7 @@ const Trips = () => {
                   type="button"
                   onClick={() => {
                     if (!user) {
-                      setShowAuthPopup(true);
+                      window.dispatchEvent(new Event("open-auth-popup"));
                       return;
                     }
                     setShowNewTripModal(true);
@@ -2063,14 +2061,6 @@ const Trips = () => {
             </div>
           </div>
         </div>
-      )}
-
-      {/* Auth Prompt Modal */}
-      {showAuthPopup && (
-        <AuthenticationPopUp
-          popup={showAuthPopup}
-          setPopup={setShowAuthPopup}
-        />
       )}
     </div>
   );
