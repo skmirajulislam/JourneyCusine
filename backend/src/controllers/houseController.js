@@ -57,488 +57,449 @@ const deleteFromCloudIfUploadThing = async (imageUrl) => {
 exports.saveHouseStructure = async (req, res) => {
     try {
         const userId = req.user;
-        const payload = req.body;
+        const payload = req.body || {};
         const houseId = payload.houseId;
         const housetype = payload.houseType;
-        // console.log(payload, "Line 5")
-        const findCriteria = {
-            _id: new mongoose.Types.ObjectId(userId)
-        }
-        const userDetails = await User.findById(findCriteria);
-        // console.log(userDetails)
-        if (userDetails.role !== "host") {
-            throw Error("User is not a host")
+
+        if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(401).json({ status: 401, succeed: 0, message: "Unauthorized" });
         }
 
-        let houseTypeData = {
-            houseType: housetype
+        if (!houseId || !mongoose.Types.ObjectId.isValid(houseId)) {
+            return res.status(400).json({ status: 400, succeed: 0, message: "Valid houseId is required" });
         }
 
-        let findHouseCriteria = {
-            _id: new mongoose.Types.ObjectId(houseId)
+        const userDetails = await User.findById(new mongoose.Types.ObjectId(String(userId)));
+        if (!userDetails || userDetails.role !== "host") {
+            return res.status(403).json({ status: 403, succeed: 0, message: "User is not a host" });
         }
+
+        const houseObjId = new mongoose.Types.ObjectId(String(houseId));
+        let houseDetails = null;
 
         if (housetype !== undefined) {
-            const houseDetails = await House.findOneAndUpdate(findHouseCriteria, houseTypeData, { new: true })
-
-            let response = {
-                status: 200,
-                succeed: 1,
-                info: "Successfully housedata updated",
-                houseDetails
-            }
-
-            res.status(200).send(response)
+            houseDetails = await House.findByIdAndUpdate(
+                houseObjId,
+                { $set: { houseType: String(housetype) } },
+                { new: true }
+            );
+        } else {
+            houseDetails = await House.findById(houseObjId);
         }
 
+        return res.status(200).send({
+            status: 200,
+            succeed: 1,
+            info: "Successfully housedata updated",
+            houseDetails
+        });
     } catch (error) {
-        console.log(error)
+        console.error("saveHouseStructure error:", error);
+        return res.status(500).json({ status: 500, succeed: 0, error: error.message });
     }
-
-}
+};
 
 exports.savePrivacyType = async (req, res) => {
     try {
-        const userId = req.userId;
-        const payload = req.body;
+        const payload = req.body || {};
         const houseId = payload.houseId;
         const privacytype = payload.privacyType;
 
-        // console.log(payload, "line 55")
-
-        const findHouseCriteria = {
-            _id: new mongoose.Types.ObjectId(houseId)
+        if (!houseId || !mongoose.Types.ObjectId.isValid(houseId)) {
+            return res.status(400).json({ status: 400, succeed: 0, message: "Valid houseId is required" });
         }
 
-        const updateCriteria = {
-            privacyType: privacytype
-        }
+        const houseObjId = new mongoose.Types.ObjectId(String(houseId));
+        let houseDetails = null;
 
         if (privacytype !== undefined) {
-            const houseDetails = await House.findOneAndUpdate(findHouseCriteria, updateCriteria, { new: true })
-
-            let response = {
-                status: 200,
-                succeed: 1,
-                info: "Successfully housedata updated",
-                houseDetails
-            }
-
-            res.status(200).send(response)
+            houseDetails = await House.findByIdAndUpdate(
+                houseObjId,
+                { $set: { privacyType: String(privacytype) } },
+                { new: true }
+            );
+        } else {
+            houseDetails = await House.findById(houseObjId);
         }
+
+        return res.status(200).send({
+            status: 200,
+            succeed: 1,
+            info: "Successfully housedata updated",
+            houseDetails
+        });
     } catch (error) {
-        console.log(error)
+        console.error("savePrivacyType error:", error);
+        return res.status(500).json({ status: 500, succeed: 0, error: error.message });
     }
-}
+};
+
 exports.saveLocation = async (req, res) => {
     try {
-        const payload = req.body;
+        const payload = req.body || {};
         const houseId = payload.houseId;
         const locationData = payload.location;
 
-        // console.log(payload, "location payload")
-
-        const findHouseCriteria = {
-            _id: new mongoose.Types.ObjectId(houseId)
+        if (!houseId || !mongoose.Types.ObjectId.isValid(houseId)) {
+            return res.status(400).json({ status: 400, succeed: 0, message: "Valid houseId is required" });
         }
 
-        const updateCriteria = {
-            location: locationData
-        }
+        const houseObjId = new mongoose.Types.ObjectId(String(houseId));
+        let houseDetails = null;
 
         if (locationData !== undefined) {
-            const houseDetails = await House.findOneAndUpdate(findHouseCriteria, updateCriteria, { new: true })
-
-            let response = {
-                status: 200,
-                succeed: 1,
-                info: "Successfully housedata updated",
-                houseDetails
-            }
-
-            res.status(200).send(response)
-
-            // console.log(houseDetails, "Line 98")
+            houseDetails = await House.findByIdAndUpdate(
+                houseObjId,
+                { $set: { location: locationData } },
+                { new: true }
+            );
+        } else {
+            houseDetails = await House.findById(houseObjId);
         }
+
+        return res.status(200).send({
+            status: 200,
+            succeed: 1,
+            info: "Successfully housedata updated",
+            houseDetails
+        });
     } catch (error) {
-        console.log(error)
+        console.error("saveLocation error:", error);
+        return res.status(500).json({ status: 500, succeed: 0, error: error.message });
     }
-}
+};
 
 exports.saveFloorPlan = async (req, res) => {
     try {
-        const payload = req.body;
+        const payload = req.body || {};
         const houseId = payload.houseId;
         const floorplanData = payload.floorPlan;
 
-        // console.log(payload, "line 121")
-
-        const findHouseCriteria = {
-            _id: new mongoose.Types.ObjectId(houseId)
+        if (!houseId || !mongoose.Types.ObjectId.isValid(houseId)) {
+            return res.status(400).json({ status: 400, succeed: 0, message: "Valid houseId is required" });
         }
 
-        const updateCriteria = {
-            floorPlan: floorplanData
-        }
+        const houseObjId = new mongoose.Types.ObjectId(String(houseId));
+        let houseDetails = null;
 
         if (floorplanData !== undefined) {
-            const houseDetails = await House.findOneAndUpdate(findHouseCriteria, updateCriteria, { new: true })
-
-            let response = {
-                status: 200,
-                succeed: 1,
-                info: "Successfully housedata updated",
-                houseDetails
-            }
-
-            res.status(200).send(response)
-
-            // console.log(houseDetails, "line 134")
+            houseDetails = await House.findByIdAndUpdate(
+                houseObjId,
+                { $set: { floorPlan: floorplanData } },
+                { new: true }
+            );
+        } else {
+            houseDetails = await House.findById(houseObjId);
         }
+
+        return res.status(200).send({
+            status: 200,
+            succeed: 1,
+            info: "Successfully housedata updated",
+            houseDetails
+        });
     } catch (error) {
-        console.log(error)
+        console.error("saveFloorPlan error:", error);
+        return res.status(500).json({ status: 500, succeed: 0, error: error.message });
     }
-}
+};
 
 exports.saveAmenities = async (req, res) => {
     try {
-        const payload = req.body;
+        const payload = req.body || {};
         const houseId = payload.houseId;
         const amenitiesData = payload.amenities;
 
-        const findHouseCriteria = {
-            _id: new mongoose.Types.ObjectId(houseId)
+        if (!houseId || !mongoose.Types.ObjectId.isValid(houseId)) {
+            return res.status(400).json({ status: 400, succeed: 0, message: "Valid houseId is required" });
         }
 
-        const updateCriteria = {
-            amenities: amenitiesData
-        }
+        const houseObjId = new mongoose.Types.ObjectId(String(houseId));
+        let houseDetails = null;
 
         if (amenitiesData !== undefined) {
-            const houseDetails = await House.findOneAndUpdate(findHouseCriteria, updateCriteria, { new: true })
-
-            let response = {
-                status: 200,
-                succeed: 1,
-                info: "Successfully housedata updated",
-                houseDetails
-            }
-
-            res.status(200).send(response)
-
-            // console.log(houseDetails, "line 177")
-
+            houseDetails = await House.findByIdAndUpdate(
+                houseObjId,
+                { $set: { amenities: amenitiesData } },
+                { new: true }
+            );
+        } else {
+            houseDetails = await House.findById(houseObjId);
         }
 
+        return res.status(200).send({
+            status: 200,
+            succeed: 1,
+            info: "Successfully housedata updated",
+            houseDetails
+        });
     } catch (error) {
-        console.log(error)
+        console.error("saveAmenities error:", error);
+        return res.status(500).json({ status: 500, succeed: 0, error: error.message });
     }
-}
+};
 
 exports.savePhotos = async (req, res) => {
     try {
-        const payload = req.body;
+        const payload = req.body || {};
         const houseId = payload.houseId;
         const photos = payload.photos;
 
-        // console.log(payload)
-
-        const findCriteria = {
-            _id: new mongoose.Types.ObjectId(houseId)
+        if (!houseId || !mongoose.Types.ObjectId.isValid(houseId)) {
+            return res.status(400).json({ status: 400, succeed: 0, message: "Valid houseId is required" });
         }
 
-        const updateCriteria = {
-            photos: photos
-        }
+        const houseObjId = new mongoose.Types.ObjectId(String(houseId));
+        const houseDetails = await House.findByIdAndUpdate(
+            houseObjId,
+            { $set: { photos: Array.isArray(photos) ? photos : [] } },
+            { new: true }
+        );
 
-        const houseDetails = await House.findOneAndUpdate(findCriteria, updateCriteria, { new: true })
-
-        let response = {
+        return res.status(200).send({
             status: 200,
             succeed: 1,
             info: "Successfully housedata updated",
             houseDetails
-        }
-
-        res.status(200).send(response)
-
-        // console.log(houseDetails, "line 211")
-
+        });
     } catch (error) {
-        console.log(error)
+        console.error("savePhotos error:", error);
+        return res.status(500).json({ status: 500, succeed: 0, error: error.message });
     }
-}
-
+};
 
 exports.saveTitle = async (req, res) => {
     try {
-        const payload = req.body;
+        const payload = req.body || {};
         const houseId = payload.houseId;
         const title = payload.title;
 
-        // console.log(payload)
-
-        const findCriteria = {
-            _id: new mongoose.Types.ObjectId(houseId)
+        if (!houseId || !mongoose.Types.ObjectId.isValid(houseId)) {
+            return res.status(400).json({ status: 400, succeed: 0, message: "Valid houseId is required" });
         }
 
-        const updateCriteria = {
-            title: title
-        }
+        const houseObjId = new mongoose.Types.ObjectId(String(houseId));
+        const houseDetails = await House.findByIdAndUpdate(
+            houseObjId,
+            { $set: { title: typeof title === "string" ? title : "" } },
+            { new: true }
+        );
 
-        const houseDetails = await House.findOneAndUpdate(findCriteria, updateCriteria, { new: true })
-
-        let response = {
+        return res.status(200).send({
             status: 200,
             succeed: 1,
             info: "Successfully housedata updated",
             houseDetails
-        }
-
-        res.status(200).send(response)
-
-        // console.log(houseDetails, "line 248")
-
+        });
     } catch (error) {
-        console.log(error)
+        console.error("saveTitle error:", error);
+        return res.status(500).json({ status: 500, succeed: 0, error: error.message });
     }
-}
+};
 
 exports.saveHighlight = async (req, res) => {
     try {
-        const payload = req.body;
+        const payload = req.body || {};
         const houseId = payload.houseId;
         const highlight = payload.highlight;
 
-        // console.log(payload)
-
-        const findCriteria = {
-            _id: new mongoose.Types.ObjectId(houseId)
+        if (!houseId || !mongoose.Types.ObjectId.isValid(houseId)) {
+            return res.status(400).json({ status: 400, succeed: 0, message: "Valid houseId is required" });
         }
 
-        const updateCriteria = {
-            highlight: highlight
-        }
+        const houseObjId = new mongoose.Types.ObjectId(String(houseId));
+        const houseDetails = await House.findByIdAndUpdate(
+            houseObjId,
+            { $set: { highlight: Array.isArray(highlight) ? highlight : highlight } },
+            { new: true }
+        );
 
-        const houseDetails = await House.findOneAndUpdate(findCriteria, updateCriteria, { new: true })
-
-        let response = {
+        return res.status(200).send({
             status: 200,
             succeed: 1,
             info: "Successfully housedata updated",
             houseDetails
-        }
-
-        res.status(200).send(response)
-
-        // console.log(houseDetails, "line 282")
-
+        });
     } catch (error) {
-        console.log(error)
+        console.error("saveHighlight error:", error);
+        return res.status(500).json({ status: 500, succeed: 0, error: error.message });
     }
-}
+};
 
 exports.saveDescription = async (req, res) => {
     try {
-        const payload = req.body;
+        const payload = req.body || {};
         const houseId = payload.houseId;
         const description = payload.description;
 
-        // console.log(payload)
-
-        const findCriteria = {
-            _id: new mongoose.Types.ObjectId(houseId)
+        if (!houseId || !mongoose.Types.ObjectId.isValid(houseId)) {
+            return res.status(400).json({ status: 400, succeed: 0, message: "Valid houseId is required" });
         }
 
-        const updateCriteria = {
-            description: description
-        }
+        const houseObjId = new mongoose.Types.ObjectId(String(houseId));
+        const houseDetails = await House.findByIdAndUpdate(
+            houseObjId,
+            { $set: { description: typeof description === "string" ? description : "" } },
+            { new: true }
+        );
 
-        const houseDetails = await House.findOneAndUpdate(findCriteria, updateCriteria, { new: true })
-
-        let response = {
+        return res.status(200).send({
             status: 200,
             succeed: 1,
             info: "Successfully housedata updated",
             houseDetails
-        }
-
-        res.status(200).send(response)
-
-        // console.log(houseDetails, "line 316")
-
+        });
     } catch (error) {
-        console.log(error)
+        console.error("saveDescription error:", error);
+        return res.status(500).json({ status: 500, succeed: 0, error: error.message });
     }
-}
+};
 
 exports.saveGuestType = async (req, res) => {
     try {
-        const payload = req.body;
+        const payload = req.body || {};
         const houseId = payload.houseId;
         const guestType = payload.guestType;
 
-        // console.log(payload)
-
-        const findCriteria = {
-            _id: new mongoose.Types.ObjectId(houseId)
+        if (!houseId || !mongoose.Types.ObjectId.isValid(houseId)) {
+            return res.status(400).json({ status: 400, succeed: 0, message: "Valid houseId is required" });
         }
 
-        const updateCriteria = {
-            guestType: guestType
-        }
+        const houseObjId = new mongoose.Types.ObjectId(String(houseId));
+        const houseDetails = await House.findByIdAndUpdate(
+            houseObjId,
+            { $set: { guestType: typeof guestType === "string" ? guestType : "" } },
+            { new: true }
+        );
 
-        const houseDetails = await House.findOneAndUpdate(findCriteria, updateCriteria, { new: true })
-
-        let response = {
+        return res.status(200).send({
             status: 200,
             succeed: 1,
             info: "Successfully housedata updated",
             houseDetails
-        }
-
-        res.status(200).send(response)
-
-        // console.log(houseDetails, "line 350")
-
+        });
     } catch (error) {
-        console.log(error)
+        console.error("saveGuestType error:", error);
+        return res.status(500).json({ status: 500, succeed: 0, error: error.message });
     }
-}
+};
 
 exports.savePrices = async (req, res) => {
     try {
-        const payload = req.body;
+        const payload = req.body || {};
         const houseId = payload.houseId;
         const priceBeforeTaxes = payload.priceBeforeTaxes;
         const authorEarnedPrice = payload.authorEarnedPrice;
         const basePrice = payload.basePrice;
 
-        console.log(payload)
-
-        const findCriteria = {
-            _id: new mongoose.Types.ObjectId(houseId)
+        if (!houseId || !mongoose.Types.ObjectId.isValid(houseId)) {
+            return res.status(400).json({ status: 400, succeed: 0, message: "Valid houseId is required" });
         }
 
-        const updateCriteria = {
-            priceBeforeTaxes: priceBeforeTaxes,
-            authorEarnedPrice: authorEarnedPrice,
-            basePrice: basePrice,
-        }
+        const houseObjId = new mongoose.Types.ObjectId(String(houseId));
+        const updateData = {};
+        if (priceBeforeTaxes !== undefined) updateData.priceBeforeTaxes = Number(priceBeforeTaxes);
+        if (authorEarnedPrice !== undefined) updateData.authorEarnedPrice = Number(authorEarnedPrice);
+        if (basePrice !== undefined) updateData.basePrice = Number(basePrice);
 
-        const houseDetails = await House.findOneAndUpdate(findCriteria, updateCriteria, { new: true })
-        console.log(houseDetails, "from 378")
+        const houseDetails = await House.findByIdAndUpdate(
+            houseObjId,
+            { $set: updateData },
+            { new: true }
+        );
 
-        let response = {
+        return res.status(200).send({
             status: 200,
             succeed: 1,
             info: "Successfully housedata updated",
             houseDetails
-        }
-
-        res.status(200).send(response)
-
-        // console.log(houseDetails, "line 386")
-
+        });
     } catch (error) {
-        console.log(error)
+        console.error("savePrices error:", error);
+        return res.status(500).json({ status: 500, succeed: 0, error: error.message });
     }
-}
+};
 
 exports.saveSecurity = async (req, res) => {
     try {
-        const payload = req.body;
+        const payload = req.body || {};
         const houseId = payload.houseId;
         const security = payload.security;
 
-        console.log(payload)
-
-        const findCriteria = {
-            _id: new mongoose.Types.ObjectId(houseId)
+        if (!houseId || !mongoose.Types.ObjectId.isValid(houseId)) {
+            return res.status(400).json({ status: 400, succeed: 0, message: "Valid houseId is required" });
         }
 
-        const updateCriteria = {
-            security: security
-        }
+        const houseObjId = new mongoose.Types.ObjectId(String(houseId));
+        const houseDetails = await House.findByIdAndUpdate(
+            houseObjId,
+            { $set: { security: Array.isArray(security) ? security : [] } },
+            { new: true }
+        );
 
-        const houseDetails = await House.findOneAndUpdate(findCriteria, updateCriteria, { new: true })
-
-        let response = {
+        return res.status(200).send({
             status: 200,
             succeed: 1,
             info: "Successfully housedata updated",
             houseDetails
-        }
-
-        res.status(200).send(response)
-
-        console.log(houseDetails, "line 420")
-
+        });
     } catch (error) {
-        console.log(error)
+        console.error("saveSecurity error:", error);
+        return res.status(500).json({ status: 500, succeed: 0, error: error.message });
     }
-}
+};
 
 exports.getHouseDetails = async (req, res) => {
     try {
-        const payload = req.body;
+        const payload = req.body || {};
         const houseId = payload.houseId;
 
-        const findCriteria = {
-            _id: new mongoose.Types.ObjectId(houseId)
+        if (!houseId || !mongoose.Types.ObjectId.isValid(houseId)) {
+            return res.status(400).json({ status: 400, succeed: 0, message: "Valid houseId is required" });
         }
 
-        const houseDetails = await House.findById(findCriteria)
+        const houseObjId = new mongoose.Types.ObjectId(String(houseId));
+        const houseDetails = await House.findById(houseObjId);
 
-        let response = {
+        return res.status(200).send({
             status: 200,
             succeed: 1,
             info: "Successfully housedata updated",
             houseDetails
-        }
-
-        res.status(200).send(response)
-
-        // console.log(houseDetails, "line 447")
-
+        });
     } catch (error) {
-        console.log(error)
+        console.error("getHouseDetails error:", error);
+        return res.status(500).json({ status: 500, succeed: 0, error: error.message });
     }
-}
-
+};
 
 exports.publishList = async (req, res) => {
     try {
-        const payload = req.body;
+        const payload = req.body || {};
         const houseId = payload.houseId;
 
-        console.log(payload)
-
-        const findCriteria = {
-            _id: new mongoose.Types.ObjectId(houseId)
+        if (!houseId || !mongoose.Types.ObjectId.isValid(houseId)) {
+            return res.status(400).json({ status: 400, succeed: 0, message: "Valid houseId is required" });
         }
 
-        const updateCriteria = {
-            status: "Complete"
-        }
+        const houseObjId = new mongoose.Types.ObjectId(String(houseId));
+        const houseDetails = await House.findByIdAndUpdate(
+            houseObjId,
+            { $set: { status: "Complete" } },
+            { new: true }
+        );
 
-        const houseDetails = await House.findOneAndUpdate(findCriteria, updateCriteria, { new: true })
-
-        let response = {
+        return res.status(200).send({
             status: 200,
             succeed: 1,
             info: "Successfully housedata updated",
             houseDetails
-        }
-
-        res.status(200).send(response)
-
-        console.log(houseDetails, "line 484")
-
+        });
     } catch (error) {
-        console.log(error)
+        console.error("publishList error:", error);
+        return res.status(500).json({ status: 500, succeed: 0, error: error.message });
     }
-}
+};
 
 exports.getAllListing = async (req, res) => {
     try {
