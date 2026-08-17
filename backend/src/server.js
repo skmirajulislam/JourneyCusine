@@ -122,6 +122,25 @@ app.get("/", (req, res) => {
   res.send(`Express + Socket.io server is working on ${process.env.PORT || 5001}`);
 });
 
+// Currency exchange rates endpoint with dynamic Frankfurter live data
+const { fetchLiveRatesForBase, fetchPairRate } = require("./utils/currency.js");
+app.get("/api/currency/rates", async (req, res) => {
+  try {
+    const base = (req.query.base || "INR").toUpperCase();
+    const quote = req.query.quote ? req.query.quote.toUpperCase() : null;
+
+    if (quote) {
+      const rate = await fetchPairRate(base, quote);
+      return res.status(200).json({ success: 1, base, quote, rate });
+    }
+
+    const rates = await fetchLiveRatesForBase(base);
+    res.status(200).json({ success: 1, base, rates });
+  } catch (err) {
+    res.status(500).json({ success: 0, error: err.message });
+  }
+});
+
 // UploadThing route handler
 app.use(
   "/api/uploadthing",

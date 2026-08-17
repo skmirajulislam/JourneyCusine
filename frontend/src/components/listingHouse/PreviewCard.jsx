@@ -1,8 +1,10 @@
 import { useListingFlow } from "../../context/ListingFlowContext";
+import { useCurrency } from "../../context/CurrencyContext";
 import { AiFillStar } from "react-icons/ai";
 
 const PreviewCard = () => {
   const { currentListingHouse: currentHouseData } = useListingFlow();
+  const { symbol } = useCurrency();
 
   return (
     <>
@@ -32,7 +34,7 @@ const PreviewCard = () => {
               {currentHouseData?.title || "Your listing title"}
             </p>
             <span className="flex flex-row items-center gap-1 mt-0.5">
-              <p className="font-bold text-[#111827] dark:text-white">${currentHouseData?.basePrice || 50}</p>
+              <p className="font-bold text-[#111827] dark:text-white">{symbol}{Number(currentHouseData?.basePrice || 50).toLocaleString()}</p>
               <span className="text-xs text-neutral-500 dark:text-neutral-400">/ night</span>
             </span>
           </div>

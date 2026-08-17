@@ -11,6 +11,7 @@ import {
   FiClock,
   FiUser,
 } from "react-icons/fi";
+import { getCurrencySymbol } from "../../../utils/currency";
 
 const CancelledReservations = ({ data = [], onRefresh }) => {
   const [selectedRes, setSelectedRes] = useState(null);
@@ -131,9 +132,9 @@ const CancelledReservations = ({ data = [], onRefresh }) => {
 
                 {/* Total Paid */}
                 <td className="px-4 py-4 font-semibold text-gray-900 dark:text-white">
-                  ${totalPaid}
+                  {getCurrencySymbol(item.guestCurrency || item.currency || "INR")}{Number(item.guestTotalPaid !== undefined ? item.guestTotalPaid : totalPaid).toLocaleString()}
                   <span className="block text-[10px] text-gray-400 font-normal">
-                    (Tax: ${tax})
+                    (Tax: {getCurrencySymbol(item.guestCurrency || item.currency || "INR")}{Number(item.guestTaxes !== undefined ? item.guestTaxes : tax).toLocaleString()})
                   </span>
                 </td>
 
@@ -146,7 +147,7 @@ const CancelledReservations = ({ data = [], onRefresh }) => {
                   )}
                   {item.status === "refunded" && (
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300">
-                      <FiCheckCircle size={11} /> Refunded (${item.refundDetails?.refundAmount || roomTotal})
+                      <FiCheckCircle size={11} /> Refunded ({getCurrencySymbol(item.guestCurrency || item.currency || "INR")}{Number(item.refundDetails?.refundAmount || item.guestBasePrice || roomTotal).toLocaleString()})
                     </span>
                   )}
                   {item.status === "cancelled" && (
@@ -219,7 +220,7 @@ const CancelledReservations = ({ data = [], onRefresh }) => {
               {/* Refund Breakdown */}
               {(() => {
                 const gCur = selectedRes.guestCurrency || selectedRes.currency || "INR";
-                const gSymbol = gCur === "INR" ? "₹" : (gCur === "EUR" ? "€" : (gCur === "GBP" ? "£" : "$"));
+                const gSymbol = getCurrencySymbol(gCur);
                 const guestTotal = selectedRes.guestTotalPaid || selectedRes.totalPrice || ((selectedRes.basePrice || 0) * (selectedRes.nightStaying || 1) + (selectedRes.taxes || 0));
                 const guestTaxes = selectedRes.guestTaxes || selectedRes.taxes || Math.round(((selectedRes.basePrice || 0) * (selectedRes.nightStaying || 1) * 14) / 100);
                 const guestNetRefund = selectedRes.guestBasePrice || (guestTotal - guestTaxes);

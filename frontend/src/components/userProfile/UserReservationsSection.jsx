@@ -385,8 +385,8 @@ const UserReservationsSection = () => {
                 </p>
                 <p className="mt-2 text-[11px] text-gray-500 dark:text-gray-400 leading-relaxed">
                   <strong>Refund Policy:</strong> Upon host approval, the room charge (
-                  ${(cancellingRes.basePrice || 0) * (cancellingRes.nightStaying || 1)}) will be refunded to your original payment gateway. Taxes (
-                  ${cancellingRes.taxes || 0}) are non-refundable.
+                  {CURRENCY_SYMBOLS[cancellingRes.guestCurrency || cancellingRes.currency || "INR"] || "₹"}{cancellingRes.guestBasePrice !== undefined ? cancellingRes.guestBasePrice : ((cancellingRes.basePrice || 0) * (cancellingRes.nightStaying || 1))}) will be refunded to your original payment gateway. Taxes (
+                  {CURRENCY_SYMBOLS[cancellingRes.guestCurrency || cancellingRes.currency || "INR"] || "₹"}{cancellingRes.guestTaxes !== undefined ? cancellingRes.guestTaxes : (cancellingRes.taxes || 0)}) are non-refundable.
                 </p>
               </div>
 

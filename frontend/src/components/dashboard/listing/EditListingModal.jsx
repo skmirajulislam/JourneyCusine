@@ -8,6 +8,8 @@ import { toast } from "react-hot-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import api from "../../../backend";
 import { uploadToUploadThingDirect } from "../../../utils/uploadthing";
+import { useCurrency } from "../../../context/CurrencyContext";
+import { getCurrencySymbol } from "../../../utils/currency";
 
 const sanitizeImageUrl = (url) => {
   if (!url || typeof url !== "string") return "";
@@ -100,6 +102,9 @@ const DIETARY_OPTIONS = [
 
 const EditListingModal = ({ listing, onClose }) => {
   const queryClient = useQueryClient();
+  const { currency } = useCurrency();
+  const listingCurrency = listing?.currency || currency || "INR";
+  const listingSymbol = getCurrencySymbol(listingCurrency);
   const [activeTab, setActiveTab] = useState("general"); // "general" | "cuisine" | "secrets"
   const [isSaving, setIsSaving] = useState(false);
 
@@ -391,6 +396,7 @@ const EditListingModal = ({ listing, onClose }) => {
         privacyType,
         status,
         basePrice: Number(basePrice) || 50,
+        currency: listingCurrency,
         floorPlan: {
           guests: Number(guests) || 1,
           bedrooms: Number(bedrooms) || 1,
@@ -568,7 +574,7 @@ const EditListingModal = ({ listing, onClose }) => {
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="block text-xs font-bold text-[#111827] dark:text-white uppercase tracking-wider">
-                    Base Nightly Price (USD $)
+                    Base Nightly Price ({listingCurrency} {listingSymbol})
                   </label>
                   <button
                     type="button"
@@ -602,14 +608,14 @@ const EditListingModal = ({ listing, onClose }) => {
                   <div className="mt-2.5 p-3 rounded-xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/60 text-xs">
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-amber-900 dark:text-amber-200">
-                        AI Recommended Rate: ${smartPricingData.recommendedPrice}/night (Range: ${smartPricingData.lowRange} - ${smartPricingData.highRange})
+                        AI Recommended Rate: {listingSymbol}{smartPricingData.recommendedPrice}/night (Range: {listingSymbol}{smartPricingData.lowRange} - {listingSymbol}{smartPricingData.highRange})
                       </span>
                       <button
                         type="button"
                         onClick={() => setBasePrice(smartPricingData.recommendedPrice)}
                         className="px-2.5 py-1 rounded-lg bg-[#ff385c] text-white font-bold text-[10px] hover:bg-[#d90b63] transition cursor-pointer"
                       >
-                        Apply (${smartPricingData.recommendedPrice})
+                        Apply ({listingSymbol}{smartPricingData.recommendedPrice})
                       </button>
                     </div>
                     <div className="mt-1.5 text-[11px] text-amber-800 dark:text-amber-300/90 space-y-0.5">

@@ -48,11 +48,16 @@ const Charts = ({ reservations = [] }) => {
         if (checkInDate && checkInDate.getFullYear() === currentYear) {
           const month = checkInDate.getMonth();
           let earnings = 0;
-          if (obj.hostEarnings && obj.hostCurrency === hostCurrency) {
-            earnings = obj.hostEarnings;
+          if (obj.hostEarnings !== undefined && obj.hostEarnings !== null) {
+            if (obj.hostCurrency && obj.hostCurrency !== hostCurrency) {
+              earnings = convertPrice(obj.hostEarnings, obj.hostCurrency, hostCurrency);
+            } else {
+              earnings = Number(obj.hostEarnings) || 0;
+            }
           } else {
-            const usd = obj.authorEarnedPrice || obj.basePrice || 0;
-            earnings = convertPrice(usd, "USD", hostCurrency);
+            const orig = obj.authorEarnedPrice !== undefined ? obj.authorEarnedPrice : (obj.basePrice || 0);
+            const resCurrency = obj.currency || obj.hostCurrency || hostCurrency;
+            earnings = convertPrice(orig, resCurrency, hostCurrency);
           }
           updatedEarnings[month] += earnings;
         }

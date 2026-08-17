@@ -29,6 +29,7 @@ const ReservationCard = ({
   const navigate = useNavigate();
   const { user } = useAuth();
   const { formatPrice } = useCurrency();
+  const houseCurrency = listingData?.currency || listingData?.author?.currency || "INR";
 
   // handling outside click
   const { state: calendarState, setState: setCalendarState } =
@@ -180,7 +181,7 @@ const ReservationCard = ({
             </span>
             <div className="flex items-baseline gap-1 mt-1">
               <span className="text-2xl font-extrabold text-[#111827] dark:text-white">
-                {formatPrice(listingData?.basePrice || 50)}
+                {formatPrice(listingData?.basePrice || 50, houseCurrency)}
               </span>
               <span className="text-xs text-neutral-500">/ night</span>
             </div>
@@ -234,7 +235,7 @@ const ReservationCard = ({
         <div className="flex flex-row justify-between items-start">
           <div className="flex flex-col">
             <h3 className="text-[22px] text-[#222222] dark:text-white font-semibold">
-              {formatPrice(totalBeforeTaxes)}
+              {formatPrice(totalBeforeTaxes, houseCurrency)}
             </h3>
             <p className="text-[#313131] dark:text-[#a0a0a0] text-sm">
               {cuisineTotalPrice > 0 ? "Stay + Dining before taxes" : "Total before taxes"}
@@ -314,14 +315,14 @@ const ReservationCard = ({
           <div className="mt-4 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/60 text-xs">
             <div className="flex items-center justify-between font-bold text-rose-900 dark:text-rose-200 mb-1.5">
               <span>🍲 Dining Experiences Added ({selectedCuisineAddons.length})</span>
-              <span>+{formatPrice(cuisineTotalPrice)}</span>
+              <span>+{formatPrice(cuisineTotalPrice, houseCurrency)}</span>
             </div>
             <div className="space-y-1">
               {selectedCuisineAddons.map((addon, idx) => (
                 <div key={idx} className="flex items-center justify-between text-neutral-600 dark:text-neutral-400 text-[11px]">
                   <span className="truncate max-w-[170px]">• {addon.title}</span>
                   <div className="flex items-center gap-1.5 shrink-0">
-                    <span>{formatPrice(addon.price * (addon.quantity || totalGuest))}</span>
+                    <span>{formatPrice(addon.price * (addon.quantity || totalGuest), houseCurrency)}</span>
                     {onToggleCuisineAddon && (
                       <button
                         type="button"

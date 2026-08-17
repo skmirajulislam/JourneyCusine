@@ -1,6 +1,7 @@
 import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
 import { FiUser, FiCalendar } from "react-icons/fi";
+import { getCurrencySymbol } from "../../../utils/currency";
 
 const UpcomingReservation = ({ data = [] }) => {
   if (!data || data.length === 0) {
@@ -95,7 +96,7 @@ const UpcomingReservation = ({ data = [] }) => {
                 </td>
 
                 <td className="px-4 py-4 font-semibold text-emerald-600 dark:text-emerald-400">
-                  ${item.authorEarnedPrice || Math.round((item.basePrice || 0) * nights * 0.97)}
+                  {getCurrencySymbol(item.hostCurrency || item.currency || "INR")}{Number(item.hostEarnings !== undefined ? item.hostEarnings : (item.authorEarnedPrice || Math.round((item.basePrice || 0) * nights * 0.97))).toLocaleString()}
                 </td>
 
                 <td className="px-4 py-4">

@@ -197,6 +197,7 @@ const ListingFooter = () => {
             priceBeforeTaxes: newHouse?.priceBeforeTaxes,
             authorEarnedPrice: newHouse?.authorEarnedPrice,
             basePrice: newHouse?.basePrice,
+            currency: newHouse?.currency || "INR",
             houseId: currentListingHouseId,
           };
           await saveHousePrices(PriceData);

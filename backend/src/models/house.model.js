@@ -79,6 +79,10 @@ const houseSchema = new mongoose.Schema({
     basePrice: {
         type: Number
     },
+    currency: {
+        type: String,
+        default: "INR"
+    },
     security: {
         type: Array
     },

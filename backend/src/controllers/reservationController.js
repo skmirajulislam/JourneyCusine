@@ -8,10 +8,13 @@ const Coupon = require("../models/coupon.model.js");
 const { sendNotification } = require("./notificationController.js");
 const {
   getCurrencyForCountry,
+  getPaymentCurrency,
+  isRazorpaySupportedCurrency,
   convertPrice,
   toSubunits,
   formatCurrency,
-  EXCHANGE_RATES,
+  getDirectRate,
+  fetchPairRate,
 } = require("../utils/currency.js");
 require("dotenv").config();
 
@@ -38,7 +41,8 @@ exports.getRazorpayKeyId = async (req, res) => {
 exports.createRazorpayOrder = async (req, res) => {
   try {
     const payload = req.body || {};
-    const targetCurrency = (payload.currency || "INR").toUpperCase().trim();
+    const rawCurrency = (payload.currency || "INR").toUpperCase().trim();
+    const targetCurrency = getPaymentCurrency(rawCurrency, "USD");
 
     let totalAmountInTargetCurrency = 0;
 
@@ -54,20 +58,29 @@ exports.createRazorpayOrder = async (req, res) => {
           });
         }
         if (listing && listing.basePrice) {
-          const baseUSD = parseInt(listing.basePrice, 10);
+          let hostCurrency = "INR";
+          if (listing.author) {
+            const hostUser = await User.findById(listing.author);
+            if (hostUser) {
+              const hostCountry = hostUser.country || "India";
+              hostCurrency = hostUser.currency || getCurrencyForCountry(hostCountry);
+            }
+          }
+
+          const basePrice = parseInt(listing.basePrice, 10);
           const nights = parseInt(payload.nightStaying, 10) || 1;
-          const roomUSD = baseUSD * nights;
+          const roomPrice = basePrice * nights;
           
           // Calculate selected cuisine add-ons
           const cuisineAddons = Array.isArray(payload.selectedCuisineAddons) ? payload.selectedCuisineAddons : [];
-          const cuisineUSD = cuisineAddons.reduce((sum, item) => sum + (Number(item.price) || 0) * (Number(item.quantity) || 1), 0);
+          const cuisinePrice = cuisineAddons.reduce((sum, item) => sum + (Number(item.price) || 0) * (Number(item.quantity) || 1), 0);
           
-          const totalUSD = roomUSD + cuisineUSD;
-          const taxUSD = Math.round((totalUSD * 14) / 100);
-          const totalStayUSD = totalUSD + taxUSD;
+          const totalHost = roomPrice + cuisinePrice;
+          const taxHost = Math.round((totalHost * 14) / 100);
+          const totalStayHost = totalHost + taxHost;
 
-          // Convert USD to target guest currency
-          totalAmountInTargetCurrency = convertPrice(totalStayUSD, "USD", targetCurrency);
+          // Convert directly from host currency to target guest currency (or 1:1 if same currency)
+          totalAmountInTargetCurrency = convertPrice(totalStayHost, hostCurrency, targetCurrency);
         }
       } catch (err) {
         console.error("Listing price lookup error:", err);
@@ -75,10 +88,10 @@ exports.createRazorpayOrder = async (req, res) => {
     }
 
     if (!totalAmountInTargetCurrency || totalAmountInTargetCurrency <= 0) {
-      totalAmountInTargetCurrency = convertPrice(100, "USD", targetCurrency);
+      totalAmountInTargetCurrency = 100;
     }
 
-    // Convert amount to sub-units (paise/cents)
+    // Convert amount to sub-units (paise for INR, cents for USD/EUR/GBP, single unit for JPY/KRW/VND)
     const amountInSubunits = toSubunits(totalAmountInTargetCurrency, targetCurrency);
     const receipt =
       payload.receipt ||
@@ -92,6 +105,7 @@ exports.createRazorpayOrder = async (req, res) => {
         listingId: payload.listingId || "",
         guestName: payload.guestName || "Guest",
         guestCurrency: targetCurrency,
+        hostCurrency: payload.hostCurrency || "INR",
       },
     };
 
@@ -194,24 +208,27 @@ exports.verifyRazorpayPayment = async (req, res) => {
     // Lookup Host Currency Details
     const resolvedAuthorId = authorId || listingDetails.author || listingDetails.authorId;
     let hostCountry = "India";
-    let hostCurrency = "INR";
+    let hostCurrency = listingDetails.currency || "INR";
 
     if (resolvedAuthorId && typeof resolvedAuthorId === "string" && mongoose.Types.ObjectId.isValid(resolvedAuthorId)) {
       const hostObjId = new mongoose.Types.ObjectId(resolvedAuthorId);
       const hostUser = await User.findById(hostObjId);
       if (hostUser) {
         hostCountry = hostUser.country || "India";
-        hostCurrency = hostUser.currency || getCurrencyForCountry(hostCountry);
+        hostCurrency = listingDetails.currency || hostUser.currency || getCurrencyForCountry(hostCountry);
       }
     }
 
-    // Base USD calculation
-    const basePriceUSD = parseInt(listingDetails.basePrice, 10) || 0;
+    const resolvedHostCurrency = hostCurrency;
+    const targetGuestCurrency = getPaymentCurrency(clientGuestCurrency || guestCurrency || "INR", "USD");
+
+    // Base Host calculation
+    const basePriceHost = parseInt(listingDetails.basePrice, 10) || 0;
     const nights = parseInt(nightStaying, 10) || 1;
-    const totalRoomPriceUSD = basePriceUSD * nights;
+    const totalRoomPriceHost = basePriceHost * nights;
     
     // Check & apply coupon discount if provided
-    let discountUSD = 0;
+    let discountHost = 0;
     let appliedCouponCode = req.body.couponCode ? req.body.couponCode.trim().toUpperCase() : null;
 
     if (appliedCouponCode) {
@@ -224,9 +241,9 @@ exports.verifyRazorpayPayment = async (req, res) => {
 
         if (coupon && coupon.usageCount < coupon.maxUsage) {
           if (coupon.discountType === "percentage") {
-            discountUSD = Math.round((totalRoomPriceUSD * coupon.discountRate) / 100);
+            discountHost = Math.round((totalRoomPriceHost * coupon.discountRate) / 100);
           } else {
-            discountUSD = Math.min(coupon.discountRate, totalRoomPriceUSD);
+            discountHost = Math.min(coupon.discountRate, totalRoomPriceHost);
           }
 
           // Record coupon usage
@@ -235,7 +252,7 @@ exports.verifyRazorpayPayment = async (req, res) => {
             guestId,
             orderId: String(orderId || razorpay_order_id),
             usedAt: new Date(),
-            discountApplied: discountUSD,
+            discountApplied: discountHost,
           });
 
           if (coupon.usageCount >= coupon.maxUsage) {
@@ -245,7 +262,7 @@ exports.verifyRazorpayPayment = async (req, res) => {
           await coupon.save();
         } else {
           appliedCouponCode = null;
-          discountUSD = 0;
+          discountHost = 0;
         }
       } catch (couponErr) {
         console.error("Coupon verification error:", couponErr);
@@ -254,28 +271,28 @@ exports.verifyRazorpayPayment = async (req, res) => {
 
     // Calculate selected cuisine add-ons
     const selectedCuisineAddons = Array.isArray(req.body.selectedCuisineAddons) ? req.body.selectedCuisineAddons : [];
-    const cuisineTotalPriceUSD = selectedCuisineAddons.reduce(
+    const cuisineTotalPriceHost = selectedCuisineAddons.reduce(
       (sum, item) => sum + (Number(item.price) || 0) * (Number(item.quantity) || 1),
       0
     );
-    const guestCuisineTotalPrice = convertPrice(cuisineTotalPriceUSD, "USD", guestCurrency);
+    const guestCuisineTotalPrice = convertPrice(cuisineTotalPriceHost, resolvedHostCurrency, targetGuestCurrency);
 
-    const discountedRoomUSD = Math.max(0, totalRoomPriceUSD - discountUSD);
-    const subtotalWithCuisineUSD = discountedRoomUSD + cuisineTotalPriceUSD;
-    const taxUSD = Math.round((subtotalWithCuisineUSD * 14) / 100);
-    const totalPriceUSD = subtotalWithCuisineUSD + taxUSD;
-    const originalTotalPriceUSD = (totalRoomPriceUSD + cuisineTotalPriceUSD) + Math.round(((totalRoomPriceUSD + cuisineTotalPriceUSD) * 14) / 100);
-    const authorEarnedPriceUSD =
-      discountedRoomUSD - Math.round((discountedRoomUSD * 3) / 100) + cuisineTotalPriceUSD;
+    const discountedRoomHost = Math.max(0, totalRoomPriceHost - discountHost);
+    const subtotalWithCuisineHost = discountedRoomHost + cuisineTotalPriceHost;
+    const taxHost = Math.round((subtotalWithCuisineHost * 14) / 100);
+    const totalPriceHost = subtotalWithCuisineHost + taxHost;
+    const originalTotalPriceHost = (totalRoomPriceHost + cuisineTotalPriceHost) + Math.round(((totalRoomPriceHost + cuisineTotalPriceHost) * 14) / 100);
+    const authorEarnedPriceHost =
+      discountedRoomHost - Math.round((discountedRoomHost * 3) / 100) + cuisineTotalPriceHost;
 
-    // Converted Guest Amounts
-    const guestBasePrice = convertPrice(discountedRoomUSD, "USD", guestCurrency);
-    const guestTaxes = convertPrice(taxUSD, "USD", guestCurrency);
-    const guestTotalPaid = convertPrice(totalPriceUSD, "USD", guestCurrency);
-    const guestDiscountAmount = convertPrice(discountUSD, "USD", guestCurrency);
+    // Converted Guest Amounts (Direct Host-to-Guest Conversion or exact 1:1 if same country/currency)
+    const guestBasePrice = convertPrice(discountedRoomHost, resolvedHostCurrency, targetGuestCurrency);
+    const guestTaxes = convertPrice(taxHost, resolvedHostCurrency, targetGuestCurrency);
+    const guestTotalPaid = convertPrice(totalPriceHost, resolvedHostCurrency, targetGuestCurrency);
+    const guestDiscountAmount = convertPrice(discountHost, resolvedHostCurrency, targetGuestCurrency);
 
     // Converted Host Earnings (in Host's native currency)
-    const hostEarnings = convertPrice(authorEarnedPriceUSD, "USD", hostCurrency);
+    const hostEarnings = authorEarnedPriceHost;
 
     const resolvedOrderId =
       orderId || crypto.randomInt(100000000, 1000000000);
@@ -290,27 +307,27 @@ exports.verifyRazorpayPayment = async (req, res) => {
       checkIn,
       checkOut,
       nightStaying: nights,
-      // USD Standard fields
-      basePrice: basePriceUSD,
-      taxes: taxUSD,
-      totalPrice: totalPriceUSD,
-      originalTotalPrice: originalTotalPriceUSD,
+      // Native host price fields
+      basePrice: basePriceHost,
+      taxes: taxHost,
+      totalPrice: totalPriceHost,
+      originalTotalPrice: originalTotalPriceHost,
       couponCode: appliedCouponCode,
       couponDiscount: guestDiscountAmount,
-      authorEarnedPrice: authorEarnedPriceUSD,
+      authorEarnedPrice: authorEarnedPriceHost,
       // Cuisine Dining Experiences Add-ons
       selectedCuisineAddons,
-      cuisineTotalPrice: cuisineTotalPriceUSD,
+      cuisineTotalPrice: cuisineTotalPriceHost,
       guestCuisineTotalPrice,
       // Multi-Currency Cross-Border Fields
-      currency: guestCurrency,
-      guestCurrency,
+      currency: targetGuestCurrency,
+      guestCurrency: targetGuestCurrency,
+      hostCurrency: resolvedHostCurrency,
       guestBasePrice,
       guestTaxes,
       guestTotalPaid,
-      hostCurrency,
       hostEarnings,
-      exchangeRate: EXCHANGE_RATES[guestCurrency] || 1.0,
+      exchangeRate: getDirectRate(resolvedHostCurrency, targetGuestCurrency) || 1.0,
       orderId: resolvedOrderId,
       razorpayOrderId: razorpay_order_id,
       razorpayPaymentId: razorpay_payment_id,
@@ -460,7 +477,7 @@ exports.newReservation = async (req, res) => {
       guestTotalPaid,
       hostCurrency,
       hostEarnings,
-      exchangeRate: EXCHANGE_RATES[guestCurrency] || 1.0,
+      exchangeRate: getDirectRate(hostCurrency, guestCurrency) || 1.0,
       orderId,
       razorpayOrderId: payload.razorpayOrderId || payload.razorpay_order_id,
       razorpayPaymentId:

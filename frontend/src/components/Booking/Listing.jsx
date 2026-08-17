@@ -10,6 +10,7 @@ import { useListingDetails } from "../../hooks/useHostData";
 const Listing = ({ searchParamsObj, appliedCoupon, setAppliedCoupon, listingDataProp }) => {
   const { data: fetchedDetails } = useListingDetails(searchParamsObj?.listingId);
   const listingData = listingDataProp || fetchedDetails?.listing;
+  const hostCurrency = listingData?.currency || listingData?.author?.currency || "INR";
   const { formatPrice, currency } = useCurrency();
 
   const [couponInput, setCouponInput] = useState("");
@@ -196,10 +197,10 @@ const Listing = ({ searchParamsObj, appliedCoupon, setAppliedCoupon, listingData
 
           <div className="flex justify-between">
             <span>
-              Accommodation ({formatPrice(rawBaseUSD)} × {nightStaying} night{nightStaying > 1 ? "s" : ""})
+              Accommodation ({formatPrice(rawBaseUSD, hostCurrency)} × {nightStaying} night{nightStaying > 1 ? "s" : ""})
             </span>
             <span className="font-semibold text-gray-900 dark:text-white">
-              {formatPrice(baseUSD)}
+              {formatPrice(baseUSD, hostCurrency)}
             </span>
           </div>
 
@@ -208,12 +209,12 @@ const Listing = ({ searchParamsObj, appliedCoupon, setAppliedCoupon, listingData
             <div className="py-1 border-y border-neutral-100 dark:border-neutral-800 my-1 space-y-1">
               <div className="flex justify-between font-bold text-rose-600 dark:text-rose-400">
                 <span>🍲 Cuisine Experiences ({selectedCuisineAddons.length})</span>
-                <span>+{formatPrice(cuisineUSD)}</span>
+                <span>+{formatPrice(cuisineUSD, hostCurrency)}</span>
               </div>
               {selectedCuisineAddons.map((addon, idx) => (
                 <div key={idx} className="flex justify-between text-[11px] text-[#717171] dark:text-[#a0a0a0] pl-2">
                   <span className="truncate max-w-[200px]">• {addon.title}</span>
-                  <span>{formatPrice(addon.price * (addon.quantity || numberOfGuests))}</span>
+                  <span>{formatPrice(addon.price * (addon.quantity || numberOfGuests), hostCurrency)}</span>
                 </div>
               ))}
             </div>
@@ -224,14 +225,14 @@ const Listing = ({ searchParamsObj, appliedCoupon, setAppliedCoupon, listingData
               <span className="flex items-center gap-1">
                 <FiTag size={11} /> Discount ({appliedCoupon.coupon?.code})
               </span>
-              <span>- {formatPrice(discountUSD)}</span>
+              <span>- {formatPrice(discountUSD, hostCurrency)}</span>
             </div>
           )}
 
           <div className="flex justify-between">
             <span>Taxes (14%)</span>
             <span className="font-semibold text-gray-900 dark:text-white">
-              {formatPrice(taxUSD)}
+              {formatPrice(taxUSD, hostCurrency)}
             </span>
           </div>
         </div>
@@ -243,11 +244,11 @@ const Listing = ({ searchParamsObj, appliedCoupon, setAppliedCoupon, listingData
             <p>Total ({currency})</p>
             {appliedCoupon && (
               <p className="text-[10px] font-normal text-emerald-600 dark:text-emerald-400">
-                You saved {formatPrice(discountUSD)}
+                You saved {formatPrice(discountUSD, hostCurrency)}
               </p>
             )}
           </div>
-          <p className="text-[#ff385c] text-lg">{formatPrice(totalUSD)}</p>
+          <p className="text-[#ff385c] text-lg">{formatPrice(totalUSD, hostCurrency)}</p>
         </div>
       </div>
     </div>

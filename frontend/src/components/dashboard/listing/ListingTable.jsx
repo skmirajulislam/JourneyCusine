@@ -6,9 +6,12 @@ import { FiEdit2, FiTrash2, FiPlus, FiHome } from "react-icons/fi";
 import EditListingModal from "./EditListingModal";
 import DeleteListingModal from "./DeleteListingModal";
 import { useHostData } from "../../../hooks/useHostData";
+import { useCurrency } from "../../../context/CurrencyContext";
+import { getCurrencySymbol } from "../../../utils/currency";
 
 const ListingTable = () => {
   const { hostHouses: allListingsData = [] } = useHostData();
+  const { currency } = useCurrency();
   const [editingListing, setEditingListing] = useState(null);
   const [deletingListing, setDeletingListing] = useState(null);
 
@@ -122,7 +125,7 @@ const ListingTable = () => {
 
                       {/* Price */}
                       <td className="px-6 py-4 w-[110px] text-xs font-bold text-[#111827] dark:text-white">
-                        ${listing?.basePrice || 50}
+                        {getCurrencySymbol(listing?.currency || currency)}{Number(listing?.basePrice || 50).toLocaleString()}
                         <span className="font-normal text-[11px] text-neutral-500 dark:text-neutral-400"> /night</span>
                       </td>
 

@@ -15,9 +15,10 @@ const ListingPreviewCard = ({ listingData, showBeforeTaxPrice }) => {
   const { isListingReserved } = useActiveReservations();
   const [isUpdating, setIsUpdating] = useState(false);
 
-  const baseUSD = Number(listingData?.basePrice) || 0;
-  const taxUSD = Math.round((baseUSD * 14) / 100);
-  const priceAfterTaxesUSD = baseUSD + taxUSD;
+  const houseCurrency = listingData?.currency || listingData?.author?.currency || "INR";
+  const basePrice = Number(listingData?.basePrice) || 0;
+  const taxPrice = Math.round((basePrice * 14) / 100);
+  const priceAfterTaxes = basePrice + taxPrice;
 
   const houseId = listingData?._id;
   const isSaved = (user?.wishlist || []).some(
@@ -128,12 +129,12 @@ const ListingPreviewCard = ({ listingData, showBeforeTaxPrice }) => {
               </p>
               {showBeforeTaxPrice && (
                 <p className="text-xs text-[#717171] dark:text-[#a0a0a0]">
-                  After tax {formatPrice(priceAfterTaxesUSD)}{" "}
+                  After tax {formatPrice(priceAfterTaxes, houseCurrency)}{" "}
                   <span className="font-normal">night</span>
                 </p>
               )}
               <p className="text-sm font-semibold text-[#111827] dark:text-white mt-0.5">
-                {formatPrice(baseUSD)}{" "}
+                {formatPrice(basePrice, houseCurrency)}{" "}
                 <span className="font-normal text-xs text-[#717171] dark:text-[#a0a0a0]">night</span>
               </p>
             </div>

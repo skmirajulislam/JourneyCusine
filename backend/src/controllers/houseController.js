@@ -401,6 +401,7 @@ exports.savePrices = async (req, res) => {
         if (priceBeforeTaxes !== undefined) updateData.priceBeforeTaxes = Number(priceBeforeTaxes);
         if (authorEarnedPrice !== undefined) updateData.authorEarnedPrice = Number(authorEarnedPrice);
         if (basePrice !== undefined) updateData.basePrice = Number(basePrice);
+        if (payload.currency) updateData.currency = String(payload.currency).toUpperCase();
 
         const houseDetails = await House.findByIdAndUpdate(
             houseObjId,
@@ -742,7 +743,7 @@ exports.updateListing = async (req, res) => {
             "title", "description", "houseType", "privacyType", "location",
             "floorPlan", "amenities", "photos", "highlights", "cuisineSpecialties",
             "localFoodSecrets", "cuisineOfferings", "basePrice", "priceAfterTaxes",
-            "authorEarnedPrice", "security", "visibility", "guestType", "ratings", "status"
+            "authorEarnedPrice", "currency", "security", "visibility", "guestType", "ratings", "status"
         ];
         const sanitizedFields = {};
         for (const field of allowedFields) {

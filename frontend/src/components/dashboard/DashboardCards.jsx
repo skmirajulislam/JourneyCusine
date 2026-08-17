@@ -30,12 +30,16 @@ const DashboardCards = ({ reservations = [], housesCount = 0 }) => {
       return 0; // Refunded reservations contribute 0 to net host earnings
     }
 
-    if (res.hostEarnings && res.hostCurrency === hostCurrency) {
-      return res.hostEarnings;
+    if (res.hostEarnings !== undefined && res.hostEarnings !== null) {
+      if (res.hostCurrency && res.hostCurrency !== hostCurrency) {
+        return convertPrice(res.hostEarnings, res.hostCurrency, hostCurrency);
+      }
+      return Number(res.hostEarnings) || 0;
     }
 
-    const usdPrice = res.authorEarnedPrice || res.basePrice || 0;
-    return convertPrice(usdPrice, "USD", hostCurrency);
+    const origPrice = res.authorEarnedPrice !== undefined ? res.authorEarnedPrice : (res.basePrice || 0);
+    const resCur = res.currency || res.hostCurrency || hostCurrency;
+    return convertPrice(origPrice, resCur, hostCurrency);
   };
 
   // 1. Total Net Revenue

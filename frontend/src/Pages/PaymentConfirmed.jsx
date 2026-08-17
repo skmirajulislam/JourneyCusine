@@ -98,16 +98,17 @@ const PaymentConfirmed = () => {
   }, [searchParamsObj, paymentId, checkIn, checkOut, guestNumber, nightStaying, orderId]);
 
   // Financial Calculations
-  const rawBaseUSD = Number(listing?.basePrice) || 50;
-  const roomTotalUSD = rawBaseUSD * nightStaying;
-  const cuisineTotalUSD = selectedCuisineAddons.reduce(
+  const hostCurrency = listing?.currency || listing?.author?.currency || "INR";
+  const rawBase = Number(listing?.basePrice) || 50;
+  const roomTotal = rawBase * nightStaying;
+  const cuisineTotal = selectedCuisineAddons.reduce(
     (sum, item) => sum + (Number(item.price) || 0) * (Number(item.quantity) || guestNumber),
     0
   );
-  const subtotalBeforeDiscountUSD = roomTotalUSD + cuisineTotalUSD;
-  const discountedSubtotalUSD = Math.max(0, subtotalBeforeDiscountUSD - couponDiscountUSD);
-  const taxesUSD = Math.round((discountedSubtotalUSD * 14) / 100);
-  const grandTotalUSD = discountedSubtotalUSD + taxesUSD;
+  const subtotalBeforeDiscount = roomTotal + cuisineTotal;
+  const discountedSubtotal = Math.max(0, subtotalBeforeDiscount - couponDiscountUSD);
+  const taxes = Math.round((discountedSubtotal * 14) / 100);
+  const grandTotal = discountedSubtotal + taxes;
 
   const handlePrint = () => {
     window.print();
@@ -403,10 +404,10 @@ const PaymentConfirmed = () => {
                       {nightStaying}n
                     </td>
                     <td className="py-3 px-3 sm:px-4 text-right text-neutral-700 dark:text-neutral-300">
-                      {formatPrice(rawBaseUSD)}/n
+                      {formatPrice(rawBase, hostCurrency)}/n
                     </td>
                     <td className="py-3 px-3 sm:px-4 text-right font-bold text-neutral-900 dark:text-white">
-                      {formatPrice(roomTotalUSD)}
+                      {formatPrice(roomTotal, hostCurrency)}
                     </td>
                   </tr>
 
@@ -426,10 +427,10 @@ const PaymentConfirmed = () => {
                         {addon.quantity || guestNumber}x
                       </td>
                       <td className="py-3 px-3 sm:px-4 text-right text-neutral-700 dark:text-neutral-300">
-                        {formatPrice(addon.price)}
+                        {formatPrice(addon.price, hostCurrency)}
                       </td>
                       <td className="py-3 px-3 sm:px-4 text-right font-bold text-neutral-900 dark:text-white">
-                        {formatPrice(Number(addon.price) * (Number(addon.quantity) || guestNumber))}
+                        {formatPrice(Number(addon.price) * (Number(addon.quantity) || guestNumber), hostCurrency)}
                       </td>
                     </tr>
                   ))}
@@ -441,7 +442,7 @@ const PaymentConfirmed = () => {
                         🎁 Promotional Voucher Discount ({couponCode})
                       </td>
                       <td className="py-2.5 px-3 sm:px-4 text-right font-extrabold">
-                        -{formatPrice(couponDiscountUSD)}
+                        -{formatPrice(couponDiscountUSD, hostCurrency)}
                       </td>
                     </tr>
                   )}
@@ -452,7 +453,7 @@ const PaymentConfirmed = () => {
                       Occupancy Tax &amp; GST (14%)
                     </td>
                     <td className="py-2.5 px-3 sm:px-4 text-right font-bold text-neutral-900 dark:text-white">
-                      {formatPrice(taxesUSD)}
+                      {formatPrice(taxes, hostCurrency)}
                     </td>
                   </tr>
 
@@ -462,7 +463,7 @@ const PaymentConfirmed = () => {
                       Total Amount Paid (Tax Incl.)
                     </td>
                     <td className="py-3.5 px-3 sm:px-4 text-right text-sm sm:text-base text-[#ff385c] font-black">
-                      {formatPrice(grandTotalUSD)}
+                      {formatPrice(grandTotal, hostCurrency)}
                     </td>
                   </tr>
                 </tbody>

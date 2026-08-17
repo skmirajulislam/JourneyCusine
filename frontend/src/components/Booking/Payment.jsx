@@ -15,6 +15,7 @@ import {
   FiTag,
 } from "react-icons/fi";
 import { useCurrency } from "../../context/CurrencyContext";
+import { isRazorpaySupportedCurrency, getCurrencySymbol } from "../../utils/currency";
 
 const RazorpayIcon = ({ size = 16, className = "" }) => (
   <svg
@@ -32,7 +33,7 @@ const Payment = ({ searchParamsObj, appliedCoupon, listingDataProp }) => {
   const { user: currentUser } = useAuth();
   const { data: fetchedDetails } = useListingDetails(searchParamsObj?.listingId);
   const listingData = listingDataProp || fetchedDetails?.listing;
-  const { currency: guestCurrency, formatPrice, convertPrice, country, symbol } = useCurrency();
+  const { currency: guestCurrency, convertPrice, country } = useCurrency();
 
   const [isProcessing, setIsProcessing] = useState(false);
   const navigate = useNavigate();
@@ -76,20 +77,27 @@ const Payment = ({ searchParamsObj, appliedCoupon, listingDataProp }) => {
     );
   }, [selectedCuisineAddons, guestNumber]);
 
-  // Standard USD Calculation
-  const rawBaseUSD = parseInt(listingData?.basePrice, 10) || 100;
-  const totalRoomUSD = rawBaseUSD * nightStaying;
+  // Host currency determination
+  const hostCurrency = listingData?.author?.currency || listingData?.currency || "INR";
+
+  // Currency resolution: Check if guest currency is supported by Razorpay
+  const isGuestCurrencySupported = isRazorpaySupportedCurrency(guestCurrency);
+  const paymentCurrency = isGuestCurrencySupported ? guestCurrency : "USD";
+
+  // Calculate Stay in Host Currency
+  const rawBaseHost = parseInt(listingData?.basePrice, 10) || 100;
+  const totalRoomHost = rawBaseHost * nightStaying;
   
   // Apply coupon discount if active
-  const discountUSD = appliedCoupon?.discountAmount || 0;
-  const discountedRoomUSD = Math.max(0, totalRoomUSD - discountUSD);
-  const subtotalWithCuisineUSD = discountedRoomUSD + cuisineUSD;
-  const taxesUSD = Math.round((subtotalWithCuisineUSD * 14) / 100);
-  const totalStayUSD = subtotalWithCuisineUSD + taxesUSD;
+  const discountHost = appliedCoupon?.discountAmount || 0;
+  const discountedRoomHost = Math.max(0, totalRoomHost - discountHost);
+  const subtotalWithCuisineHost = discountedRoomHost + cuisineUSD;
+  const taxesHost = Math.round((subtotalWithCuisineHost * 14) / 100);
+  const totalStayHost = subtotalWithCuisineHost + taxesHost;
 
-  // Converted in Guest's local currency
-  const convertedGuestTotal = convertPrice(totalStayUSD);
-  const guestDiscountAmount = convertPrice(discountUSD);
+  // Direct conversion from Host Currency to payment currency (or 1:1 if same country/currency)
+  const convertedPaymentTotal = convertPrice(totalStayHost, hostCurrency, paymentCurrency);
+  const paymentDiscountAmount = convertPrice(discountHost, hostCurrency, paymentCurrency);
 
   const loadRazorpayScript = () => {
     return new Promise((resolve) => {
@@ -129,10 +137,11 @@ const Payment = ({ searchParamsObj, appliedCoupon, listingDataProp }) => {
         return;
       }
 
-      // Step 1: Create order on backend in Guest's Currency with Coupon & Cuisine Addons
+      // Step 1: Create order on backend in Payment Currency with Direct Host-to-Guest Conversion
       const orderRes = await api.post("/reservations/create_razorpay_order", {
-        amount: convertedGuestTotal,
-        currency: guestCurrency,
+        amount: convertedPaymentTotal,
+        currency: paymentCurrency,
+        hostCurrency,
         listingId: listingData?._id,
         nightStaying,
         guestNumber,
@@ -144,28 +153,42 @@ const Payment = ({ searchParamsObj, appliedCoupon, listingDataProp }) => {
         throw new Error(orderRes.data?.error || "Unable to initiate Razorpay order.");
       }
 
-      const { order_id, amount, currency, keyId } = orderRes.data;
+      const { order_id, amount, currency: orderCurrency, keyId } = orderRes.data;
 
       const userName = currentUser?.name
         ? `${currentUser.name.firstName || ""} ${currentUser.name.lastName || ""}`.trim()
         : "Guest Traveler";
       const userEmail = currentUser?.emailId || "guest@journeycuisine.com";
 
-      // Step 2: Open Razorpay Checkout Modal
+      // Step 2: Open Razorpay Checkout Modal configured with Payment currency
       const options = {
         key:
           keyId ||
           import.meta.env.VITE_RAZORPAY_KEY_ID ||
           "rzp_test_TQ65wJo8tIo228",
         amount: amount,
-        currency: currency || guestCurrency || "INR",
+        currency: orderCurrency || paymentCurrency || "INR",
         name: "Journey Cuisine",
         description: `Booking: ${listingData?.title || "Motel Stay"} (${nightStaying} Night${nightStaying > 1 ? "s" : ""})${selectedCuisineAddons.length > 0 ? ` + ${selectedCuisineAddons.length} Dining Experiences` : ""}`,
         image: "/src/assets/Travel_Logo.png",
         order_id: order_id,
+        prefill: {
+          name: userName,
+          email: userEmail,
+          contact: "9999999999",
+        },
+        notes: {
+          listingId: listingData?._id || "",
+          orderId: orderId.toString(),
+          guestCurrency: paymentCurrency,
+          couponCode: appliedCoupon?.coupon?.code || "NONE",
+        },
+        theme: {
+          color: "#E11D48",
+        },
         handler: async function (response) {
           try {
-            // Step 3: Verify Payment Signature on Backend
+            // Step 3: Verify Payment Signature on Backend with Cross-Currency Ledger Tracking
             const verifyRes = await api.post("/reservations/verify_payment", {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
@@ -177,7 +200,8 @@ const Payment = ({ searchParamsObj, appliedCoupon, listingDataProp }) => {
               checkOut: checkout,
               nightStaying,
               orderId,
-              currency: guestCurrency,
+              currency: paymentCurrency,
+              hostCurrency,
               selectedCuisineAddons,
               couponCode: appliedCoupon?.coupon?.code || null,
             });
@@ -209,7 +233,7 @@ const Payment = ({ searchParamsObj, appliedCoupon, listingDataProp }) => {
                     )}`
                   : "";
               navigate(
-                `/payment-confirmed?guestNumber=${guestNumber}&checkIn=${checkin}&checkOut=${checkout}&listingId=${listingData?._id}&authorId=${listingData?.author}&nightStaying=${nightStaying}&orderId=${orderId}&razorpayPaymentId=${response.razorpay_payment_id}&razorpayOrderId=${response.razorpay_order_id}&currency=${guestCurrency}&couponCode=${appliedCoupon?.coupon?.code || ""}&couponDiscount=${guestDiscountAmount || 0}${cuisineParam}`
+                `/payment-confirmed?guestNumber=${guestNumber}&checkIn=${checkin}&checkOut=${checkout}&listingId=${listingData?._id}&authorId=${listingData?.author}&nightStaying=${nightStaying}&orderId=${orderId}&razorpayPaymentId=${response.razorpay_payment_id}&razorpayOrderId=${response.razorpay_order_id}&currency=${paymentCurrency}&couponCode=${appliedCoupon?.coupon?.code || ""}&couponDiscount=${paymentDiscountAmount || 0}${cuisineParam}`
               );
             } else {
               toast.error(verifyRes.data?.error || "Signature verification failed.");
@@ -223,20 +247,6 @@ const Payment = ({ searchParamsObj, appliedCoupon, listingDataProp }) => {
           } finally {
             setIsProcessing(false);
           }
-        },
-        prefill: {
-          name: userName,
-          email: userEmail,
-          contact: "9999999999",
-        },
-        notes: {
-          listingId: listingData?._id || "",
-          orderId: orderId.toString(),
-          guestCurrency: guestCurrency,
-          couponCode: appliedCoupon?.coupon?.code || "NONE",
-        },
-        theme: {
-          color: "#ff385c",
         },
         modal: {
           ondismiss: function () {
@@ -297,18 +307,26 @@ const Payment = ({ searchParamsObj, appliedCoupon, listingDataProp }) => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-4 py-2.5 rounded-xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 text-xs">
           <span className="flex items-center gap-1.5 text-blue-700 dark:text-blue-300 font-medium">
             <FiGlobe size={14} />
-            Billing Currency: <strong>{country} ({guestCurrency})</strong>
+            Billing Currency: <strong>{country} ({paymentCurrency})</strong>
           </span>
           <span className="text-blue-600 dark:text-blue-400 font-semibold">
-            {symbol} {convertedGuestTotal.toLocaleString()}
+            {getCurrencySymbol(paymentCurrency)} {convertedPaymentTotal.toLocaleString()}
           </span>
         </div>
+
+        {!isGuestCurrencySupported && (
+          <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800/60 text-xs text-amber-800 dark:text-amber-300">
+            <span>
+              ℹ️ Your local currency (<strong>{guestCurrency}</strong>) is not directly processed by the payment network. Your booking charge will be processed safely in <strong>USD ({getCurrencySymbol("USD")}{convertedPaymentTotal.toLocaleString()})</strong>.
+            </span>
+          </div>
+        )}
 
         {appliedCoupon && (
           <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800/60 text-xs text-emerald-800 dark:text-emerald-300">
             <FiTag className="text-emerald-600 dark:text-emerald-400 shrink-0" size={15} />
             <span>
-              Promo Code <strong>{appliedCoupon.coupon?.code}</strong> applied! You are saving <strong>{formatPrice(discountUSD)}</strong> on this stay.
+              Promo Code <strong>{appliedCoupon.coupon?.code}</strong> applied! You are saving <strong>{getCurrencySymbol(paymentCurrency)}{paymentDiscountAmount.toLocaleString()}</strong> on this stay.
             </span>
           </div>
         )}
@@ -322,7 +340,7 @@ const Payment = ({ searchParamsObj, appliedCoupon, listingDataProp }) => {
             </h5>
             <span className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800">
               <RazorpayIcon size={13} />
-              Razorpay ({guestCurrency})
+              Razorpay ({paymentCurrency})
             </span>
           </div>
 
@@ -337,7 +355,7 @@ const Payment = ({ searchParamsObj, appliedCoupon, listingDataProp }) => {
             </div>
 
             <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
-              Your order will be processed in <strong>{guestCurrency}</strong> via Razorpay Secure Checkout with 256-bit bank-grade encryption.
+              Your order will be processed in <strong>{paymentCurrency}</strong> via Razorpay Secure Checkout with 256-bit bank-grade encryption.
             </p>
           </div>
         </div>
@@ -376,7 +394,7 @@ const Payment = ({ searchParamsObj, appliedCoupon, listingDataProp }) => {
             ) : (
               <>
                 <FiLock size={16} />
-                Pay {formatPrice(totalStayUSD)} with Razorpay
+                Pay {getCurrencySymbol(paymentCurrency)}{convertedPaymentTotal.toLocaleString()} ({paymentCurrency}) with Razorpay
               </>
             )}
           </button>

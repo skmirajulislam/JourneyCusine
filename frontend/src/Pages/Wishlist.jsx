@@ -213,7 +213,7 @@ const Wishlist = () => {
                         {house.houseType || "Motel"}
                       </span>
                       <div className="text-sm font-bold text-[#111827] dark:text-white">
-                        {formatPrice(house.basePrice)}{" "}
+                        {formatPrice(house.basePrice, house.currency || house.author?.currency || "INR")}{" "}
                         <span className="text-xs font-normal text-[#717171] dark:text-[#a0a0a0]">
                           / night
                         </span>

@@ -4,7 +4,7 @@
  * Base Canonical Currency: USD ($)
  */
 
-export const RAZORPAY_SUPPORTED_CURRENCIES = [
+export const SUPPORTED_CURRENCY_LIST = [
   { code: "INR", name: "Indian Rupee", symbol: "₹", country: "India" },
   { code: "USD", name: "US Dollar", symbol: "$", country: "United States" },
   { code: "EUR", name: "Euro", symbol: "€", country: "Germany" },
@@ -36,68 +36,235 @@ export const RAZORPAY_SUPPORTED_CURRENCIES = [
   { code: "VND", name: "Vietnamese Dong", symbol: "₫", country: "Vietnam" },
 ];
 
-export const EXCHANGE_RATES = {
-  USD: 1.0,
-  INR: 83.5,
-  EUR: 0.92,
-  GBP: 0.79,
-  AUD: 1.54,
-  CAD: 1.36,
-  SGD: 1.35,
-  AED: 3.67,
-  SAR: 3.75,
-  JPY: 155.0,
-  CHF: 0.90,
-  BDT: 118.0,
-  MYR: 4.70,
-  NZD: 1.65,
-  THB: 36.5,
-  CNY: 7.23,
-  HKD: 7.82,
-  KRW: 1370.0,
-  BRL: 5.15,
-  MXN: 16.9,
-  ZAR: 18.5,
-  TRY: 32.2,
-  SEK: 10.7,
-  NOK: 10.8,
-  DKK: 6.85,
-  PLN: 3.95,
-  PHP: 57.5,
-  IDR: 16100.0,
-  VND: 25400.0,
-};
+// Dynamic Direct Pair Rates Cache (e.g. 'EUR_INR': 110.61, 'GBP_INR': 129.28)
+let pairRatesCache = {};
+const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
+
+/**
+ * Fetch direct cross-currency rate between any two currencies (e.g. EUR to INR, GBP to EUR)
+ * When fromCurrency === toCurrency, instantly returns 1.0 (No conversion applied).
+ */
+export async function fetchPairRate(fromCurrency = "INR", toCurrency = "INR", force = false) {
+  const from = (fromCurrency || "INR").toUpperCase().trim();
+  const to = (toCurrency || "INR").toUpperCase().trim();
+
+  // Same currency / same country: 100% exact price, no conversion
+  if (from === to) {
+    return 1.0;
+  }
+
+  const pairKey = `${from}_${to}`;
+  const reverseKey = `${to}_${from}`;
+  const CACHE_KEY = `journey_pair_rate_${pairKey}`;
+  const CACHE_TIME_KEY = `journey_pair_time_${pairKey}`;
+
+  if (!force && typeof window !== "undefined") {
+    try {
+      const savedTime = localStorage.getItem(CACHE_TIME_KEY);
+      const savedRate = localStorage.getItem(CACHE_KEY);
+      if (savedTime && savedRate && Date.now() - Number(savedTime) < CACHE_TTL_MS) {
+        const rate = Number(savedRate);
+        if (!isNaN(rate) && rate > 0) {
+          pairRatesCache[pairKey] = rate;
+          pairRatesCache[reverseKey] = 1 / rate;
+          return rate;
+        }
+      }
+    } catch {
+      // ignore localStorage parse error
+    }
+  }
+
+  if (!force && pairRatesCache[pairKey]) {
+    return pairRatesCache[pairKey];
+  }
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+    const response = await fetch(
+      `https://api.frankfurter.dev/v2/rate/${encodeURIComponent(from)}/${encodeURIComponent(to)}`,
+      { signal: controller.signal }
+    );
+    clearTimeout(timeoutId);
+
+    if (response.ok) {
+      const data = await response.json();
+      if (data && typeof data.rate === "number") {
+        const rate = data.rate;
+        pairRatesCache[pairKey] = rate;
+        pairRatesCache[reverseKey] = 1 / rate;
+
+        if (typeof window !== "undefined") {
+          try {
+            localStorage.setItem(CACHE_KEY, String(rate));
+            localStorage.setItem(CACHE_TIME_KEY, String(Date.now()));
+          } catch {
+            // ignore storage quota error
+          }
+        }
+        return rate;
+      }
+    }
+  } catch (err) {
+    console.warn(`Frankfurter pair rate ${from}->${to} fetch warning:`, err.message);
+  }
+
+  return pairRatesCache[pairKey] || 1.0;
+}
+
+/**
+ * Fetch all exchange rates for a specific base host/guest currency directly from Frankfurter API
+ */
+export async function fetchLiveRatesForBase(baseCurrency = "INR", force = false) {
+  const base = (baseCurrency || "INR").toUpperCase().trim();
+  const CACHE_KEY = `journey_rates_base_${base}`;
+  const CACHE_TIME_KEY = `journey_rates_time_${base}`;
+
+  if (!force && typeof window !== "undefined") {
+    try {
+      const savedTime = localStorage.getItem(CACHE_TIME_KEY);
+      const savedRates = localStorage.getItem(CACHE_KEY);
+      if (savedTime && savedRates && Date.now() - Number(savedTime) < CACHE_TTL_MS) {
+        const parsed = JSON.parse(savedRates);
+        if (parsed && typeof parsed === "object") {
+          Object.entries(parsed).forEach(([quote, rate]) => {
+            pairRatesCache[`${base}_${quote}`] = rate;
+            pairRatesCache[`${quote}_${base}`] = 1 / rate;
+          });
+          return parsed;
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+    const response = await fetch(
+      `https://api.frankfurter.dev/v2/rates?base=${encodeURIComponent(base)}`,
+      { signal: controller.signal }
+    );
+    clearTimeout(timeoutId);
+
+    if (response.ok) {
+      const data = await response.json();
+      const directRates = { [base]: 1.0 };
+
+      if (Array.isArray(data)) {
+        data.forEach((item) => {
+          if (item && item.quote && typeof item.rate === "number") {
+            directRates[item.quote] = item.rate;
+            pairRatesCache[`${base}_${item.quote}`] = item.rate;
+            pairRatesCache[`${item.quote}_${base}`] = 1 / item.rate;
+          }
+        });
+      } else if (data && typeof data.rates === "object") {
+        Object.entries(data.rates).forEach(([quote, rate]) => {
+          directRates[quote] = rate;
+          pairRatesCache[`${base}_${quote}`] = rate;
+          pairRatesCache[`${quote}_${base}`] = 1 / rate;
+        });
+      }
+
+      if (Object.keys(directRates).length > 1) {
+        if (typeof window !== "undefined") {
+          try {
+            localStorage.setItem(CACHE_KEY, JSON.stringify(directRates));
+            localStorage.setItem(CACHE_TIME_KEY, String(Date.now()));
+          } catch {
+            // ignore
+          }
+        }
+        return directRates;
+      }
+    }
+  } catch (err) {
+    console.warn(`Frankfurter bulk rates for base ${base} fetch warning:`, err.message);
+  }
+
+  return { [base]: 1.0 };
+}
+
+/**
+ * Synchronously retrieves direct pair exchange rate from cache
+ */
+export function getDirectRate(fromCurrency = "INR", toCurrency = "INR") {
+  const from = (fromCurrency || "INR").toUpperCase().trim();
+  const to = (toCurrency || "INR").toUpperCase().trim();
+
+  // Same currency: 100% exact price, rate is exactly 1.0
+  if (from === to) return 1.0;
+
+  const pairKey = `${from}_${to}`;
+  if (pairRatesCache[pairKey]) {
+    return pairRatesCache[pairKey];
+  }
+
+  const reverseKey = `${to}_${from}`;
+  if (pairRatesCache[reverseKey]) {
+    return 1 / pairRatesCache[reverseKey];
+  }
+
+  return 1.0;
+}
+
+export const RAZORPAY_SUPPORTED_CURRENCIES = new Set([
+  "AED", "AFN", "ALL", "AMD", "ANG", "AOA", "ARS", "AUD", "AWG", "AZN",
+  "BAM", "BBD", "BDT", "BGN", "BHD", "BIF", "BMD", "BND", "BOB", "BRL",
+  "BSD", "BWP", "BZD", "CAD", "CDF", "CHF", "CLP", "CNY", "COP", "CRC",
+  "CVE", "CZK", "DJF", "DKK", "DOP", "DZD", "EGP", "ETB", "EUR", "FJD",
+  "FKP", "GBP", "GEL", "GHS", "GIP", "GMD", "GNF", "GTQ", "GYD", "HKD",
+  "HNL", "HTG", "HUF", "IDR", "ILS", "INR", "ISK", "JMD", "JPY", "KES",
+  "KGS", "KHR", "KMF", "KRW", "KWD", "KYD", "KZT", "LAK", "LBP", "LKR",
+  "LRD", "LSL", "MAD", "MDL", "MGA", "MKD", "MMK", "MNT", "MOP", "MUR",
+  "MVR", "MWK", "MXN", "MYR", "MZN", "NAD", "NGN", "NIO", "NOK", "NPR",
+  "NZD", "OMR", "PAB", "PEN", "PGK", "PHP", "PKR", "PLN", "PYG", "QAR",
+  "RON", "RSD", "RUB", "RWF", "SAR", "SBD", "SCR", "SEK", "SGD", "SHP",
+  "SLL", "SOS", "SRD", "STD", "SVC", "SZL", "THB", "TJS", "TOP", "TRY",
+  "TTD", "TWD", "TZS", "UAH", "UGX", "USD", "UYU", "UZS", "VND", "VUV",
+  "WST", "XAF", "XCD", "XOF", "XPF", "YER", "ZAR", "ZMW"
+]);
+
+// Currencies where Razorpay requires single unit (no 100x subunit multiplier)
+export const ZERO_DECIMAL_CURRENCIES = new Set([
+  "BIF", "CLP", "DJF", "GNF", "ISK", "JPY", "KMF", "KRW", "PYG", "RWF",
+  "UGX", "VND", "VUV", "XAF", "XOF", "XPF"
+]);
+
+export function isRazorpaySupportedCurrency(currencyCode) {
+  if (!currencyCode) return false;
+  return RAZORPAY_SUPPORTED_CURRENCIES.has(String(currencyCode).toUpperCase().trim());
+}
+
+export function getPaymentCurrency(currencyCode, fallback = "USD") {
+  const code = (currencyCode || "INR").toUpperCase().trim();
+  return isRazorpaySupportedCurrency(code) ? code : fallback;
+}
 
 export const CURRENCY_SYMBOLS = {
-  USD: "$",
-  INR: "₹",
-  EUR: "€",
-  GBP: "£",
-  AUD: "A$",
-  CAD: "CA$",
-  SGD: "S$",
-  AED: "AED",
-  SAR: "SAR",
-  JPY: "¥",
-  CHF: "CHF",
-  BDT: "৳",
-  MYR: "RM",
-  NZD: "NZ$",
-  THB: "฿",
-  CNY: "¥",
-  HKD: "HK$",
-  KRW: "₩",
-  BRL: "R$",
-  MXN: "Mex$",
-  ZAR: "R",
-  TRY: "₺",
-  SEK: "kr",
-  NOK: "kr",
-  DKK: "kr",
-  PLN: "zł",
-  PHP: "₱",
-  IDR: "Rp",
-  VND: "₫",
+  AED: "AED", AFN: "؋", ALL: "L", AMD: "֏", ANG: "ƒ", AOA: "Kz", ARS: "$", AUD: "A$",
+  AWG: "ƒ", AZN: "₼", BAM: "KM", BBD: "Bds$", BDT: "৳", BGN: "лв", BHD: ".د.ب", BIF: "FBu",
+  BMD: "$", BND: "B$", BOB: "Bs.", BRL: "R$", BSD: "B$", BWP: "P", BZD: "BZ$", CAD: "CA$",
+  CDF: "FC", CHF: "CHF", CLP: "$", CNY: "¥", COP: "$", CRC: "₡", CVE: "$", CZK: "Kč",
+  DJF: "Fdj", DKK: "kr", DOP: "RD$", DZD: "دج", EGP: "E£", ETB: "Br", EUR: "€", FJD: "FJ$",
+  FKP: "£", GBP: "£", GEL: "₾", GHS: "GH₵", GIP: "£", GMD: "D", GNF: "FG", GTQ: "Q",
+  GYD: "G$", HKD: "HK$", HNL: "L", HTG: "G", HUF: "Ft", IDR: "Rp", ILS: "₪", INR: "₹",
+  ISK: "kr", JMD: "J$", JPY: "¥", KES: "KSh", KGS: "с", KHR: "៛", KMF: "CF", KRW: "₩",
+  KWD: "KD", KYD: "CI$", KZT: "₸", LAK: "₭", LBP: "L£", LKR: "Rs", LRD: "L$", LSL: "M",
+  MAD: "DH", MDL: "L", MGA: "Ar", MKD: "ден", MMK: "K", MNT: "₮", MOP: "MOP$", MUR: "₨",
+  MVR: "Rf", MWK: "MK", MXN: "Mex$", MYR: "RM", MZN: "MT", NAD: "N$", NGN: "₦", NIO: "C$",
+  NOK: "kr", NPR: "रू", NZD: "NZ$", OMR: "OMR", PAB: "B/.", PEN: "S/.", PGK: "K", PHP: "₱",
+  PKR: "₨", PLN: "zł", PYG: "₲", QAR: "QR", RON: "lei", RSD: "din", RUB: "₽", RWF: "FRw",
+  SAR: "SAR", SBD: "SI$", SCR: "SR", SEK: "kr", SGD: "S$", SHP: "£", SLL: "Le", SOS: "S",
+  SRD: "Sr$", STD: "Db", SVC: "₡", SZL: "E", THB: "฿", TJS: "SM", TOP: "T$", TRY: "₺",
+  TTD: "TT$", TWD: "NT$", TZS: "TSh", UAH: "₴", UGX: "USh", USD: "$", UYU: "$U", UZS: "so'm",
+  VND: "₫", VUV: "VT", WST: "WS$", XAF: "FCFA", XCD: "EC$", XOF: "CFA", XPF: "₣", YER: "﷼",
+  ZAR: "R", ZMW: "ZK"
 };
 
 export const COUNTRY_TO_CURRENCY = {
@@ -185,15 +352,49 @@ export function getCurrencyForCountry(countryName) {
 }
 
 /**
- * Convert price between currencies
+ * Convert price directly between host currency and client currency.
+ * - When host and client use the same currency / country (from === to): NO conversion is performed, exact actual price is returned.
+ * - When host and client use different currencies: Direct cross-currency conversion via Frankfurter API rate (No USD intermediary).
  */
-export function convertPrice(amountInUSD, targetCurrency = "INR") {
-  if (amountInUSD === undefined || amountInUSD === null || isNaN(amountInUSD)) {
+export function convertPrice(amount, arg2 = null, arg3 = null, customRate = null) {
+  if (amount === undefined || amount === null || isNaN(amount)) {
     return 0;
   }
-  const num = Number(amountInUSD);
-  const targetRate = EXCHANGE_RATES[targetCurrency] || 1.0;
-  const converted = num * targetRate;
+  const num = Number(amount);
+
+  let fromCurrency = "INR";
+  let targetCurrency = "INR";
+
+  if (arg3 && typeof arg3 === "string") {
+    // Called as convertPrice(amount, fromHostCurrency, toClientCurrency)
+    fromCurrency = (arg2 || "INR").toUpperCase().trim();
+    targetCurrency = (arg3 || "INR").toUpperCase().trim();
+  } else if (arg2 && typeof arg2 === "string") {
+    // Called as convertPrice(amount, targetCurrency) -> defaults fromCurrency to targetCurrency (exact native price)
+    fromCurrency = arg2.toUpperCase().trim();
+    targetCurrency = arg2.toUpperCase().trim();
+  } else {
+    fromCurrency = "INR";
+    targetCurrency = "INR";
+  }
+
+  // 1. Same country / same currency check: 100% exact price, zero conversion!
+  if (fromCurrency === targetCurrency) {
+    if (["INR", "JPY", "KRW", "VND", "IDR"].includes(targetCurrency)) {
+      return Math.round(num);
+    }
+    return Math.round(num * 100) / 100;
+  }
+
+  // 2. Direct cross-currency conversion
+  let rate = 1.0;
+  if (typeof customRate === "number" && customRate > 0) {
+    rate = customRate;
+  } else {
+    rate = getDirectRate(fromCurrency, targetCurrency);
+  }
+
+  const converted = num * rate;
 
   if (["INR", "JPY", "KRW", "VND", "IDR"].includes(targetCurrency)) {
     return Math.round(converted);
@@ -205,15 +406,20 @@ export function convertPrice(amountInUSD, targetCurrency = "INR") {
  * Get currency symbol by code
  */
 export function getCurrencySymbol(currencyCode = "INR") {
-  return CURRENCY_SYMBOLS[currencyCode] || "$";
+  const code = (currencyCode || "INR").toUpperCase().trim();
+  return CURRENCY_SYMBOLS[code] || "$";
 }
 
 /**
- * Format price with dynamic symbol from USD base
+ * Format price directly in target client currency.
+ * If fromCurrency is not provided, defaults to targetCurrency (i.e. native price format without conversion).
+ * If fromCurrency is provided and fromCurrency !== targetCurrency, converts from fromCurrency to targetCurrency.
  */
-export function formatPrice(amountInUSD, targetCurrency = "INR") {
-  const symbol = getCurrencySymbol(targetCurrency);
-  const converted = convertPrice(amountInUSD, targetCurrency);
+export function formatPrice(amount, targetCurrency = "INR", fromCurrency = null, customRate = null) {
+  const toCode = (targetCurrency || "INR").toUpperCase().trim();
+  const fromCode = fromCurrency ? fromCurrency.toUpperCase().trim() : toCode;
+  const symbol = getCurrencySymbol(toCode);
+  const converted = convertPrice(amount, fromCode, toCode, customRate);
   return `${symbol}${converted.toLocaleString()}`;
 }
 
@@ -224,7 +430,22 @@ export function formatCurrency(amount, currencyCode = "INR") {
   if (amount === undefined || amount === null || isNaN(amount)) {
     return `${getCurrencySymbol(currencyCode)}0`;
   }
-  const symbol = getCurrencySymbol(currencyCode);
+  const code = (currencyCode || "INR").toUpperCase().trim();
+  const symbol = getCurrencySymbol(code);
   const num = Math.round(Number(amount));
   return `${symbol}${num.toLocaleString()}`;
 }
+
+/**
+ * Convert amount to smallest currency subunits for Razorpay
+ * Zero-decimal currencies (JPY, KRW, VND, CLP, etc.) are passed without 100x multiplier.
+ */
+export function toSubunits(amount, currency = "INR") {
+  const code = (currency || "INR").toUpperCase().trim();
+  const isZeroDecimal = ZERO_DECIMAL_CURRENCIES.has(code);
+  if (isZeroDecimal) {
+    return Math.max(Math.round(amount), 1);
+  }
+  return Math.max(Math.round(amount * 100), 100);
+}
+

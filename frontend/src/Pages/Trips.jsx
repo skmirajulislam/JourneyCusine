@@ -1337,7 +1337,7 @@ const Trips = () => {
                                       {dest.motelId.title}
                                     </p>
                                     <p className="text-xs text-[#ff385c] font-extrabold mt-0.5">
-                                      {formatPrice(dest.motelId.basePrice)}
+                                      {formatPrice(dest.motelId.basePrice, dest.motelId.currency || dest.motelId.author?.currency || "INR")}
                                       <span className="text-[10px] text-[#6b7280] dark:text-[#9ca3af] font-normal">
                                         {" "}/ night
                                       </span>
@@ -1522,7 +1522,7 @@ const Trips = () => {
                 <Marker
                   key={`${motel._id}_${offset}`}
                   position={[motel.lat, motel.lng + offset]}
-                  icon={createMotelIcon(formatPrice(motel.basePrice), isDark)}
+                  icon={createMotelIcon(formatPrice(motel.basePrice, motel.currency || motel.author?.currency || "INR"), isDark)}
                 >
                   <Popup className="custom-leaflet-popup">
                     <div className="p-1 max-w-[220px] text-gray-900 dark:text-white">
@@ -1541,7 +1541,7 @@ const Trips = () => {
                         {motel.location?.country?.name || (typeof motel.location?.country === "string" ? motel.location.country : "")}
                       </p>
                       <p className="text-xs font-extrabold text-gray-900 dark:text-white mt-1">
-                        {formatPrice(motel.basePrice)} <span className="font-normal text-gray-500 dark:text-neutral-400">/ night</span>
+                        {formatPrice(motel.basePrice, motel.currency || motel.author?.currency || "INR")} <span className="font-normal text-gray-500 dark:text-neutral-400">/ night</span>
                       </p>
                       <div className="flex items-center gap-1 text-xs text-amber-500 font-bold my-1">
                         <AiFillStar size={12} />
@@ -2037,7 +2037,7 @@ const Trips = () => {
                           {item.location?.country?.name}
                         </p>
                         <p className="text-xs font-bold text-[#111827] dark:text-white mt-0.5">
-                          ${item.basePrice} / night
+                          {formatPrice(item.basePrice, item.currency || item.author?.currency || "INR")} / night
                         </p>
                       </div>
                       <button

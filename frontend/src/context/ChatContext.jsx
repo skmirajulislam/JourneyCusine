@@ -147,7 +147,7 @@ export const ChatProvider = ({ children }) => {
             );
           }
         }
-      } catch (err) {
+      } catch {
         // Polling errors fail silently without disrupting user
       } finally {
         isFetching = false;

@@ -1,15 +1,18 @@
 /* eslint-disable react-refresh/only-export-components */
  
-import { createContext, useContext, useEffect, useState, useMemo } from "react";
+import { createContext, useContext, useEffect, useState, useMemo, useCallback } from "react";
 import { useAuth } from "../hooks/useAuth";
 import {
   CURRENCY_SYMBOLS,
-  EXCHANGE_RATES,
   getCurrencyForCountry,
   convertPrice as convertHelper,
   formatPrice as formatHelper,
+  fetchPairRate,
+  fetchLiveRatesForBase,
+  getDirectRate,
   GLOBAL_COUNTRIES,
-  RAZORPAY_SUPPORTED_CURRENCIES,
+  SUPPORTED_CURRENCY_LIST,
+  isRazorpaySupportedCurrency,
 } from "../utils/currency";
 
 const CurrencyContext = createContext(null);
@@ -20,8 +23,8 @@ export const CurrencyProvider = ({ children }) => {
   // Initialize from user details, localStorage, or default to India (INR)
   const [currency, setCurrencyState] = useState(() => {
     const saved = localStorage.getItem("journey_currency");
-    if (saved && EXCHANGE_RATES[saved]) return saved;
-    if (user?.currency && EXCHANGE_RATES[user.currency]) return user.currency;
+    if (saved) return saved;
+    if (user?.currency) return user.currency;
     if (user?.country) return getCurrencyForCountry(user.country);
     return "INR";
   });
@@ -33,9 +36,23 @@ export const CurrencyProvider = ({ children }) => {
     return "India";
   });
 
+  // Fetch live direct exchange rates for active user currency from Frankfurter API
+  useEffect(() => {
+    let isMounted = true;
+    fetchLiveRatesForBase(currency).then(() => {
+      if (isMounted) {
+        // Trigger re-render with updated direct rates cache
+        setCurrencyState((curr) => curr);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, [currency]);
+
   // Sync currency whenever logged-in user details change
   useEffect(() => {
-    if (user?.currency && EXCHANGE_RATES[user.currency]) {
+    if (user?.currency) {
       setCurrencyState(user.currency);
       localStorage.setItem("journey_currency", user.currency);
     } else if (user?.country) {
@@ -51,9 +68,10 @@ export const CurrencyProvider = ({ children }) => {
   }, [user?.currency, user?.country]);
 
   const setCurrency = (newCurrency) => {
-    if (newCurrency && EXCHANGE_RATES[newCurrency]) {
+    if (newCurrency) {
       setCurrencyState(newCurrency);
       localStorage.setItem("journey_currency", newCurrency);
+      fetchLiveRatesForBase(newCurrency);
     }
   };
 
@@ -64,20 +82,27 @@ export const CurrencyProvider = ({ children }) => {
       const autoCurrency = getCurrencyForCountry(newCountry);
       setCurrencyState(autoCurrency);
       localStorage.setItem("journey_currency", autoCurrency);
+      fetchLiveRatesForBase(autoCurrency);
     }
   };
+
+  const refreshRates = useCallback(async () => {
+    return await fetchLiveRatesForBase(currency, true);
+  }, [currency]);
 
   const symbol = useMemo(() => {
     return CURRENCY_SYMBOLS[currency] || "$";
   }, [currency]);
 
-  const formatPrice = (amountInUSD) => {
-    return formatHelper(amountInUSD, currency);
-  };
+  const formatPrice = useCallback((amount, fromCurrency = null, customRate = null) => {
+    return formatHelper(amount, currency, fromCurrency || currency, customRate);
+  }, [currency]);
 
-  const convertPrice = (amountInUSD) => {
-    return convertHelper(amountInUSD, currency);
-  };
+  const convertPrice = useCallback((amount, fromCurrency = null, targetCurrency = null, customRate = null) => {
+    const from = fromCurrency || currency;
+    const to = targetCurrency || currency;
+    return convertHelper(amount, from, to, customRate);
+  }, [currency]);
 
   const value = {
     currency,
@@ -85,10 +110,13 @@ export const CurrencyProvider = ({ children }) => {
     country,
     setCountry,
     symbol,
-    exchangeRate: EXCHANGE_RATES[currency] || 1.0,
+    getDirectRate: (from, to) => getDirectRate(from || currency, to || currency),
+    fetchPairRate,
+    refreshRates,
     formatPrice,
     convertPrice,
-    supportedCurrencies: RAZORPAY_SUPPORTED_CURRENCIES,
+    supportedCurrencies: SUPPORTED_CURRENCY_LIST,
+    isSupportedByGateway: isRazorpaySupportedCurrency,
     countriesList: GLOBAL_COUNTRIES,
   };
 
@@ -106,12 +134,15 @@ export const useCurrency = () => {
       currency: "INR",
       symbol: "₹",
       country: "India",
-      exchangeRate: 83.5,
-      formatPrice: (amount) => formatHelper(amount, "INR"),
-      convertPrice: (amount) => convertHelper(amount, "INR"),
+      getDirectRate: () => 1.0,
+      fetchPairRate: async () => 1.0,
+      refreshRates: async () => ({ INR: 1.0 }),
+      formatPrice: (amount) => formatHelper(amount, "INR", "INR"),
+      convertPrice: (amount) => convertHelper(amount, "INR", "INR"),
       setCurrency: () => {},
       setCountry: () => {},
-      supportedCurrencies: RAZORPAY_SUPPORTED_CURRENCIES,
+      supportedCurrencies: SUPPORTED_CURRENCY_LIST,
+      isSupportedByGateway: isRazorpaySupportedCurrency,
       countriesList: GLOBAL_COUNTRIES,
     };
   }

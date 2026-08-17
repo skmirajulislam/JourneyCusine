@@ -28,12 +28,16 @@ const ProfitLossTrendChart = ({ reservations = [] }) => {
   const currentYear = now.getFullYear();
   const currentMonth = now.getMonth();
 
-  // Helper to convert any USD or native price to host currency
-  const toHostCur = useCallback((amountUSD, nativeAmount, nativeCur) => {
-    if (nativeAmount !== undefined && nativeCur === hostCurrency) {
-      return nativeAmount;
+  // Helper to convert any native price to host currency
+  const toHostCur = useCallback((rawAmount, nativeAmount, nativeCur) => {
+    if (nativeAmount !== undefined && nativeAmount !== null) {
+      if (nativeCur && nativeCur !== hostCurrency) {
+        return convertPrice(nativeAmount, nativeCur, hostCurrency);
+      }
+      return Number(nativeAmount) || 0;
     }
-    return convertPrice(amountUSD || 0, "USD", hostCurrency);
+    const origCur = nativeCur || hostCurrency;
+    return convertPrice(rawAmount || 0, origCur, hostCurrency);
   }, [hostCurrency]);
 
   // Build monthly data for Gross Revenue, Refunds, and Net Profit
