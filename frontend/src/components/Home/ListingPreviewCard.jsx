@@ -58,7 +58,7 @@ const ListingPreviewCard = ({ listingData, showBeforeTaxPrice }) => {
           transition={{ duration: 0.2, ease: "easeOut" }}
           className="bg-transparent"
         >
-          <div className="relative h-[310px] md:h-[277px] overflow-hidden rounded-2xl bg-neutral-100 dark:bg-neutral-800">
+          <div className="relative w-full aspect-[20/19] sm:aspect-square overflow-hidden rounded-2xl bg-neutral-100 dark:bg-neutral-800">
             <img
               src={listingData?.photos[0]}
               alt={listingData?.title || "Listing preview"}

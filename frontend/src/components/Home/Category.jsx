@@ -25,38 +25,38 @@ const Category = ({ styleGrid = "" }) => {
   };
 
   return (
-    <div className={`flex items-center gap-2 ${styleGrid}`}>
+    <div className={`flex items-center gap-1.5 sm:gap-2 w-full min-w-0 ${styleGrid}`}>
       <button
         type="button"
         aria-label="Show previous categories"
-        className="shrink-0 rounded-full border border-neutral-400 dark:border-neutral-600 bg-white dark:bg-[#2a2a2a] p-1 hover:shadow-lg dark:text-white"
+        className="shrink-0 rounded-full border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-[#2a2a2a] p-1.5 hover:shadow-md dark:text-white transition-all cursor-pointer"
         onClick={() => scrollCategories(-1)}
       >
         <MdKeyboardArrowLeft size={18} />
       </button>
       <div
         ref={categoryListRef}
-        className="flex min-w-0 flex-1 gap-4 overflow-x-auto scroll-smooth py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="flex min-w-0 flex-1 gap-5 overflow-x-auto scroll-smooth py-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {categoryApi.map((cat) => (
           <button
             key={cat.name}
             type="button"
             onClick={() => handleSelectedCat(cat)}
-            className={`relative flex min-w-16 shrink-0 flex-col-reverse items-center gap-1 pb-4 text-left transition duration-200 ease-in ${
-              category === cat.name ? "opacity-100" : "opacity-70 hover:opacity-100"
+            className={`relative flex min-w-16 shrink-0 flex-col-reverse items-center gap-1.5 pb-3 text-center cursor-pointer transition-all duration-200 ease-in ${
+              category === cat.name ? "opacity-100 font-semibold" : "opacity-60 hover:opacity-100 font-normal"
             }`}
           >
-            <span className="text-xs font-medium">{cat.name}</span>
-            <cat.svg size={28} />
-            {category === cat.name && <span className="absolute bottom-0 h-0.5 w-9 bg-[#222222] dark:bg-white" />}
+            <span className="text-[11px] sm:text-xs tracking-tight whitespace-nowrap">{cat.name}</span>
+            <cat.svg size={26} className="shrink-0" />
+            {category === cat.name && <span className="absolute bottom-0 h-0.5 w-full bg-[#ff385c] rounded-full" />}
           </button>
         ))}
       </div>
       <button
         type="button"
         aria-label="Show next categories"
-        className="shrink-0 rounded-full border border-neutral-400 dark:border-neutral-600 bg-white dark:bg-[#2a2a2a] p-1 hover:shadow-lg dark:text-white"
+        className="shrink-0 rounded-full border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-[#2a2a2a] p-1.5 hover:shadow-md dark:text-white transition-all cursor-pointer"
         onClick={() => scrollCategories(1)}
       >
         <MdKeyboardArrowRight size={18} />

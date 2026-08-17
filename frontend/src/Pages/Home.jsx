@@ -285,17 +285,19 @@ const Home = () => {
   }
 
   return (
-    <main className="max-w-screen-2xl xl:px-10 px-5 sm:px-16 mx-auto pb-16">
+    <main className="max-w-screen-2xl xl:px-10 px-4 sm:px-8 md:px-12 mx-auto pb-16 w-full min-w-0">
       {/* Categories & Tax Bar */}
       <section
-        className={`pt-6 grid md:grid-cols-12 gap-5 bg-white dark:bg-[#121212] sticky top-16 z-30 transition-all ${
-          hasScroll ? "shadow-sm" : "shadow-none"
+        className={`pt-3 md:pt-6 flex flex-col md:flex-row items-center gap-4 bg-white dark:bg-[#121212] sticky top-14 md:top-16 z-30 transition-all w-full min-w-0 ${
+          hasScroll ? "shadow-sm pb-2" : "shadow-none pb-1"
         }`}
       >
-        <Category styleGrid={"md:col-span-8 lg:col-span-9"} />
+        <div className="w-full min-w-0 flex-1">
+          <Category />
+        </div>
         <PriceWithTaxCard
           style={
-            "md:col-span-4 lg:col-span-3 border-[#e2e2e2] dark:border-[#333333] border rounded-xl h-14 md:flex justify-around items-center hidden"
+            "border-[#e2e2e2] dark:border-[#333333] border rounded-xl h-12 px-4 md:flex justify-between items-center gap-4 hidden shrink-0"
           }
           setShowBeforeTaxPrice={setShowBeforeTaxPrice}
         />
@@ -431,10 +433,10 @@ const Home = () => {
               variants={containerVariants}
               initial="hidden"
               animate="visible"
-              className="py-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 mx-auto gap-x-7 gap-y-10"
+              className="py-4 md:py-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-6 gap-y-8 md:gap-y-10 w-full"
             >
               {displayedListings.map((listing) => (
-                <motion.div key={listing._id} variants={itemVariants}>
+                <motion.div key={listing._id} variants={itemVariants} className="w-full">
                   <Link
                     to={`/rooms/${listing?._id}`}
                     onClick={(e) => {
@@ -443,7 +445,7 @@ const Home = () => {
                         window.dispatchEvent(new Event("open-auth-popup"));
                       }
                     }}
-                    className="flex flex-col gap-3 rounded-xl w-full sm:max-w-[300px] md:w-full mx-auto group block"
+                    className="flex flex-col gap-2.5 rounded-2xl w-full group block"
                   >
                     <ListingPreviewCard
                       listingData={listing}
