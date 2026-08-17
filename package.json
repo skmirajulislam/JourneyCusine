@@ -1,0 +1,12 @@
+{
+  "name": "journey-cusine-monorepo",
+  "version": "1.0.1",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "build": "npm run build --prefix frontend"
+  }
+}

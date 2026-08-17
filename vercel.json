@@ -1,29 +1,14 @@
 {
-  "version": 2,
-  "builds": [
+  "buildCommand": "npm run build --prefix frontend",
+  "outputDirectory": "frontend/dist",
+  "rewrites": [
     {
-      "src": "backend/api.js",
-      "use": "@vercel/node"
+      "source": "/(auth|house|reservations|trips|ai|coupons|reviews|chat|loyalty|notifications|api)(/.*)?",
+      "destination": "/api/index.js"
     },
     {
-      "src": "frontend/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist"
-      }
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(auth|house|reservations|trips|ai|coupons|reviews|chat|loyalty|notifications|api)(/.*)?",
-      "dest": "/backend/api.js"
-    },
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/frontend/index.html"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
