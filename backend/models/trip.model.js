@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const crypto = require("crypto");
 
 const activitySchema = new mongoose.Schema(
   {
@@ -144,7 +145,7 @@ const tripSchema = new mongoose.Schema(
 // Pre-save hook to ensure invite code exists
 tripSchema.pre("save", function (next) {
   if (!this.inviteCode) {
-    this.inviteCode = `TRIP_${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
+    this.inviteCode = `TRIP_${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
   }
   next();
 });

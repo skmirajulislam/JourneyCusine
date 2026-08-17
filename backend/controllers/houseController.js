@@ -9,27 +9,30 @@ require('dotenv').config();
 // Helper to extract UploadThing key from CDN URL
 const extractUploadThingKey = (url) => {
     if (!url || typeof url !== "string") return null;
-    const isUploadThing =
-        url.includes("utfs.io") ||
-        url.includes("ufs.sh") ||
-        url.includes("uploadthing.com") ||
-        url.includes("uploadthing-prod") ||
-        url.includes("ingest.uploadthing.com");
-
-    if (!isUploadThing) return null;
-
-    const match = url.match(/\/f\/([^?#]+)/);
-    if (match && match[1]) {
-        return match[1];
-    }
-
     try {
         const parsed = new URL(url);
+        const host = parsed.hostname.toLowerCase();
+        const isUploadThing =
+            host === "utfs.io" ||
+            host.endsWith(".utfs.io") ||
+            host === "ufs.sh" ||
+            host.endsWith(".ufs.sh") ||
+            host === "uploadthing.com" ||
+            host.endsWith(".uploadthing.com") ||
+            host === "uploadthing-prod.s3.us-west-2.amazonaws.com" ||
+            host === "ingest.uploadthing.com";
+
+        if (!isUploadThing) return null;
+
+        const match = parsed.pathname.match(/\/f\/([^?#]+)/);
+        if (match && match[1]) {
+            return match[1];
+        }
+
         const parts = parsed.pathname.split("/").filter(Boolean);
         return parts[parts.length - 1] || null;
-    } catch (e) {
-        const parts = url.split("/").filter(Boolean);
-        return parts[parts.length - 1] || null;
+    } catch {
+        return null;
     }
 };
 

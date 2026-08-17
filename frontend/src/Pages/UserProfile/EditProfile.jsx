@@ -13,6 +13,20 @@ import { useCurrency } from "../../context/CurrencyContext";
 import { useQueryClient } from "@tanstack/react-query";
 import { FiGlobe } from "react-icons/fi";
 
+const sanitizeImageUrl = (url) => {
+  if (!url || typeof url !== "string") return null;
+  const trimmed = url.trim();
+  if (
+    trimmed.startsWith("https://") ||
+    trimmed.startsWith("http://") ||
+    trimmed.startsWith("blob:") ||
+    trimmed.startsWith("data:image/")
+  ) {
+    return trimmed;
+  }
+  return null;
+};
+
 const EditProfile = () => {
   const queryClient = useQueryClient();
   const { user, setUser } = useAuth();
@@ -185,6 +199,8 @@ const EditProfile = () => {
     }
   };
 
+  const safeAvatarSrc = sanitizeImageUrl(previewImg) || sanitizeImageUrl(user?.profileImg);
+
   return (
     <div className="flex flex-col min-h-screen">
       <main className="max-w-[1120px] mx-auto px-6 sm:px-8 xl:px-0 py-8 flex-1">
@@ -197,10 +213,10 @@ const EditProfile = () => {
           {isMobile ? (
             <div className="flex flex-col items-center justify-center w-full mb-8">
               <div className="relative">
-                {previewImg || user?.profileImg ? (
+                {safeAvatarSrc ? (
                   <div className="w-[150px] h-[150px] rounded-full overflow-hidden border border-neutral-200 dark:border-neutral-700 shadow-inner">
                     <img
-                      src={previewImg || user.profileImg}
+                      src={safeAvatarSrc}
                       alt="User avatar"
                       className="w-full h-full object-cover"
                     />
@@ -241,10 +257,10 @@ const EditProfile = () => {
             <div className="w-[300px] shrink-0 sticky top-[100px]">
               <div className="flex flex-col gap-4 items-center shadow-lg rounded-3xl p-7 border border-[#dddddd] dark:border-[#333333] bg-white dark:bg-[#1e1e1e]">
                 <div className="relative">
-                  {previewImg || user?.profileImg ? (
+                  {safeAvatarSrc ? (
                     <div className="w-[180px] h-[180px] rounded-full overflow-hidden border border-neutral-200 dark:border-neutral-700 shadow-inner">
                       <img
-                        src={previewImg || user.profileImg}
+                        src={safeAvatarSrc}
                         alt="User avatar"
                         className="w-full h-full object-cover"
                       />

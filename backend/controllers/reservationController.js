@@ -82,7 +82,7 @@ exports.createRazorpayOrder = async (req, res) => {
     const amountInSubunits = toSubunits(totalAmountInTargetCurrency, targetCurrency);
     const receipt =
       payload.receipt ||
-      `rcpt_${Date.now()}_${Math.floor(1000 + Math.random() * 9000)}`;
+      `rcpt_${Date.now()}_${crypto.randomInt(1000, 10000)}`;
 
     const options = {
       amount: amountInSubunits,
@@ -278,7 +278,7 @@ exports.verifyRazorpayPayment = async (req, res) => {
     const hostEarnings = convertPrice(authorEarnedPriceUSD, "USD", hostCurrency);
 
     const resolvedOrderId =
-      orderId || Math.floor(100000000 + Math.random() * 900000000);
+      orderId || crypto.randomInt(100000000, 1000000000);
 
     const newReservation = {
       listingId,
@@ -373,7 +373,7 @@ exports.newReservation = async (req, res) => {
     const checkOut = payload.checkOut;
     const nightStaying = parseInt(payload.nightStaying, 10) || 1;
     const orderId =
-      payload.orderId || Math.floor(100000000 + Math.random() * 900000000);
+      payload.orderId || crypto.randomInt(100000000, 1000000000);
     const guestId = req.user || payload.guestId;
 
     if (!listingId || typeof listingId !== "string" || !mongoose.Types.ObjectId.isValid(listingId)) {

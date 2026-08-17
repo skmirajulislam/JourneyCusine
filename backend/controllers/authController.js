@@ -11,27 +11,30 @@ require('dotenv').config();
 // Helper to extract UploadThing key from CDN URL
 const extractUploadThingKey = (url) => {
     if (!url || typeof url !== "string") return null;
-    const isUploadThing =
-        url.includes("utfs.io") ||
-        url.includes("ufs.sh") ||
-        url.includes("uploadthing.com") ||
-        url.includes("uploadthing-prod") ||
-        url.includes("ingest.uploadthing.com");
-
-    if (!isUploadThing) return null;
-
-    const match = url.match(/\/f\/([^?#]+)/);
-    if (match && match[1]) {
-        return match[1];
-    }
-
     try {
         const parsed = new URL(url);
+        const host = parsed.hostname.toLowerCase();
+        const isUploadThing =
+            host === "utfs.io" ||
+            host.endsWith(".utfs.io") ||
+            host === "ufs.sh" ||
+            host.endsWith(".ufs.sh") ||
+            host === "uploadthing.com" ||
+            host.endsWith(".uploadthing.com") ||
+            host === "uploadthing-prod.s3.us-west-2.amazonaws.com" ||
+            host === "ingest.uploadthing.com";
+
+        if (!isUploadThing) return null;
+
+        const match = parsed.pathname.match(/\/f\/([^?#]+)/);
+        if (match && match[1]) {
+            return match[1];
+        }
+
         const parts = parsed.pathname.split("/").filter(Boolean);
         return parts[parts.length - 1] || null;
-    } catch (e) {
-        const parts = url.split("/").filter(Boolean);
-        return parts[parts.length - 1] || null;
+    } catch {
+        return null;
     }
 };
 
@@ -483,14 +486,19 @@ exports.updateUserCountry = async (req, res) => {
 exports.uploadProfileImage = async (req, res) => {
     try {
         const profileImg = req.body.profileImg || req.body.url;
-        const userId = req.user || req.body.id;
+        const rawUserId = req.user || req.body?.id;
 
-        if (!profileImg) {
+        if (!rawUserId || !mongoose.Types.ObjectId.isValid(String(rawUserId))) {
+            return res.status(400).json({ success: 0, error: "Valid user ID is required" });
+        }
+        const userObjectId = new mongoose.Types.ObjectId(String(rawUserId));
+
+        if (!profileImg || typeof profileImg !== "string") {
             return res.status(400).json({ success: 0, error: "Image URL is required" });
         }
 
         // Fetch existing user to check if there is an existing profile image in UploadThing
-        const existingUser = await User.findById(userId);
+        const existingUser = await User.findById(userObjectId);
         const previousProfileImg = existingUser?.profileImg;
 
         // If re-uploading and user had a previous image in UploadThing, delete it from cloud storage
@@ -508,7 +516,7 @@ exports.uploadProfileImage = async (req, res) => {
         }
 
         const updatedUser = await User.findByIdAndUpdate(
-            userId,
+            userObjectId,
             { $set: { profileImg: profileImg } },
             { new: true }
         );
@@ -529,8 +537,13 @@ exports.uploadProfileImage = async (req, res) => {
 
 exports.deleteProfileImage = async (req, res) => {
     try {
-        const userId = req.user || req.body.id;
-        const user = await User.findById(userId);
+        const rawUserId = req.user || req.body?.id;
+        if (!rawUserId || !mongoose.Types.ObjectId.isValid(String(rawUserId))) {
+            return res.status(400).json({ success: 0, error: "Valid user ID is required" });
+        }
+        const userObjectId = new mongoose.Types.ObjectId(String(rawUserId));
+
+        const user = await User.findById(userObjectId);
         if (!user) {
             return res.status(404).json({ success: 0, error: "User not found" });
         }
@@ -549,7 +562,7 @@ exports.deleteProfileImage = async (req, res) => {
         }
 
         const updatedUser = await User.findByIdAndUpdate(
-            userId,
+            userObjectId,
             { $set: { profileImg: "" } },
             { new: true }
         );

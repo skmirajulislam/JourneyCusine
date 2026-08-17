@@ -1,6 +1,7 @@
 const User = require("../models/user.model.js");
 const Coupon = require("../models/coupon.model.js");
 const { sendNotification } = require("./notificationController.js");
+const crypto = require("crypto");
 
 const ALL_PASSPORT_BADGES = [
   {
@@ -214,9 +215,9 @@ exports.redeemVoucher = async (req, res) => {
     const { voucherType } = req.body; // e.g. "discount_10" (200 pts) | "discount_25" (500 pts)
 
     const costMap = {
-      discount_10: { points: 200, discount: 10, code: `GOURMET10_${Math.random().toString(36).substring(2, 7).toUpperCase()}` },
-      discount_25: { points: 500, discount: 25, code: `CHEF25_${Math.random().toString(36).substring(2, 7).toUpperCase()}` },
-      discount_50: { points: 1000, discount: 50, code: `VIP50_${Math.random().toString(36).substring(2, 7).toUpperCase()}` },
+      discount_10: { points: 200, discount: 10, code: `GOURMET10_${crypto.randomBytes(3).toString("hex").toUpperCase()}` },
+      discount_25: { points: 500, discount: 25, code: `CHEF25_${crypto.randomBytes(3).toString("hex").toUpperCase()}` },
+      discount_50: { points: 1000, discount: 50, code: `VIP50_${crypto.randomBytes(3).toString("hex").toUpperCase()}` },
     };
 
     const selected = costMap[voucherType] || costMap.discount_10;
