@@ -13,18 +13,22 @@ import { useCurrency } from "../../context/CurrencyContext";
 import { useQueryClient } from "@tanstack/react-query";
 import { FiGlobe } from "react-icons/fi";
 
+import DOMPurify from "dompurify";
+
 const sanitizeImageUrl = (url) => {
-  if (!url || typeof url !== "string") return null;
-  const trimmed = url.trim();
+  if (!url || typeof url !== "string") return "";
+  const sanitized = DOMPurify.sanitize(url.trim(), {
+    ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|blob):|data:image\/)/i,
+  });
   if (
-    trimmed.startsWith("https://") ||
-    trimmed.startsWith("http://") ||
-    trimmed.startsWith("blob:") ||
-    trimmed.startsWith("data:image/")
+    sanitized.startsWith("https://") ||
+    sanitized.startsWith("http://") ||
+    sanitized.startsWith("blob:") ||
+    sanitized.startsWith("data:image/")
   ) {
-    return trimmed;
+    return sanitized;
   }
-  return null;
+  return "";
 };
 
 const EditProfile = () => {
@@ -199,7 +203,8 @@ const EditProfile = () => {
     }
   };
 
-  const safeAvatarSrc = sanitizeImageUrl(previewImg) || sanitizeImageUrl(user?.profileImg);
+  const rawAvatarUrl = previewImg || user?.profileImg || "";
+  const safeAvatarSrc = DOMPurify.sanitize(sanitizeImageUrl(rawAvatarUrl));
 
   return (
     <div className="flex flex-col min-h-screen">
