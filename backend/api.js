@@ -160,7 +160,14 @@ io.on("connection", (socket) => {
   });
 });
 
-async function main() {
+let isDbConnected = false;
+
+async function connectDB() {
+  if (isDbConnected || mongoose.connection.readyState >= 1) {
+    isDbConnected = true;
+    return;
+  }
+
   let mongoUri = process.env.MONGODB_URI || "";
   const dbName = process.env.DB_NAME || "motel-develpoment-db";
   if (!mongoUri) {
@@ -169,10 +176,31 @@ async function main() {
     mongoUri = `${mongoUri}${dbName}`;
   }
 
+  await mongoose.connect(mongoUri);
+  isDbConnected = true;
+  const { seedDefaultCoupons } = require("./controllers/couponController.js");
+  await seedDefaultCoupons();
+}
+
+// Ensure DB is connected for serverless invocations
+app.use(async (req, res, next) => {
   try {
-    await mongoose.connect(mongoUri);
-    const { seedDefaultCoupons } = require("./controllers/couponController.js");
-    await seedDefaultCoupons();
+    await connectDB();
+    next();
+  } catch (err) {
+    console.error("Database connection error:", err.message);
+    next();
+  }
+});
+
+app.get("/", (req, res) => {
+  res.send(`Express + Socket.io server is working on ${process.env.PORT || 5001}`);
+});
+
+// Start local server when run standalone
+async function main() {
+  try {
+    await connectDB();
     const port = process.env.PORT || 5001;
     server.listen(port, () => {
       console.log(`Server is running with Socket.io on port ${port}`);
@@ -184,8 +212,8 @@ async function main() {
   }
 }
 
-app.get("/", (req, res) => {
-  res.send(`Express + Socket.io server is working on ${process.env.PORT || 5001}`);
-});
+if (process.env.NODE_ENV !== "production" || require.main === module) {
+  main();
+}
 
-main();
+module.exports = app;
