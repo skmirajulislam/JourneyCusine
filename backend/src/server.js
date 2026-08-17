@@ -204,12 +204,19 @@ async function connectDB() {
 
 // Ensure DB is connected for serverless invocations
 app.use(async (req, res, next) => {
+  if (req.path === "/health" || req.path === "/api/health") {
+    return next();
+  }
   try {
     await connectDB();
     next();
   } catch (err) {
     console.error("Database connection error:", err.message);
-    next();
+    return res.status(503).json({
+      status: 503,
+      error: "Database connection failed",
+      message: err.message,
+    });
   }
 });
 
