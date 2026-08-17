@@ -11,6 +11,7 @@ const apiLimiter = rateLimit({
   max: isDev ? 10000 : 3000,
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { xForwardedForHeader: false },
   message: {
     success: 0,
     status: 429,
@@ -27,6 +28,7 @@ const strictLimiter = rateLimit({
   max: isDev ? 1000 : 200,
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { xForwardedForHeader: false },
   message: {
     success: 0,
     status: 429,
@@ -42,6 +44,7 @@ const standardLimiter = rateLimit({
   max: isDev ? 10000 : 2500,
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { xForwardedForHeader: false },
   message: {
     success: 0,
     status: 429,

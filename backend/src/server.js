@@ -24,6 +24,9 @@ const { createRouteHandler } = require("uploadthing/express");
 const { uploadRouter } = require("./uploadthing.js");
 
 const app = express();
+// Enable proxy trust for reverse proxies (e.g., Vercel, Nginx, Cloudflare)
+app.set("trust proxy", 1);
+
 const server = http.createServer(app);
 
 // Setup Socket.io

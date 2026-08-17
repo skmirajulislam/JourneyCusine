@@ -130,6 +130,7 @@ const addReview = async (req, res) => {
     }
 
     const { listingId, rating = 5, comment } = req.body;
+    const numRating = Math.max(1, Math.min(5, Number(rating) || 5));
 
     if (!listingId) {
       return res.status(400).json({ message: "Listing ID is required." });
@@ -409,10 +410,11 @@ const editReview = async (req, res) => {
     const isTextChanged = newComment !== oldComment;
 
     let warningInfo = null;
+    let moderation = null;
 
     if (isTextChanged) {
       // ONLY invoke Gemini AI moderation if text was actually changed
-      const moderation = await moderateReviewWithAI(newComment);
+      moderation = await moderateReviewWithAI(newComment);
 
       if (moderation.isOffensive && user) {
         user.offensiveWarnings = (user.offensiveWarnings || 0) + 1;
@@ -464,7 +466,7 @@ const editReview = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: moderation.isOffensive
+      message: moderation?.isOffensive
         ? "Review updated with community moderation applied."
         : "Review updated successfully!",
       review: updatedReview,
