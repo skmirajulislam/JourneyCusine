@@ -54,38 +54,12 @@ api.interceptors.request.use(
   }
 );
 
-let isBackendReportedDown = false;
-
 api.interceptors.response.use(
   (response) => {
-    if (isBackendReportedDown) {
-      isBackendReportedDown = false;
-      window.dispatchEvent(
-        new CustomEvent("backend-service-status", {
-          detail: { isDown: false },
-        })
-      );
-    }
     return response;
   },
   async (error) => {
     const originalRequest = error.config;
-
-    // Detect server down (no response / network error / gateway errors 502, 503, 504)
-    const isNetworkError =
-      !error.response ||
-      error.code === "ERR_NETWORK" ||
-      error.code === "ECONNABORTED" ||
-      (error.response?.status >= 502 && error.response?.status <= 504);
-
-    if (isNetworkError && !isBackendReportedDown) {
-      isBackendReportedDown = true;
-      window.dispatchEvent(
-        new CustomEvent("backend-service-status", {
-          detail: { isDown: true, message: error.message },
-        })
-      );
-    }
 
     if (
       originalRequest &&

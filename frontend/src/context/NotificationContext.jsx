@@ -39,44 +39,48 @@ export const NotificationProvider = ({ children }) => {
     fetchNotifications();
   }, [fetchNotifications]);
 
-  // Real-time socket notification listener & service status monitoring
+  // Smart background polling for real-time notification sync
+  // Uses Page Visibility API and sequential scheduling to avoid overloading server/client
   useEffect(() => {
-    const handleServiceStatus = (e) => {
-      const { isDown } = e.detail || {};
-      if (isDown) {
-        setNotifications((prev) => {
-          if (prev.some((n) => n._id === "backend-service-down-alert")) return prev;
-          const downAlert = {
-            _id: "backend-service-down-alert",
-            title: "⚠️ Backend Service Disconnected",
-            message: "Unable to reach the Journey Cuisine server. Please check your internet connection or server status.",
-            type: "system_error",
-            createdAt: new Date().toISOString(),
-            isRead: false,
-            isServerAlert: true,
-          };
-          setUnreadCount((c) => c + 1);
-          return [downAlert, ...prev];
-        });
-      } else {
-        // When connected/restored, silently clear the down alert
-        setNotifications((prev) => {
-          const target = prev.find((n) => n._id === "backend-service-down-alert");
-          if (target && !target.isRead) {
-            setUnreadCount((c) => Math.max(0, c - 1));
-          }
-          return prev.filter((n) => n._id !== "backend-service-down-alert");
-        });
+    if (!user?._id) return;
+
+    let timerId = null;
+    let isFetching = false;
+
+    const poll = async () => {
+      if (document.hidden || isFetching) return;
+      isFetching = true;
+      try {
+        await fetchNotifications();
+      } finally {
+        isFetching = false;
+        if (!document.hidden) {
+          timerId = setTimeout(poll, 40000); // 40s gentle interval for background notifications
+        }
       }
     };
 
-    window.addEventListener("backend-service-status", handleServiceStatus);
-    return () => {
-      window.removeEventListener("backend-service-status", handleServiceStatus);
+    const handleVisibilityOrFocus = () => {
+      if (!document.hidden) {
+        if (timerId) clearTimeout(timerId);
+        poll();
+      }
     };
-  }, []);
 
-  // Real-time socket notification listener
+    // Initial check
+    timerId = setTimeout(poll, 40000);
+
+    document.addEventListener("visibilitychange", handleVisibilityOrFocus);
+    window.addEventListener("focus", handleVisibilityOrFocus);
+
+    return () => {
+      if (timerId) clearTimeout(timerId);
+      document.removeEventListener("visibilitychange", handleVisibilityOrFocus);
+      window.removeEventListener("focus", handleVisibilityOrFocus);
+    };
+  }, [user?._id, fetchNotifications]);
+
+  // Real-time socket notification listener (works when socket server is available)
   useEffect(() => {
     if (!user?._id) return;
     const socketServerUrl = API.endsWith("/api/")
@@ -86,27 +90,18 @@ export const NotificationProvider = ({ children }) => {
     const socket = io(socketServerUrl, {
       transports: ["websocket", "polling"],
       reconnection: true,
-      reconnectionAttempts: 10,
-      reconnectionDelay: 1000,
-      timeout: 10000,
+      reconnectionAttempts: 2,
+      reconnectionDelay: 2000,
+      timeout: 5000,
     });
 
     socket.on("connect", () => {
-      // Register socket in user's personal room immediately on connect/reconnect
+      // Register socket in user's personal room immediately on connect
       socket.emit("register_user", String(user._id));
-      window.dispatchEvent(
-        new CustomEvent("backend-service-status", {
-          detail: { isDown: false },
-        })
-      );
     });
 
     socket.on("connect_error", () => {
-      window.dispatchEvent(
-        new CustomEvent("backend-service-status", {
-          detail: { isDown: true, message: "Socket connection error" },
-        })
-      );
+      // Gracefully silent on serverless / non-socket environments
     });
 
     socket.on("new_notification", (notif) => {
@@ -140,13 +135,6 @@ export const NotificationProvider = ({ children }) => {
   }, [user?._id]);
 
   const markAsRead = async (id) => {
-    if (typeof id === "string" && id.startsWith("backend-service-")) {
-      setNotifications((prev) =>
-        prev.map((n) => (n._id === id ? { ...n, isRead: true } : n))
-      );
-      setUnreadCount((prev) => Math.max(0, prev - 1));
-      return;
-    }
     try {
       const res = await api.patch(`/notifications/${id}/read`);
       if (res.data?.success === 1) {
@@ -181,10 +169,6 @@ export const NotificationProvider = ({ children }) => {
       }
       return prev.filter((n) => n._id !== id);
     });
-
-    if (typeof id === "string" && id.startsWith("backend-service-")) {
-      return;
-    }
 
     try {
       await api.delete(`/notifications/${id}`);

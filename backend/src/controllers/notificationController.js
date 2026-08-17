@@ -32,7 +32,8 @@ exports.getUserNotifications = async (req, res) => {
 
     let notifications = await Notification.find({ userId: userObjId })
       .sort({ createdAt: -1 })
-      .limit(50);
+      .limit(50)
+      .lean();
 
     const unreadCount = notifications.filter((n) => !n.isRead).length;
 

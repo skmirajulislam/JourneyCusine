@@ -97,7 +97,8 @@ exports.getConversations = async (req, res) => {
     })
       .populate("participants", "name emailId profileImg role")
       .populate("listingId", "title photos basePrice location houseType")
-      .sort({ "lastMessage.createdAt": -1, updated_at: -1 });
+      .sort({ "lastMessage.createdAt": -1, updated_at: -1 })
+      .lean();
 
     return res.status(200).json({
       success: 1,
@@ -134,26 +135,33 @@ exports.getMessages = async (req, res) => {
       return res.status(403).json({ success: 0, message: "Unauthorized to view this conversation" });
     }
 
-    // Mark messages as read by current user
+    // Mark messages as read by current user (only if there are unread messages)
     const currentObjId = new mongoose.Types.ObjectId(currentUserId);
-    await Message.updateMany(
-      { conversationId, readBy: { $ne: currentObjId } },
-      { $addToSet: { readBy: currentObjId } }
-    );
+    const unreadCountForUser = conversation.unreadCount?.get
+      ? conversation.unreadCount.get(String(currentUserId))
+      : conversation.unreadCount?.[String(currentUserId)];
 
-    // Reset unread count for current user
-    if (conversation.unreadCount && conversation.unreadCount.has(String(currentUserId))) {
-      conversation.unreadCount.set(String(currentUserId), 0);
-      await conversation.save();
+    if (unreadCountForUser > 0) {
+      await Message.updateMany(
+        { conversationId, readBy: { $ne: currentObjId } },
+        { $addToSet: { readBy: currentObjId } }
+      );
+
+      if (conversation.unreadCount && conversation.unreadCount.has(String(currentUserId))) {
+        conversation.unreadCount.set(String(currentUserId), 0);
+        await conversation.save();
+      }
     }
 
     const messages = await Message.find({ conversationId })
       .populate("senderId", "name emailId profileImg")
-      .sort({ createdAt: 1 });
+      .sort({ createdAt: 1 })
+      .lean();
 
     const populatedConversation = await Conversation.findById(conversationId)
       .populate("participants", "name emailId profileImg role")
-      .populate("listingId", "title photos basePrice location houseType");
+      .populate("listingId", "title photos basePrice location houseType")
+      .lean();
 
     return res.status(200).json({
       success: 1,

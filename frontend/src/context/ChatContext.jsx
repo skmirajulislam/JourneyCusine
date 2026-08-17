@@ -41,12 +41,149 @@ export const ChatProvider = ({ children }) => {
     isChatOpenRef.current = isChatOpen;
   }, [isChatOpen]);
 
+  const activeConversationRef = useRef(activeConversation);
+  useEffect(() => {
+    activeConversationRef.current = activeConversation;
+  }, [activeConversation]);
+
   const fetchConversationsRef = useRef(fetchConversations);
   useEffect(() => {
     fetchConversationsRef.current = fetchConversations;
   }, [fetchConversations]);
 
-  // Initialize Socket connection
+  // Smart background conversations polling (30s interval, pauses when tab is hidden)
+  useEffect(() => {
+    if (!user?._id) return;
+
+    let timerId = null;
+    let isFetching = false;
+
+    const pollConversations = async () => {
+      if (document.hidden || isFetching) return;
+      isFetching = true;
+      try {
+        await fetchConversations();
+      } finally {
+        isFetching = false;
+        if (!document.hidden) {
+          timerId = setTimeout(pollConversations, 30000); // 30s gentle interval for conversation list
+        }
+      }
+    };
+
+    const handleVisibilityOrFocus = () => {
+      if (!document.hidden) {
+        if (timerId) clearTimeout(timerId);
+        pollConversations();
+      }
+    };
+
+    // Initial fetch on mount / user change
+    pollConversations();
+
+    document.addEventListener("visibilitychange", handleVisibilityOrFocus);
+    window.addEventListener("focus", handleVisibilityOrFocus);
+
+    return () => {
+      if (timerId) clearTimeout(timerId);
+      document.removeEventListener("visibilitychange", handleVisibilityOrFocus);
+      window.removeEventListener("focus", handleVisibilityOrFocus);
+    };
+  }, [user?._id, fetchConversations]);
+
+  // Adaptive polling for active conversation messages
+  // ONLY runs when chat modal is open AND active conversation exists AND tab is visible.
+  // Backs off from 2.5s -> 4s -> 6s -> 8s if idle, resets to 2.5s on new activity.
+  useEffect(() => {
+    if (!user?._id || !activeConversation?._id || !isChatOpen) return;
+
+    const convId = activeConversation._id;
+    let timerId = null;
+    let isFetching = false;
+    let pollDelay = 2500;
+    let unchangedCount = 0;
+
+    const pollMessages = async () => {
+      if (document.hidden || isFetching || !isChatOpenRef.current) return;
+      isFetching = true;
+
+      try {
+        const res = await api.get(`/chat/messages/${convId}`);
+        if (res.data?.success === 1 && Array.isArray(res.data.messages)) {
+          const incomingMessages = res.data.messages;
+
+          setMessages((prev) => {
+            const hasChanged =
+              prev.length !== incomingMessages.length ||
+              (incomingMessages.length > 0 &&
+                prev[prev.length - 1]?._id !== incomingMessages[incomingMessages.length - 1]._id);
+
+            if (!hasChanged) {
+              unchangedCount++;
+              // Adaptive backoff when no new messages
+              if (unchangedCount >= 3) pollDelay = 4000;
+              if (unchangedCount >= 6) pollDelay = 6000;
+              if (unchangedCount >= 10) pollDelay = 8000;
+              return prev;
+            }
+
+            // Reset backoff on new message
+            unchangedCount = 0;
+            pollDelay = 2500;
+
+            const pendingOptimistic = prev.filter(
+              (m) =>
+                m.isOptimistic &&
+                !incomingMessages.some(
+                  (im) =>
+                    im.text === m.text &&
+                    String(im.senderId?._id || im.senderId) ===
+                      String(m.senderId?._id || m.senderId)
+                )
+            );
+
+            return [...incomingMessages, ...pendingOptimistic];
+          });
+
+          if (res.data.conversation) {
+            setConversations((prev) =>
+              prev.map((c) => (c._id === convId ? res.data.conversation : c))
+            );
+          }
+        }
+      } catch (err) {
+        // Polling errors fail silently without disrupting user
+      } finally {
+        isFetching = false;
+        if (!document.hidden && isChatOpenRef.current) {
+          timerId = setTimeout(pollMessages, pollDelay);
+        }
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden && isChatOpenRef.current) {
+        if (timerId) clearTimeout(timerId);
+        pollDelay = 2500;
+        unchangedCount = 0;
+        pollMessages();
+      }
+    };
+
+    // Start initial poll loop
+    timerId = setTimeout(pollMessages, pollDelay);
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", handleVisibilityChange);
+
+    return () => {
+      if (timerId) clearTimeout(timerId);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", handleVisibilityChange);
+    };
+  }, [user?._id, activeConversation?._id, isChatOpen]);
+
+  // Initialize Socket connection (graceful when supported, silent fallback on serverless)
   useEffect(() => {
     if (!user?._id) {
       if (socketRef.current) {
@@ -59,9 +196,9 @@ export const ChatProvider = ({ children }) => {
     const socket = io(socketUrl, {
       transports: ["websocket", "polling"],
       reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
-      timeout: 10000,
+      reconnectionAttempts: 2,
+      reconnectionDelay: 2000,
+      timeout: 5000,
     });
 
     socketRef.current = socket;
@@ -70,8 +207,13 @@ export const ChatProvider = ({ children }) => {
       socket.emit("register_user", user._id);
     });
 
+    socket.on("connect_error", () => {
+      // Gracefully silent on serverless / non-socket environments
+    });
+
     // Handle incoming message in active conversation
     socket.on("receive_message", (message) => {
+      if (!message) return;
       setMessages((prev) => {
         // If exact ID exists, do nothing
         if (prev.some((m) => m._id === message._id)) return prev;
@@ -127,7 +269,7 @@ export const ChatProvider = ({ children }) => {
             }}
             className="flex items-center gap-2 cursor-pointer text-xs font-semibold"
           >
-            <span>💬 New inquiry: {text.slice(0, 35)}...</span>
+            <span>💬 New inquiry: {text?.slice(0, 35)}...</span>
           </div>
         ));
       }
@@ -152,12 +294,6 @@ export const ChatProvider = ({ children }) => {
       socket.disconnect();
     };
   }, [user?._id, socketUrl]);
-
-  useEffect(() => {
-    if (user?._id) {
-      fetchConversations();
-    }
-  }, [user?._id, fetchConversations]);
 
   // Select active conversation and load messages
   const selectConversation = useCallback(
@@ -184,10 +320,10 @@ export const ChatProvider = ({ children }) => {
         })
       );
 
-      // Join socket room
-      if (socketRef.current) {
-        if (activeConversation?._id) {
-          socketRef.current.emit("leave_conversation", activeConversation._id);
+      // Join socket room if socket is connected
+      if (socketRef.current && socketRef.current.connected) {
+        if (activeConversationRef.current?._id) {
+          socketRef.current.emit("leave_conversation", activeConversationRef.current._id);
         }
         socketRef.current.emit("join_conversation", conversation._id);
       }
@@ -209,10 +345,10 @@ export const ChatProvider = ({ children }) => {
         setIsLoadingMessages(false);
       }
     },
-    [activeConversation?._id, user?._id]
+    [user?._id]
   );
 
-  // Send a message
+  // Send a message (bulletproof real-time persistence with 0ms optimistic UI)
   const sendMessage = async (text) => {
     if (!text || !text.trim() || !activeConversation?._id || !user?._id) return;
 
@@ -260,22 +396,23 @@ export const ChatProvider = ({ children }) => {
       text: trimmedText,
     };
 
-    // Emit via socket for real-time delivery
+    // Emit via socket if available
     if (socketRef.current && socketRef.current.connected) {
       socketRef.current.emit("send_message", messageData);
-    } else {
-      // Fallback REST call
-      try {
-        const res = await api.post("/chat/messages", messageData);
-        if (res.data?.success === 1 && res.data.message) {
-          setMessages((prev) =>
-            prev.map((m) => (m._id === tempId ? res.data.message : m))
-          );
-        }
-      } catch (err) {
-        console.error("sendMessage error:", err);
-        toast.error("Failed to send message");
+    }
+
+    // Persist via REST API
+    try {
+      const res = await api.post("/chat/messages", messageData);
+      if (res.data?.success === 1 && res.data.message) {
+        const savedMessage = res.data.message;
+        setMessages((prev) =>
+          prev.map((m) => (m._id === tempId ? savedMessage : m))
+        );
       }
+    } catch (err) {
+      console.error("sendMessage error:", err);
+      toast.error("Failed to send message");
     }
   };
 
