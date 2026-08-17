@@ -54,17 +54,24 @@ app.use(
   })
 );
 
-// Use routes
-app.use("/auth", auth);
-app.use("/house", house);
-app.use("/reservations", reservations);
-app.use("/trips", trips);
-app.use("/ai", ai);
-app.use("/coupons", coupon);
-app.use("/reviews", review);
-app.use("/chat", chat);
-app.use("/loyalty", loyalty);
-app.use("/notifications", notifications);
+// Use routes (supports both direct and /api/ prefixed calls)
+const routePairs = [
+  ["/auth", auth],
+  ["/house", house],
+  ["/reservations", reservations],
+  ["/trips", trips],
+  ["/ai", ai],
+  ["/coupons", coupon],
+  ["/reviews", review],
+  ["/chat", chat],
+  ["/loyalty", loyalty],
+  ["/notifications", notifications],
+];
+
+routePairs.forEach(([path, router]) => {
+  app.use(path, router);
+  app.use(`/api${path}`, router);
+});
 
 // Real-Time Socket.io Connection Handlers
 io.on("connection", (socket) => {
@@ -160,26 +167,39 @@ io.on("connection", (socket) => {
   });
 });
 
-let isDbConnected = false;
+let cachedDbPromise = null;
 
 async function connectDB() {
-  if (isDbConnected || mongoose.connection.readyState >= 1) {
-    isDbConnected = true;
-    return;
+  if (mongoose.connection.readyState === 1) {
+    return mongoose.connection;
   }
 
-  let mongoUri = process.env.MONGODB_URI || "";
-  const dbName = process.env.DB_NAME || "motel-develpoment-db";
-  if (!mongoUri) {
-    mongoUri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.tkzvadc.mongodb.net/${dbName}`;
-  } else if (mongoUri.endsWith("/")) {
-    mongoUri = `${mongoUri}${dbName}`;
+  if (!cachedDbPromise) {
+    let mongoUri = process.env.MONGODB_URI || "";
+    const dbName = process.env.DB_NAME || "motel-develpoment-db";
+    if (!mongoUri) {
+      mongoUri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.tkzvadc.mongodb.net/${dbName}`;
+    } else if (mongoUri.endsWith("/")) {
+      mongoUri = `${mongoUri}${dbName}`;
+    }
+
+    cachedDbPromise = mongoose.connect(mongoUri, {
+      serverSelectionTimeoutMS: 5000,
+    }).then(async (conn) => {
+      try {
+        const { seedDefaultCoupons } = require("./controllers/couponController.js");
+        await seedDefaultCoupons();
+      } catch (err) {
+        console.error("Coupon seed warning:", err.message);
+      }
+      return conn;
+    }).catch((err) => {
+      cachedDbPromise = null;
+      throw err;
+    });
   }
 
-  await mongoose.connect(mongoUri);
-  isDbConnected = true;
-  const { seedDefaultCoupons } = require("./controllers/couponController.js");
-  await seedDefaultCoupons();
+  return await cachedDbPromise;
 }
 
 // Ensure DB is connected for serverless invocations
@@ -190,6 +210,24 @@ app.use(async (req, res, next) => {
   } catch (err) {
     console.error("Database connection error:", err.message);
     next();
+  }
+});
+
+// Health check endpoint
+app.get(["/health", "/api/health"], async (req, res) => {
+  try {
+    await connectDB();
+    res.status(200).json({
+      status: "ok",
+      database: mongoose.connection.readyState === 1 ? "connected" : "disconnected",
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: "error",
+      error: err.message,
+      timestamp: new Date().toISOString(),
+    });
   }
 });
 

@@ -1,28 +1,54 @@
 {
-  "services": {
-    "frontend": {
-      "root": "frontend",
-      "framework": "vite"
-    },
-    "backend": {
-      "root": "backend",
-      "entrypoint": "src/api.js"
-    }
-  },
+  "buildCommand": "npm run build --prefix frontend",
+  "outputDirectory": "frontend/dist",
   "rewrites": [
     {
-      "source": "/api(/.*)?",
-      "destination": {
-        "type": "service",
-        "service": "backend"
-      }
+      "source": "/auth/:path*",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/house/:path*",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/reservations/:path*",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/trips/:path*",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/ai/:path*",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/coupons/:path*",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/reviews/:path*",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/chat/:path*",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/loyalty/:path*",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/notifications/:path*",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/api/:path*",
+      "destination": "/api/index.js"
     },
     {
       "source": "/(.*)",
-      "destination": {
-        "type": "service",
-        "service": "frontend"
-      }
+      "destination": "/index.html"
     }
   ]
 }
