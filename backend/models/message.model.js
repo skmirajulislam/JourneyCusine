@@ -28,6 +28,8 @@ const messageSchema = new mongoose.Schema(
   { timestamps: { createdAt: "created_at", updatedAt: "updated_at" } }
 );
 
+messageSchema.index({ conversationId: 1, created_at: 1 });
+
 const Message = mongoose.model("Message", messageSchema);
 
 module.exports = Message;

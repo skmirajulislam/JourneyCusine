@@ -123,6 +123,9 @@ const houseSchema = new mongoose.Schema({
     kitchenFeatures: [{ type: String }] // ["chef_kitchen", "bbq_grill", "pizza_oven", "halal_cookware", "vegetarian_dedicated", "espresso_bar", "dishwasher"]
 }, { timestamps: { createdAt: "created_at", updatedAt: "updated_at" } });
 
+houseSchema.index({ status: 1, basePrice: 1 });
+houseSchema.index({ status: 1, houseType: 1 });
+
 const House = mongoose.model("House", houseSchema);
 
 module.exports = House;

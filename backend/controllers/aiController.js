@@ -1397,7 +1397,31 @@ exports.handleAiChat = async (req, res) => {
       };
     });
 
-    // 2. Try Gemini API first (with 5-second timeout safeguard)
+    // 2. Select top candidate listings relevant to query (avoids multi-megabyte prompt token overflow)
+    const queryTokens = normalize(message).split(" ").filter((t) => t.length > 2);
+    let candidateListings = formattedListings;
+
+    if (queryTokens.length > 0) {
+      const scored = formattedListings.map((listing) => {
+        const textToSearch = `${listing.title} ${listing.location} ${listing.city} ${listing.state} ${listing.country} ${listing.houseType} ${(listing.amenities || []).join(" ")} ${listing.description}`.toLowerCase();
+        let score = 0;
+        queryTokens.forEach((token) => {
+          if (textToSearch.includes(token)) score += 1;
+        });
+        return { listing, score };
+      });
+
+      const matched = scored.filter((s) => s.score > 0).sort((a, b) => b.score - a.score);
+      if (matched.length > 0) {
+        candidateListings = matched.slice(0, 15).map((m) => m.listing);
+      } else {
+        candidateListings = formattedListings.slice(0, 10);
+      }
+    } else {
+      candidateListings = formattedListings.slice(0, 10);
+    }
+
+    // 3. Try Gemini API first (with 5-second timeout safeguard)
     let geminiSuccess = false;
     let replyText = "";
     let matchedListings = [];
@@ -1406,7 +1430,7 @@ exports.handleAiChat = async (req, res) => {
       try {
         const systemPrompt = `You are the friendly, knowledgeable AI Travel & Motel Concierge for "Journey Cuisine".
 DATABASE OF AVAILABLE MOTELS:
-${JSON.stringify(formattedListings, null, 2)}
+${JSON.stringify(candidateListings, null, 2)}
 
 CORE CAPABILITIES:
 1. GREETINGS & COMPANY INFO:

@@ -41,7 +41,7 @@ export const NotificationProvider = ({ children }) => {
 
   // Real-time socket notification listener
   useEffect(() => {
-    if (!user) return;
+    if (!user?._id) return;
     const socketServerUrl = API.endsWith("/api/")
       ? API.replace("/api/", "")
       : API.replace("/api", "");
@@ -54,7 +54,7 @@ export const NotificationProvider = ({ children }) => {
       timeout: 10000,
     });
 
-    socket.emit("register_user", user._id || user.id);
+    socket.emit("register_user", user._id);
 
     socket.on("new_notification", (notif) => {
       setNotifications((prev) => [notif, ...prev]);
@@ -68,7 +68,7 @@ export const NotificationProvider = ({ children }) => {
     return () => {
       socket.disconnect();
     };
-  }, [user]);
+  }, [user?._id]);
 
   const markAsRead = async (id) => {
     try {

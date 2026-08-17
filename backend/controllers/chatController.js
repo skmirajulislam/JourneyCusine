@@ -174,6 +174,7 @@ exports.getMessages = async (req, res) => {
 exports.sendMessage = async (req, res) => {
   try {
     const currentUserId = req.user;
+    const { conversationId, text } = req.body || {};
     if (!conversationId || typeof conversationId !== "string" || !mongoose.Types.ObjectId.isValid(conversationId) || !text || typeof text !== "string" || !text.trim()) {
       return res.status(400).json({ success: 0, message: "Valid conversation ID and text are required" });
     }

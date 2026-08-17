@@ -36,6 +36,16 @@ export const ChatProvider = ({ children }) => {
     }
   }, [user?._id]);
 
+  const isChatOpenRef = useRef(isChatOpen);
+  useEffect(() => {
+    isChatOpenRef.current = isChatOpen;
+  }, [isChatOpen]);
+
+  const fetchConversationsRef = useRef(fetchConversations);
+  useEffect(() => {
+    fetchConversationsRef.current = fetchConversations;
+  }, [fetchConversations]);
+
   // Initialize Socket connection
   useEffect(() => {
     if (!user?._id) {
@@ -105,8 +115,10 @@ export const ChatProvider = ({ children }) => {
 
     // Handle notification when not in active chat
     socket.on("new_message_notification", ({ text }) => {
-      fetchConversations();
-      if (!isChatOpen) {
+      if (fetchConversationsRef.current) {
+        fetchConversationsRef.current();
+      }
+      if (!isChatOpenRef.current) {
         toast((t) => (
           <div
             onClick={() => {
@@ -139,7 +151,7 @@ export const ChatProvider = ({ children }) => {
     return () => {
       socket.disconnect();
     };
-  }, [user?._id, socketUrl, isChatOpen, fetchConversations]);
+  }, [user?._id, socketUrl]);
 
   useEffect(() => {
     if (user?._id) {

@@ -16,6 +16,11 @@ export function useHostData() {
   } = useQuery({
     queryKey: ["hostHouses"],
     queryFn: async () => {
+      // If already populated in cache by useAuth, reuse it
+      const cached = queryClient.getQueryData(["hostHouses"]);
+      if (Array.isArray(cached) && cached.length > 0) {
+        return cached;
+      }
       try {
         const res = await api.post("/auth/get_user_details");
         if (res.data && res.data.house_data) {
@@ -27,7 +32,8 @@ export function useHostData() {
         return [];
       }
     },
-    staleTime: 2 * 60 * 1000,
+    initialData: () => queryClient.getQueryData(["hostHouses"]),
+    staleTime: 5 * 60 * 1000,
   });
 
   // Host Reservations Query

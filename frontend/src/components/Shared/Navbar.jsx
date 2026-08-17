@@ -178,7 +178,7 @@ const Navbar = () => {
               alt="Logo"
               className="w-9 sm:w-10 cursor-pointer"
               onClick={() => {
-                JSON.stringify(localStorage.setItem("category", "House"));
+                localStorage.setItem("category", "House");
                 navigate("/");
               }}
             />

@@ -540,7 +540,11 @@ exports.publishList = async (req, res) => {
 exports.getAllListing = async (req, res) => {
     try {
         const { minPrice, maxPrice, minRating } = req.query;
-        let query = {};
+        let query = {
+            status: "Complete",
+            "photos.0": { $exists: true },
+        };
+
         if ((minPrice !== undefined && minPrice !== "" && minPrice !== "all") || (maxPrice !== undefined && maxPrice !== "" && maxPrice !== "all")) {
             query.basePrice = {};
             if (minPrice !== undefined && minPrice !== "" && minPrice !== "all") {
@@ -573,7 +577,6 @@ exports.getAllListing = async (req, res) => {
         });
 
         let allListingData = data
-            .filter((listing) => listing.status === "Complete" && listing.photos?.length !== 0)
             .map((listing) => {
                 const stats = ratingsMap[String(listing._id)];
                 return {

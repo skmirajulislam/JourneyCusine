@@ -32,19 +32,6 @@ exports.getUserNotifications = async (req, res) => {
       .sort({ createdAt: -1 })
       .limit(50);
 
-    // If empty, generate a starter welcome notification
-    if (notifications.length === 0) {
-      const welcome = await Notification.create({
-        userId: userObjId,
-        title: "Welcome to Journey Cuisine! 🍲",
-        message: "You've earned 200 Gourmet Loyalty Points and unlocked your Foodie Passport.",
-        type: "reward",
-        link: "/trips",
-        isRead: false,
-      });
-      notifications = [welcome];
-    }
-
     const unreadCount = notifications.filter((n) => !n.isRead).length;
 
     res.status(200).json({
