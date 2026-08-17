@@ -1,17 +1,20 @@
 import axios from "axios";
 
-const rawEnvUrl = import.meta.env.VITE_API_BASE_URL || "";
-let base = rawEnvUrl.trim();
-
-if (base.endsWith("/")) {
-  base = base.slice(0, -1);
-}
-
+const rawEnvUrl = import.meta.env.VITE_API_BASE_URL;
 let apiBaseURL = "/api/";
-if (base && !base.endsWith("/api")) {
-  apiBaseURL = `${base}/api/`;
-} else if (base.endsWith("/api")) {
-  apiBaseURL = `${base}/`;
+
+if (rawEnvUrl && rawEnvUrl.trim() && rawEnvUrl.trim() !== "/") {
+  let base = rawEnvUrl.trim();
+  if (base.endsWith("/")) base = base.slice(0, -1);
+  if (!base.endsWith("/api")) {
+    apiBaseURL = `${base}/api/`;
+  } else {
+    apiBaseURL = `${base}/`;
+  }
+} else if (import.meta.env.DEV) {
+  apiBaseURL = "http://localhost:5001/api/";
+} else {
+  apiBaseURL = "/api/";
 }
 
 const getStoredToken = (key) => {
