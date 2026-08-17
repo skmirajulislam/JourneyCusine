@@ -4,8 +4,10 @@ const mongoose = require("mongoose");
 // Helper to push notification to DB and emit socket event if IO instance exists
 exports.sendNotification = async (io, { userId, title, message, type = "system", link = "" }) => {
   try {
+    if (!userId) return null;
+    const userIdStr = String(userId);
     const notif = new Notification({
-      userId: new mongoose.Types.ObjectId(userId),
+      userId: new mongoose.Types.ObjectId(userIdStr),
       title,
       message,
       type,
@@ -15,7 +17,7 @@ exports.sendNotification = async (io, { userId, title, message, type = "system",
     const saved = await notif.save();
 
     if (io) {
-      io.to(`user_${userId}`).emit("new_notification", saved);
+      io.to(`user_${userIdStr}`).emit("new_notification", saved);
     }
     return saved;
   } catch (err) {

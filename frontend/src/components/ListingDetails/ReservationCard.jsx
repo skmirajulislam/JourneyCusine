@@ -36,6 +36,15 @@ const ReservationCard = ({
   const { state: showDropdown, setState: setShowDropdown } =
     useOutsideClick(dropdownRef);
 
+  // Max guests allowed by this listing's floor plan
+  const maxAllowedGuests = Math.max(
+    1,
+    Number(listingData?.floorPlan?.guests) ||
+      Number(listingData?.floorPlan?.guestNumber) ||
+      Number(listingData?.guests) ||
+      2
+  );
+
   // guests state
   const [guestsNumber, setGuestsNumber] = useState(1);
   const [childrenNumber, setChildrenNumber] = useState(0);
@@ -114,6 +123,14 @@ const ReservationCard = ({
     if (!user) {
       toast.error("Please log in or sign up to reserve a motel!");
       window.dispatchEvent(new Event("open-auth-popup"));
+      return;
+    }
+    if (totalGuest > maxAllowedGuests) {
+      toast.error(
+        `This listing allows a maximum of ${maxAllowedGuests} guest${
+          maxAllowedGuests > 1 ? "s" : ""
+        }.`
+      );
       return;
     }
     const orderNumber = localStorage.getItem("orderId");
@@ -329,9 +346,9 @@ const ReservationCard = ({
         {showDropdown && (
           <div
             ref={dropdownRef}
-            className="min-h-[200px] w-72 shadow-lg border dark:border-[#444444] absolute z-[90] bg-white dark:bg-[#2a2a2a] px-4 py-5 rounded-md"
+            className="min-h-[200px] w-72 shadow-xl border border-neutral-200 dark:border-[#444444] absolute z-[90] bg-white dark:bg-[#2a2a2a] px-4 py-5 rounded-xl"
           >
-            <div className="flex flex-col gap-5">
+            <div className="flex flex-col gap-4">
               <div className="flex flex-row items-center justify-between">
                 <div>
                   <h4 className="text-base text-[#222222] dark:text-white font-medium">Adults</h4>
@@ -339,17 +356,23 @@ const ReservationCard = ({
                 </div>
                 <div className="flex flex-row gap-3 items-center">
                   <button
-                    disabled={guestsNumber === 1}
-                    onClick={() => setGuestsNumber((prev) => prev - 1)}
-                    className="p-2 border rounded-full border-[#b0b0b0] dark:border-[#666666] disabled:opacity-30 disabled:cursor-not-allowed"
+                    type="button"
+                    disabled={guestsNumber <= 1}
+                    onClick={() => setGuestsNumber((prev) => Math.max(1, prev - 1))}
+                    className="p-2 border rounded-full border-[#b0b0b0] dark:border-[#666666] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                   >
                     <AiOutlineMinus size={14} className="dark:text-white" />
                   </button>
-                  <span className="text-sm dark:text-white">{guestsNumber}</span>
+                  <span className="text-sm font-semibold dark:text-white">{guestsNumber}</span>
                   <button
-                    disabled={guestsNumber === 10}
-                    onClick={() => setGuestsNumber((prev) => prev + 1)}
-                    className="p-2 border rounded-full border-[#b0b0b0] dark:border-[#666666] disabled:opacity-30 disabled:cursor-not-allowed"
+                    type="button"
+                    disabled={totalGuest >= maxAllowedGuests}
+                    onClick={() => {
+                      if (totalGuest < maxAllowedGuests) {
+                        setGuestsNumber((prev) => prev + 1);
+                      }
+                    }}
+                    className="p-2 border rounded-full border-[#b0b0b0] dark:border-[#666666] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                   >
                     <AiOutlinePlus size={14} className="dark:text-white" />
                   </button>
@@ -363,28 +386,37 @@ const ReservationCard = ({
                 </div>
                 <div className="flex flex-row gap-3 items-center">
                   <button
-                    disabled={childrenNumber === 0}
-                    onClick={() => setChildrenNumber((prev) => prev - 1)}
-                    className="p-2 border rounded-full border-[#b0b0b0] dark:border-[#666666] disabled:opacity-30 disabled:cursor-not-allowed"
+                    type="button"
+                    disabled={childrenNumber <= 0}
+                    onClick={() => setChildrenNumber((prev) => Math.max(0, prev - 1))}
+                    className="p-2 border rounded-full border-[#b0b0b0] dark:border-[#666666] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                   >
                     <AiOutlineMinus size={14} className="dark:text-white" />
                   </button>
-                  <span className="text-sm dark:text-white">{childrenNumber}</span>
+                  <span className="text-sm font-semibold dark:text-white">{childrenNumber}</span>
                   <button
-                    disabled={childrenNumber === 5}
-                    onClick={() => setChildrenNumber((prev) => prev + 1)}
-                    className="p-2 border rounded-full border-[#b0b0b0] dark:border-[#666666] disabled:opacity-30 disabled:cursor-not-allowed"
+                    type="button"
+                    disabled={totalGuest >= maxAllowedGuests}
+                    onClick={() => {
+                      if (totalGuest < maxAllowedGuests) {
+                        setChildrenNumber((prev) => prev + 1);
+                      }
+                    }}
+                    className="p-2 border rounded-full border-[#b0b0b0] dark:border-[#666666] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                   >
                     <AiOutlinePlus size={14} className="dark:text-white" />
                   </button>
                 </div>
               </div>
 
-              <div className="flex justify-end pt-2">
+              <div className="pt-3 border-t border-neutral-100 dark:border-neutral-700/60 flex items-center justify-between">
+                <span className="text-[11px] font-medium text-neutral-500 dark:text-neutral-400">
+                  Max {maxAllowedGuests} guest{maxAllowedGuests > 1 ? "s" : ""} allowed
+                </span>
                 <button
                   type="button"
                   onClick={() => setShowDropdown(false)}
-                  className="underline text-sm text-[#222222] dark:text-white font-semibold px-3 py-1.5 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                  className="underline text-xs text-[#222222] dark:text-white font-semibold px-2 py-1 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
                 >
                   Close
                 </button>

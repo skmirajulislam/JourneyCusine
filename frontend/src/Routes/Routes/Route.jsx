@@ -75,6 +75,7 @@ const Description = lazy(() =>
 );
 const Terms = lazy(() => import("../../Pages/Terms"));
 const Privacy = lazy(() => import("../../Pages/Privacy"));
+const NotFound = lazy(() => import("../../Pages/NotFound"));
 
 const router = createBrowserRouter([
   {
@@ -306,6 +307,20 @@ const router = createBrowserRouter([
             }
           >
             <PaymentConfirmed />
+          </Suspense>
+        ),
+      },
+      {
+        path: "*",
+        element: (
+          <Suspense
+            fallback={
+              <div className="flex justify-center items-center w-full h-[60dvh]">
+                <FadeLoader color="#ff385c" />
+              </div>
+            }
+          >
+            <NotFound />
           </Suspense>
         ),
       },

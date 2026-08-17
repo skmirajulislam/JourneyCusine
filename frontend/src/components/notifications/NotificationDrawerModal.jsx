@@ -11,11 +11,18 @@ import {
   FiAward,
   FiMessageSquare,
   FiInfo,
+  FiAlertTriangle,
+  FiCheckCircle,
 } from "react-icons/fi";
 import { FadeLoader } from "react-spinners";
 
 const getTypeIcon = (type) => {
   switch (type) {
+    case "system_error":
+    case "server_down":
+      return <FiAlertTriangle className="text-red-500" size={16} />;
+    case "system_success":
+      return <FiCheckCircle className="text-emerald-500" size={16} />;
     case "booking":
       return <FiCalendar className="text-rose-500" size={16} />;
     case "trip":

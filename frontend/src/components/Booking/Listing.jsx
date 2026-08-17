@@ -17,10 +17,17 @@ const Listing = ({ searchParamsObj, appliedCoupon, setAppliedCoupon, listingData
 
   const listingSpace =
     listingData?.privacyType === "An entire place" ? "Entire" : "Shared";
-  const listingType = listingData?.houseType;
-
+  const listingType = listingData?.houseType || "Motel";
+  const maxCapacity = Math.max(
+    1,
+    Number(listingData?.floorPlan?.guests) ||
+      Number(listingData?.floorPlan?.guestNumber) ||
+      Number(listingData?.guests) ||
+      2
+  );
   const nightStaying = parseInt(searchParamsObj?.nightStaying, 10) || 1;
-  const numberOfGuests = parseInt(searchParamsObj?.numberOfGuests, 10) || 1;
+  const rawGuests = parseInt(searchParamsObj?.numberOfGuests, 10) || 1;
+  const numberOfGuests = Math.min(rawGuests, maxCapacity);
   const rawBaseUSD = Number(listingData?.basePrice) || 0;
   const baseUSD = rawBaseUSD * nightStaying;
 

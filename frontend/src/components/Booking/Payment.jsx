@@ -44,7 +44,15 @@ const Payment = ({ searchParamsObj, appliedCoupon, listingDataProp }) => {
 
   const formattedDates = useDateFormatting(dateObj);
 
-  const guestNumber = Number(searchParamsObj?.numberOfGuests) || 1;
+  const maxCapacity = Math.max(
+    1,
+    Number(listingData?.floorPlan?.guests) ||
+      Number(listingData?.floorPlan?.guestNumber) ||
+      Number(listingData?.guests) ||
+      2
+  );
+  const rawGuestNumber = Number(searchParamsObj?.numberOfGuests) || 1;
+  const guestNumber = Math.min(rawGuestNumber, maxCapacity);
   const checkin = searchParamsObj?.checkin;
   const checkout = searchParamsObj?.checkout;
   const nightStaying = parseInt(searchParamsObj?.nightStaying, 10) || 1;
@@ -176,8 +184,32 @@ const Payment = ({ searchParamsObj, appliedCoupon, listingDataProp }) => {
 
             if (verifyRes.data?.success) {
               toast.success("Payment verified! Booking confirmed.");
+              
+              // Immediately update notification drawer in real-time
+              window.dispatchEvent(
+                new CustomEvent("local-booking-notification", {
+                  detail: {
+                    notification: {
+                      _id: `booking-${Date.now()}`,
+                      title: "Booking Confirmed! 🏨",
+                      message: `Your reservation at "${listingData?.title || "Motel Stay"}" (${nightStaying} nights) has been confirmed.`,
+                      type: "booking",
+                      link: "/trips",
+                      createdAt: new Date().toISOString(),
+                      isRead: false,
+                    },
+                  },
+                })
+              );
+
+              const cuisineParam =
+                selectedCuisineAddons.length > 0
+                  ? `&cuisineAddons=${encodeURIComponent(
+                      JSON.stringify(selectedCuisineAddons)
+                    )}`
+                  : "";
               navigate(
-                `/payment-confirmed?guestNumber=${guestNumber}&checkIn=${checkin}&checkOut=${checkout}&listingId=${listingData?._id}&authorId=${listingData?.author}&nightStaying=${nightStaying}&orderId=${orderId}&razorpayPaymentId=${response.razorpay_payment_id}&razorpayOrderId=${response.razorpay_order_id}&currency=${guestCurrency}&couponCode=${appliedCoupon?.coupon?.code || ""}&couponDiscount=${guestDiscountAmount || 0}`
+                `/payment-confirmed?guestNumber=${guestNumber}&checkIn=${checkin}&checkOut=${checkout}&listingId=${listingData?._id}&authorId=${listingData?.author}&nightStaying=${nightStaying}&orderId=${orderId}&razorpayPaymentId=${response.razorpay_payment_id}&razorpayOrderId=${response.razorpay_order_id}&currency=${guestCurrency}&couponCode=${appliedCoupon?.coupon?.code || ""}&couponDiscount=${guestDiscountAmount || 0}${cuisineParam}`
               );
             } else {
               toast.error(verifyRes.data?.error || "Signature verification failed.");
