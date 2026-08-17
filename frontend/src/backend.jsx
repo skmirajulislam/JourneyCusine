@@ -34,6 +34,29 @@ const getStoredToken = (key) => {
 
 export const API = apiBaseURL;
 
+/**
+ * Resolves the Socket.IO server URL:
+ * 1. Dedicated external Socket server URL from VITE_SOCKET_URL (if provided)
+ * 2. In Local Development (import.meta.env.DEV), uses the local Node server (e.g. http://localhost:5001)
+ * 3. In Serverless / Vercel production without an external WebSocket server, returns null to avoid
+ *    failing wss:// connections on the vercel.app domain (where persistent WebSockets are unsupported).
+ */
+export const getSocketUrl = () => {
+  const envSocketUrl = import.meta.env.VITE_SOCKET_URL;
+  if (envSocketUrl && envSocketUrl.trim()) {
+    return envSocketUrl.trim();
+  }
+
+  if (import.meta.env.DEV) {
+    if (apiBaseURL.startsWith("http")) {
+      return apiBaseURL.replace(/\/api\/?$/, "");
+    }
+    return "http://localhost:5001";
+  }
+
+  return null;
+};
+
 const api = axios.create({
   baseURL: apiBaseURL,
 });

@@ -2,7 +2,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import { io } from "socket.io-client";
 import { useAuth } from "../hooks/useAuth";
-import api, { API } from "../backend";
+import api, { getSocketUrl } from "../backend";
 import { toast } from "react-hot-toast";
 
 const ChatContext = createContext(null);
@@ -18,10 +18,6 @@ export const ChatProvider = ({ children }) => {
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [typingUser, setTypingUser] = useState("");
-
-  const socketUrl = API.startsWith("http")
-    ? API.replace(/\/api\/?$/, "")
-    : (typeof window !== "undefined" ? window.location.origin : "");
 
   // Fetch all user conversations
   const fetchConversations = useCallback(async () => {
@@ -193,6 +189,12 @@ export const ChatProvider = ({ children }) => {
       return;
     }
 
+    const socketUrl = getSocketUrl();
+    if (!socketUrl) {
+      // Serverless deployment (Vercel): real-time sync is handled seamlessly via HTTP polling & focus sync
+      return;
+    }
+
     const socket = io(socketUrl, {
       transports: ["websocket", "polling"],
       reconnection: true,
@@ -248,6 +250,7 @@ export const ChatProvider = ({ children }) => {
                 senderId: message.senderId?._id || message.senderId,
                 createdAt: message.createdAt,
               },
+              updatedAt: message.createdAt,
             };
           }
           return c;
@@ -255,27 +258,28 @@ export const ChatProvider = ({ children }) => {
       );
     });
 
-    // Handle notification when not in active chat
+    // Handle background incoming message notification
     socket.on("new_message_notification", ({ text }) => {
-      if (fetchConversationsRef.current) {
-        fetchConversationsRef.current();
-      }
       if (!isChatOpenRef.current) {
         toast((t) => (
           <div
             onClick={() => {
-              setIsChatOpen(true);
               toast.dismiss(t.id);
+              setIsChatOpen(true);
             }}
-            className="flex items-center gap-2 cursor-pointer text-xs font-semibold"
+            className="cursor-pointer flex items-center space-x-2 text-sm font-medium"
           >
-            <span>💬 New inquiry: {text?.slice(0, 35)}...</span>
+            <span>💬 New message: {text ? (text.length > 40 ? text.slice(0, 40) + "..." : text) : "Received a message"}</span>
           </div>
-        ));
+        ), {
+          duration: 4000,
+          position: "top-right",
+        });
       }
+      fetchConversationsRef.current();
     });
 
-    // Handle typing status
+    // Typing indicators
     socket.on("user_typing", ({ senderName, senderId }) => {
       if (senderId !== user._id) {
         setIsTyping(true);
@@ -292,8 +296,9 @@ export const ChatProvider = ({ children }) => {
 
     return () => {
       socket.disconnect();
+      socketRef.current = null;
     };
-  }, [user?._id, socketUrl]);
+  }, [user?._id]);
 
   // Select active conversation and load messages
   const selectConversation = useCallback(

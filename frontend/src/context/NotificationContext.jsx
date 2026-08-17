@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
-import api, { API } from "../backend";
+import api, { getSocketUrl } from "../backend";
 import { useAuth } from "../hooks/useAuth";
 import io from "socket.io-client";
 import { toast } from "react-hot-toast";
@@ -83,9 +83,29 @@ export const NotificationProvider = ({ children }) => {
   // Real-time socket notification listener (works when socket server is available)
   useEffect(() => {
     if (!user?._id) return;
-    const socketServerUrl = API.endsWith("/api/")
-      ? API.replace("/api/", "")
-      : API.replace("/api", "");
+
+    // Also listen to custom local event for immediate in-app booking confirmation push
+    const handleLocalBookingNotification = (e) => {
+      const { notification } = e.detail || {};
+      if (notification) {
+        setNotifications((prev) => {
+          // Avoid duplicate notification items
+          if (prev.some((n) => n._id === notification._id)) return prev;
+          return [notification, ...prev];
+        });
+        setUnreadCount((prev) => prev + 1);
+      }
+    };
+
+    window.addEventListener("local-booking-notification", handleLocalBookingNotification);
+
+    const socketServerUrl = getSocketUrl();
+    if (!socketServerUrl) {
+      // On Vercel serverless, real-time updates are handled seamlessly via background polling & custom events
+      return () => {
+        window.removeEventListener("local-booking-notification", handleLocalBookingNotification);
+      };
+    }
 
     const socket = io(socketServerUrl, {
       transports: ["websocket", "polling"],
@@ -113,20 +133,6 @@ export const NotificationProvider = ({ children }) => {
       });
       setUnreadCount((prev) => prev + 1);
     });
-
-    // Also listen to custom local event for immediate in-app booking confirmation push
-    const handleLocalBookingNotification = (e) => {
-      const { notification } = e.detail || {};
-      if (notification) {
-        setNotifications((prev) => {
-          if (prev.some((n) => n._id === notification._id)) return prev;
-          return [notification, ...prev];
-        });
-        setUnreadCount((prev) => prev + 1);
-      }
-    };
-
-    window.addEventListener("local-booking-notification", handleLocalBookingNotification);
 
     return () => {
       window.removeEventListener("local-booking-notification", handleLocalBookingNotification);
