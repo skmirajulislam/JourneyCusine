@@ -446,6 +446,7 @@ export function toSubunits(amount, currency = "INR") {
   if (isZeroDecimal) {
     return Math.max(Math.round(amount), 1);
   }
-  return Math.max(Math.round(amount * 100), 100);
+  const minSubunits = ["BDT", "PHP", "THB", "PKR", "NPR", "LKR"].includes(code) ? 500 : 100;
+  return Math.max(Math.round(amount * 100), minSubunits);
 }
 

@@ -109,15 +109,73 @@ exports.createRazorpayOrder = async (req, res) => {
       },
     };
 
-    const order = await razorpay.orders.create(options);
+    let order = null;
+    let finalCurrency = targetCurrency;
+
+    try {
+      order = await razorpay.orders.create(options);
+    } catch (orderErr) {
+      console.warn(`Initial Razorpay order creation for ${targetCurrency} failed:`, orderErr.error?.description || orderErr.message);
+
+      // 1. If error is minimum amount violation, retry with minimum allowed threshold
+      if (orderErr.error?.description?.includes("minimum amount")) {
+        try {
+          const clampedSubunits = Math.max(amountInSubunits, 500);
+          order = await razorpay.orders.create({
+            ...options,
+            amount: clampedSubunits,
+          });
+        } catch (retryErr) {
+          console.warn("Clamped retry failed:", retryErr.error?.description || retryErr.message);
+        }
+      }
+
+      // 2. If order creation still failed (e.g. currency not enabled on merchant key), fallback to USD
+      if (!order) {
+        try {
+          const hostCurrency = payload.hostCurrency || "INR";
+          const amountInUSD = convertPrice(totalAmountInTargetCurrency, targetCurrency, "USD");
+          const usdSubunits = Math.max(Math.round(amountInUSD * 100), 100);
+          finalCurrency = "USD";
+
+          order = await razorpay.orders.create({
+            amount: usdSubunits,
+            currency: "USD",
+            receipt: options.receipt,
+            notes: {
+              ...options.notes,
+              originalCurrency: targetCurrency,
+              fallbackApplied: "true",
+            },
+          });
+        } catch (usdErr) {
+          // 3. If USD fails, try INR as ultimate local fallback
+          const inrSubunits = Math.max(Math.round(totalAmountInTargetCurrency * 100), 100);
+          finalCurrency = "INR";
+          order = await razorpay.orders.create({
+            amount: inrSubunits,
+            currency: "INR",
+            receipt: options.receipt,
+            notes: {
+              ...options.notes,
+              originalCurrency: targetCurrency,
+            },
+          });
+        }
+      }
+    }
+
+    if (!order || !order.id) {
+      throw new Error("Unable to generate Razorpay order ID");
+    }
 
     return res.status(200).json({
       success: 1,
       order_id: order.id,
       id: order.id,
       amount: order.amount,
-      currency: order.currency,
-      formattedAmount: formatCurrency(totalAmountInTargetCurrency, targetCurrency),
+      currency: order.currency || finalCurrency,
+      formattedAmount: formatCurrency(totalAmountInTargetCurrency, finalCurrency),
       keyId: process.env.RAZORPAY_KEY_ID || "rzp_test_TQ65wJo8tIo228",
     });
   } catch (error) {
