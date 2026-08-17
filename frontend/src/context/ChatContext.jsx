@@ -20,8 +20,8 @@ export const ChatProvider = ({ children }) => {
   const [typingUser, setTypingUser] = useState("");
 
   const socketUrl = API.startsWith("http")
-    ? API.replace(/\/+$/, "")
-    : window.location.origin;
+    ? API.replace(/\/api\/?$/, "")
+    : (typeof window !== "undefined" ? window.location.origin : "");
 
   // Fetch all user conversations
   const fetchConversations = useCallback(async () => {

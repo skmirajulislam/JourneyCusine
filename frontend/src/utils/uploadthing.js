@@ -5,9 +5,12 @@ import {
 } from "@uploadthing/react";
 
 const getUploadthingUrl = () => {
-  const envUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:5001/";
-  const baseUrl = envUrl.endsWith("/") ? envUrl : `${envUrl}/`;
-  return `${baseUrl}api/uploadthing`;
+  if (import.meta.env.DEV) {
+    const envUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:5001/api/";
+    const baseUrl = envUrl.endsWith("/") ? envUrl : `${envUrl}/`;
+    return baseUrl.endsWith("/api/") ? `${baseUrl}uploadthing` : `${baseUrl}api/uploadthing`;
+  }
+  return "/api/uploadthing";
 };
 
 const uploadthingUrl = getUploadthingUrl();
