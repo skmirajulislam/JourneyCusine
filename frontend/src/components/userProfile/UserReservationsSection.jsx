@@ -306,6 +306,13 @@ const UserReservationsSection = () => {
                         const displayTaxRetained = resItem.refundDetails?.taxDeduction !== undefined ? resItem.refundDetails.taxDeduction : displayTax;
 
                         const isZeroDec = ["INR", "JPY", "KRW", "VND", "IDR"].includes(resCurrency);
+                        const formatVal = (val) => {
+                          const n = Number(val) || 0;
+                          return isZeroDec
+                            ? Math.round(n).toLocaleString()
+                            : n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        };
+
                         const ratePerNight = nights > 0 ? (displayBase / nights) : displayBase;
                         const formattedRate = isZeroDec ? Math.round(ratePerNight) : ratePerNight.toFixed(2);
 
@@ -315,15 +322,15 @@ const UserReservationsSection = () => {
                               <span>
                                 {resSymbol}{formattedRate} × {nights} {nights === 1 ? "night" : "nights"}
                               </span>
-                              <span>{resSymbol}{displayBase.toLocaleString()}</span>
+                              <span>{resSymbol}{formatVal(displayBase)}</span>
                             </div>
                             <div className="flex justify-between">
                               <span>Taxes (14%)</span>
-                              <span>{resSymbol}{displayTax.toLocaleString()}</span>
+                              <span>{resSymbol}{formatVal(displayTax)}</span>
                             </div>
                             <div className="flex justify-between font-bold text-sm text-gray-900 dark:text-white pt-1 border-t border-gray-200 dark:border-gray-700">
                               <span>Total Paid ({resCurrency})</span>
-                              <span className="text-[#ff385c]">{resSymbol}{displayTotal.toLocaleString()}</span>
+                              <span className="text-[#ff385c]">{resSymbol}{formatVal(displayTotal)}</span>
                             </div>
 
                             <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-2 flex items-center gap-1">
@@ -426,11 +433,19 @@ const UserReservationsSection = () => {
                     modalTax = convertPrice(cancellingRes.taxes || Math.round((modalRoomTotal * 14) / 100), modalHostCur, modalCur, modalExRate);
                   }
 
+                  const modalIsZeroDec = ["INR", "JPY", "KRW", "VND", "IDR"].includes(modalCur);
+                  const formatModalVal = (val) => {
+                    const n = Number(val) || 0;
+                    return modalIsZeroDec
+                      ? Math.round(n).toLocaleString()
+                      : n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                  };
+
                   return (
                     <p className="mt-2 text-[11px] text-gray-500 dark:text-gray-400 leading-relaxed">
                       <strong>Refund Policy:</strong> Upon host approval, the room charge (
-                      {modalSymbol}{modalBase.toLocaleString()}) will be refunded to your original payment gateway. Taxes (
-                      {modalSymbol}{modalTax.toLocaleString()}) are non-refundable.
+                      {modalSymbol}{formatModalVal(modalBase)}) will be refunded to your original payment gateway. Taxes (
+                      {modalSymbol}{formatModalVal(modalTax)}) are non-refundable.
                     </p>
                   );
                 })()}

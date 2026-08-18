@@ -1,6 +1,7 @@
 import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
 import { FiCheckCircle, FiClock, FiXCircle, FiUser } from "react-icons/fi";
+import { getCurrencySymbol } from "../../../utils/currency";
 
 const AllReservations = ({ data = [] }) => {
   if (!data || data.length === 0) {
@@ -86,12 +87,25 @@ const AllReservations = ({ data = [] }) => {
                 <td className="px-4 py-4 font-semibold text-gray-900 dark:text-white">
                   {(() => {
                     const hostCur = item.hostCurrency || "INR";
-                    const hostSymbol = hostCur === "INR" ? "₹" : "$";
-                    const earned = item.hostEarnings !== undefined ? item.hostEarnings : (item.authorEarnedPrice || Math.round((item.basePrice || 0) * nights * 0.97));
+                    const hostSymbol = getCurrencySymbol(hostCur);
+                    const nights = item.nightStaying || 1;
+                    const baseTotal = (item.basePrice || 0) * nights;
+                    const fee = Math.round((baseTotal * 3) / 100);
+                    const earned = item.hostEarnings !== undefined ? item.hostEarnings : (item.authorEarnedPrice || (baseTotal - fee));
                     const guestCur = item.guestCurrency || item.currency || "USD";
                     return (
-                      <div>
-                        <span>{hostSymbol}{earned.toLocaleString()} ({hostCur})</span>
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-sm font-bold text-gray-900 dark:text-white">
+                            {hostSymbol}{earned.toLocaleString()}
+                          </span>
+                          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400">
+                            {hostCur}
+                          </span>
+                        </div>
+                        <p className="text-[10px] font-medium text-rose-500/90 dark:text-rose-400">
+                          -3% service fee ({hostSymbol}{fee.toLocaleString()})
+                        </p>
                         <p className="text-[10px] font-normal text-gray-400 dark:text-gray-500">
                           Paid by guest in {guestCur}
                         </p>
