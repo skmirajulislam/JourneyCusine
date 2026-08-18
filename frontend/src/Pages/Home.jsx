@@ -287,11 +287,7 @@ const Home = () => {
   return (
     <main className="max-w-screen-2xl xl:px-10 px-4 sm:px-8 md:px-12 mx-auto pb-16 w-full min-w-0">
       {/* Categories & Tax Bar */}
-      <section
-        className={`pt-3 md:pt-6 flex flex-col md:flex-row items-center gap-4 bg-white dark:bg-[#121212] sticky top-14 md:top-16 z-30 transition-all w-full min-w-0 ${
-          hasScroll ? "shadow-sm pb-2" : "shadow-none pb-1"
-        }`}
-      >
+      <section className="pt-2 pb-1 flex flex-col md:flex-row items-center gap-2 sm:gap-4 bg-white dark:bg-[#121212] w-full min-w-0">
         <div className="w-full min-w-0 flex-1">
           <Category />
         </div>

@@ -111,12 +111,6 @@ const WelcomePopup = ({
               onBlur: handleInputBlur,
             })}
           />
-          <div className="pt-3 px-2 italic">
-            <ul className="list-disc text-xs text-[#222222] dark:text-[#e5e7eb] opacity-80 space-y-0.5">
-              <p className="font-medium not-italic">Demo / Test Account:</p>
-              <li className="ml-4">email: guest@email.com</li>
-            </ul>
-          </div>
           <p className="text-xs text-[#222222] dark:text-[#e5e7eb] pt-3 mb-4 opacity-80 ml-[2px]">
             We’ll send a confirmation email to verify your email address. <br />{" "}
             <Link to="/privacy" className="font-semibold underline hover:text-[#ff385c] transition-colors">Privacy Policy</Link>

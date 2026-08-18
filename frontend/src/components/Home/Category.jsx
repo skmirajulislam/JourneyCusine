@@ -36,14 +36,14 @@ const Category = ({ styleGrid = "" }) => {
       </button>
       <div
         ref={categoryListRef}
-        className="flex min-w-0 flex-1 gap-5 overflow-x-auto scroll-smooth py-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="flex min-w-0 flex-1 gap-4 sm:gap-5 overflow-x-auto scroll-smooth py-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {categoryApi.map((cat) => (
           <button
             key={cat.name}
             type="button"
             onClick={() => handleSelectedCat(cat)}
-            className={`relative flex min-w-16 shrink-0 flex-col-reverse items-center gap-1.5 pb-3 text-center cursor-pointer transition-all duration-200 ease-in ${
+            className={`relative flex min-w-16 shrink-0 flex-col-reverse items-center gap-1 pb-2 text-center cursor-pointer transition-all duration-200 ease-in ${
               category === cat.name ? "opacity-100 font-semibold" : "opacity-60 hover:opacity-100 font-normal"
             }`}
           >

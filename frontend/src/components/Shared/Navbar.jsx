@@ -162,7 +162,7 @@ const Navbar = () => {
         }`}
     >
       <div
-        className={`w-full max-w-full px-3 sm:px-5 xl:px-10 py-2.5 sm:py-3.5 xl:mx-auto relative flex flex-row justify-between items-center ${
+        className={`w-full max-w-full px-3 sm:px-5 xl:px-10 py-2 sm:py-2.5 xl:mx-auto relative flex flex-row justify-between items-center ${
           inUserProfile ||
           inUserDashboard ||
           inHostHomesLandingPage ||
@@ -518,17 +518,17 @@ const Navbar = () => {
         !inHostHomesLandingPage &&
         !inBookingPage &&
         !inTripsPage && (
-          <div className="lg:hidden px-5 pb-3.5 pt-0.5 max-w-screen-2xl mx-auto">
-            <div className="flex items-center gap-2">
+          <div className="lg:hidden px-3 sm:px-5 pb-2 pt-0 w-full max-w-full">
+            <div className="flex items-center gap-1.5 sm:gap-2">
               <form
                 onSubmit={handleSearchSubmit}
-                className="flex-1 border-[1.5px] border-[#dddddd] dark:border-[#444444] rounded-full px-3.5 py-2 flex items-center shadow-sm bg-white dark:bg-[#222222]"
+                className="flex-1 min-w-0 border-[1.5px] border-[#dddddd] dark:border-[#444444] rounded-full px-3 py-1.5 flex items-center shadow-sm bg-white dark:bg-[#222222]"
               >
                 <input
                   type="text"
                   value={searchValue}
                   onChange={(e) => setSearchValue(e.target.value)}
-                  className="focus:outline-none pl-1 pr-1 text-xs sm:text-sm text-[#222222] dark:text-white bg-transparent w-full"
+                  className="focus:outline-none pl-1 pr-1 text-xs sm:text-sm text-[#222222] dark:text-white bg-transparent w-full min-w-0"
                   placeholder="Search city, country, motel..."
                 />
                 <AnimatePresence>
@@ -540,7 +540,7 @@ const Navbar = () => {
                       transition={{ duration: 0.15 }}
                       type="button"
                       onClick={handleClearSearch}
-                      className="text-[#888888] hover:text-[#222222] dark:hover:text-white p-1 cursor-pointer"
+                      className="text-[#888888] hover:text-[#222222] dark:hover:text-white p-1 cursor-pointer shrink-0"
                       title="Clear search"
                     >
                       <FiX size={14} />
@@ -551,7 +551,7 @@ const Navbar = () => {
                   type="submit"
                   variant="journey"
                   size="icon"
-                  className="rounded-full w-7 h-7 ml-1"
+                  className="rounded-full w-7 h-7 ml-1 shrink-0"
                   title="Search"
                 >
                   <img src={searchIcon} alt="Search" className="w-3 h-3" />
@@ -564,7 +564,7 @@ const Navbar = () => {
                 onClick={() => setShowFilterPopup(true)}
                 variant="outline"
                 size="sm"
-                className={`rounded-full gap-1.5 text-xs font-bold shrink-0 ${
+                className={`rounded-full gap-1.5 px-3 py-1.5 text-xs font-bold shrink-0 ${
                   activeFilterCount > 0
                     ? "border-[#ff385c] bg-[#ff385c]/10 text-[#ff385c] ring-1 ring-[#ff385c]"
                     : ""

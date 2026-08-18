@@ -166,12 +166,6 @@ const LogInPopup = ({
           </button>
         </div>
       </div>
-      <div className=" pt-4 px-8 italic pb-7">
-        <ul className=" list-disc text-xs text-[#222222] dark:text-[#e5e7eb] opacity-80">
-          <p>You can use below test credentials to login!</p>
-          <li>Password: guest1234</li>
-        </ul>
-      </div>
     </div>
   );
 };

@@ -142,6 +142,23 @@ Open [http://localhost:3001](http://localhost:3001) in your browser.
 
 ---
 
+## 💳 Test Payment Credentials (Razorpay Sandbox)
+
+When testing checkout, bookings, and instant refund flows in test mode, use any of the official test cards below:
+
+| Network | Card Number | Card Type | Card Sub Type | CVV & Expiry Date |
+| :--- | :--- | :--- | :--- | :--- |
+| **Visa** | `4100 2800 0000 1007` | Debit | Consumer | Use a random CVV and any future date (e.g. `12/28`) |
+| **Mastercard** | `5555 5100 0008 1006` | Credit | Business | Use a random CVV and any future date (e.g. `12/28`) |
+| **Mastercard** | `5180 2872 0009 1001` | Prepaid | Consumer | Use a random CVV and any future date (e.g. `12/28`) |
+| **RuPay** | `6527 6589 0000 1005` | Credit | Consumer | Use a random CVV and any future date (e.g. `12/28`) |
+| **Diners** | `3608 280009 1007` | Credit | Consumer | Use a random CVV and any future date (e.g. `12/28`) |
+| **Amex** | `3402 560004 01007` | Credit | Consumer | Use a random CVV and any future date (e.g. `12/28`) |
+
+> **Note**: For OTP verification during test payments, enter any numeric OTP (e.g., `1234` or `123456`) or click **Success** on the Razorpay test payment interface.
+
+---
+
 ## 🧪 Verification & Quality Assurance
 
 | Quality Check | Tool / Standard | Result |

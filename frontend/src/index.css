@@ -52,6 +52,8 @@
 
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
+  max-width: 100%;
 }
 body {
   font-family: "Poppins", sans-serif;
@@ -60,6 +62,8 @@ body {
   box-sizing: border-box;
   background-color: #ffffff;
   color: #222222;
+  overflow-x: hidden;
+  max-width: 100%;
 }
 
 
