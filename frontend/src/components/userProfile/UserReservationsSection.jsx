@@ -17,7 +17,7 @@ import {
   FiRefreshCw,
 } from "react-icons/fi";
 import { FadeLoader } from "react-spinners";
-import { CURRENCY_SYMBOLS } from "../../utils/currency";
+import { CURRENCY_SYMBOLS, convertPrice } from "../../utils/currency";
 
 const UserReservationsSection = () => {
   const { user } = useAuth();
@@ -273,19 +273,47 @@ const UserReservationsSection = () => {
 
                     <div className="text-xs space-y-1 text-gray-600 dark:text-gray-300">
                       {(() => {
-                        const resCurrency = resItem.guestCurrency || resItem.currency || "INR";
+                        const resCurrency = resItem.guestCurrency || resItem.currency || user?.currency || "INR";
+                        const hostCur = resItem.hostCurrency || resItem.listing?.currency || "INR";
                         const resSymbol = CURRENCY_SYMBOLS[resCurrency] || "$";
-                        const displayBase = resItem.guestBasePrice !== undefined ? resItem.guestBasePrice : roomTotal;
-                        const displayTax = resItem.guestTaxes !== undefined ? resItem.guestTaxes : taxes;
-                        const displayTotal = resItem.guestTotalPaid !== undefined ? resItem.guestTotalPaid : totalPaid;
+                        const exchangeRate = resItem.exchangeRate && resItem.exchangeRate !== 1 ? resItem.exchangeRate : null;
+
+                        // Resolve converted base room price
+                        let displayBase = resItem.guestBasePrice;
+                        if (displayBase === undefined || displayBase === null || (hostCur !== resCurrency && displayBase === roomTotal)) {
+                          displayBase = convertPrice(roomTotal, hostCur, resCurrency, exchangeRate);
+                        }
+
+                        // Resolve converted tax
+                        let displayTax = resItem.guestTaxes;
+                        if (displayTax === undefined || displayTax === null || (hostCur !== resCurrency && displayTax === taxes)) {
+                          displayTax = convertPrice(taxes, hostCur, resCurrency, exchangeRate);
+                          if (!displayTax || isNaN(displayTax)) {
+                            displayTax = Math.round((displayBase * 14) / 100);
+                          }
+                        }
+
+                        // Resolve converted total paid
+                        let displayTotal = resItem.guestTotalPaid;
+                        if (displayTotal === undefined || displayTotal === null || (hostCur !== resCurrency && displayTotal === totalPaid)) {
+                          displayTotal = convertPrice(totalPaid, hostCur, resCurrency, exchangeRate);
+                          if (!displayTotal || isNaN(displayTotal)) {
+                            displayTotal = Math.round((displayBase + displayTax) * 100) / 100;
+                          }
+                        }
+
                         const displayRefund = resItem.refundDetails?.refundAmount !== undefined ? resItem.refundDetails.refundAmount : displayBase;
                         const displayTaxRetained = resItem.refundDetails?.taxDeduction !== undefined ? resItem.refundDetails.taxDeduction : displayTax;
+
+                        const isZeroDec = ["INR", "JPY", "KRW", "VND", "IDR"].includes(resCurrency);
+                        const ratePerNight = nights > 0 ? (displayBase / nights) : displayBase;
+                        const formattedRate = isZeroDec ? Math.round(ratePerNight) : ratePerNight.toFixed(2);
 
                         return (
                           <>
                             <div className="flex justify-between">
                               <span>
-                                {resSymbol}{Math.round(displayBase / nights)} × {nights} nights
+                                {resSymbol}{formattedRate} × {nights} {nights === 1 ? "night" : "nights"}
                               </span>
                               <span>{resSymbol}{displayBase.toLocaleString()}</span>
                             </div>
@@ -383,11 +411,29 @@ const UserReservationsSection = () => {
                 <p>
                   <strong>Order ID:</strong> #{cancellingRes.orderId}
                 </p>
-                <p className="mt-2 text-[11px] text-gray-500 dark:text-gray-400 leading-relaxed">
-                  <strong>Refund Policy:</strong> Upon host approval, the room charge (
-                  {CURRENCY_SYMBOLS[cancellingRes.guestCurrency || cancellingRes.currency || "INR"] || "₹"}{cancellingRes.guestBasePrice !== undefined ? cancellingRes.guestBasePrice : ((cancellingRes.basePrice || 0) * (cancellingRes.nightStaying || 1))}) will be refunded to your original payment gateway. Taxes (
-                  {CURRENCY_SYMBOLS[cancellingRes.guestCurrency || cancellingRes.currency || "INR"] || "₹"}{cancellingRes.guestTaxes !== undefined ? cancellingRes.guestTaxes : (cancellingRes.taxes || 0)}) are non-refundable.
-                </p>
+                {(() => {
+                  const modalCur = cancellingRes.guestCurrency || cancellingRes.currency || user?.currency || "INR";
+                  const modalHostCur = cancellingRes.hostCurrency || cancellingRes.listing?.currency || "INR";
+                  const modalSymbol = CURRENCY_SYMBOLS[modalCur] || "$";
+                  const modalExRate = cancellingRes.exchangeRate && cancellingRes.exchangeRate !== 1 ? cancellingRes.exchangeRate : null;
+                  const modalRoomTotal = (cancellingRes.basePrice || 0) * (cancellingRes.nightStaying || 1);
+                  let modalBase = cancellingRes.guestBasePrice;
+                  if (modalBase === undefined || modalBase === null || (modalHostCur !== modalCur && modalBase === modalRoomTotal)) {
+                    modalBase = convertPrice(modalRoomTotal, modalHostCur, modalCur, modalExRate);
+                  }
+                  let modalTax = cancellingRes.guestTaxes;
+                  if (modalTax === undefined || modalTax === null || (modalHostCur !== modalCur && modalTax === (cancellingRes.taxes || 0))) {
+                    modalTax = convertPrice(cancellingRes.taxes || Math.round((modalRoomTotal * 14) / 100), modalHostCur, modalCur, modalExRate);
+                  }
+
+                  return (
+                    <p className="mt-2 text-[11px] text-gray-500 dark:text-gray-400 leading-relaxed">
+                      <strong>Refund Policy:</strong> Upon host approval, the room charge (
+                      {modalSymbol}{modalBase.toLocaleString()}) will be refunded to your original payment gateway. Taxes (
+                      {modalSymbol}{modalTax.toLocaleString()}) are non-refundable.
+                    </p>
+                  );
+                })()}
               </div>
 
               <label className="flex flex-col gap-1.5 text-xs font-semibold text-gray-700 dark:text-gray-300">

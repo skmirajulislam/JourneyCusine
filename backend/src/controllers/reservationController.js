@@ -79,6 +79,9 @@ exports.createRazorpayOrder = async (req, res) => {
           const taxHost = Math.round((totalHost * 14) / 100);
           const totalStayHost = totalHost + taxHost;
 
+          if (hostCurrency !== targetCurrency) {
+            await fetchPairRate(hostCurrency, targetCurrency);
+          }
           // Convert directly from host currency to target guest currency (or 1:1 if same currency)
           totalAmountInTargetCurrency = convertPrice(totalStayHost, hostCurrency, targetCurrency);
         }
@@ -333,6 +336,9 @@ exports.verifyRazorpayPayment = async (req, res) => {
       (sum, item) => sum + (Number(item.price) || 0) * (Number(item.quantity) || 1),
       0
     );
+    if (resolvedHostCurrency !== targetGuestCurrency) {
+      await fetchPairRate(resolvedHostCurrency, targetGuestCurrency);
+    }
     const guestCuisineTotalPrice = convertPrice(cuisineTotalPriceHost, resolvedHostCurrency, targetGuestCurrency);
 
     const discountedRoomHost = Math.max(0, totalRoomPriceHost - discountHost);
@@ -479,36 +485,45 @@ exports.newReservation = async (req, res) => {
     }
 
     const resolvedAuthorId = authorId || listingDetails.author || listingDetails.authorId;
-    let hostCurrency = "INR";
+    let hostCountry = "India";
+    let hostCurrency = listingDetails.currency || "INR";
     if (resolvedAuthorId && typeof resolvedAuthorId === "string" && mongoose.Types.ObjectId.isValid(resolvedAuthorId)) {
       const hostObjId = new mongoose.Types.ObjectId(resolvedAuthorId);
       const hostUser = await User.findById(hostObjId);
       if (hostUser) {
-        hostCurrency = hostUser.currency || getCurrencyForCountry(hostUser.country || "India");
+        hostCountry = hostUser.country || "India";
+        hostCurrency = listingDetails.currency || hostUser.currency || getCurrencyForCountry(hostCountry);
       }
     }
 
-    const basePriceUSD = parseInt(listingDetails.basePrice, 10) || 0;
-    const totalRoomPriceUSD = basePriceUSD * nightStaying;
+    const resolvedHostCurrency = hostCurrency;
+    const targetGuestCurrency = getPaymentCurrency(payload.currency || guestCurrency || "INR", "USD");
+
+    if (resolvedHostCurrency !== targetGuestCurrency) {
+      await fetchPairRate(resolvedHostCurrency, targetGuestCurrency);
+    }
+
+    const basePriceHost = parseInt(listingDetails.basePrice, 10) || 0;
+    const totalRoomPriceHost = basePriceHost * nightStaying;
 
     // Calculate selected cuisine add-ons
     const selectedCuisineAddons = Array.isArray(payload.selectedCuisineAddons) ? payload.selectedCuisineAddons : [];
-    const cuisineTotalPriceUSD = selectedCuisineAddons.reduce(
+    const cuisineTotalPriceHost = selectedCuisineAddons.reduce(
       (sum, item) => sum + (Number(item.price) || 0) * (Number(item.quantity) || 1),
       0
     );
-    const guestCuisineTotalPrice = convertPrice(cuisineTotalPriceUSD, "USD", guestCurrency);
+    const guestCuisineTotalPrice = convertPrice(cuisineTotalPriceHost, resolvedHostCurrency, targetGuestCurrency);
 
-    const subtotalWithCuisineUSD = totalRoomPriceUSD + cuisineTotalPriceUSD;
-    const taxUSD = Math.round((subtotalWithCuisineUSD * 14) / 100);
-    const totalPriceUSD = subtotalWithCuisineUSD + taxUSD;
-    const authorEarnedPriceUSD =
-      totalRoomPriceUSD - Math.round((totalRoomPriceUSD * 3) / 100) + cuisineTotalPriceUSD;
+    const subtotalWithCuisineHost = totalRoomPriceHost + cuisineTotalPriceHost;
+    const taxHost = Math.round((subtotalWithCuisineHost * 14) / 100);
+    const totalPriceHost = subtotalWithCuisineHost + taxHost;
+    const authorEarnedPriceHost =
+      totalRoomPriceHost - Math.round((totalRoomPriceHost * 3) / 100) + cuisineTotalPriceHost;
 
-    const guestBasePrice = convertPrice(totalRoomPriceUSD, "USD", guestCurrency);
-    const guestTaxes = convertPrice(taxUSD, "USD", guestCurrency);
-    const guestTotalPaid = convertPrice(totalPriceUSD, "USD", guestCurrency);
-    const hostEarnings = convertPrice(authorEarnedPriceUSD, "USD", hostCurrency);
+    const guestBasePrice = convertPrice(totalRoomPriceHost, resolvedHostCurrency, targetGuestCurrency);
+    const guestTaxes = convertPrice(taxHost, resolvedHostCurrency, targetGuestCurrency);
+    const guestTotalPaid = convertPrice(totalPriceHost, resolvedHostCurrency, targetGuestCurrency);
+    const hostEarnings = authorEarnedPriceHost;
 
     const newReservation = {
       listingId,
@@ -520,22 +535,22 @@ exports.newReservation = async (req, res) => {
       checkIn,
       checkOut,
       nightStaying,
-      basePrice: basePriceUSD,
-      taxes: taxUSD,
-      totalPrice: totalPriceUSD,
-      authorEarnedPrice: authorEarnedPriceUSD,
+      basePrice: basePriceHost,
+      taxes: taxHost,
+      totalPrice: totalPriceHost,
+      authorEarnedPrice: authorEarnedPriceHost,
       // Cuisine Dining Experiences Add-ons
       selectedCuisineAddons,
-      cuisineTotalPrice: cuisineTotalPriceUSD,
+      cuisineTotalPrice: cuisineTotalPriceHost,
       guestCuisineTotalPrice,
-      currency: guestCurrency,
-      guestCurrency,
+      currency: targetGuestCurrency,
+      guestCurrency: targetGuestCurrency,
       guestBasePrice,
       guestTaxes,
       guestTotalPaid,
-      hostCurrency,
+      hostCurrency: resolvedHostCurrency,
       hostEarnings,
-      exchangeRate: getDirectRate(hostCurrency, guestCurrency) || 1.0,
+      exchangeRate: getDirectRate(resolvedHostCurrency, targetGuestCurrency) || 1.0,
       orderId,
       razorpayOrderId: payload.razorpayOrderId || payload.razorpay_order_id,
       razorpayPaymentId:
@@ -719,11 +734,16 @@ exports.processRefund = async (req, res) => {
     }
 
     const guestCurrency = reservation.guestCurrency || reservation.currency || "INR";
+    const hostCur = reservation.hostCurrency || "INR";
     const nights = reservation.nightStaying || 1;
 
+    if (hostCur !== guestCurrency) {
+      await fetchPairRate(hostCur, guestCurrency);
+    }
+
     // Refund calculation in guest currency
-    const guestTotalPaid = reservation.guestTotalPaid || convertPrice(reservation.totalPrice || 0, "USD", guestCurrency);
-    const guestBasePrice = reservation.guestBasePrice || convertPrice((reservation.basePrice || 0) * nights, "USD", guestCurrency);
+    const guestTotalPaid = reservation.guestTotalPaid || convertPrice(reservation.totalPrice || 0, hostCur, guestCurrency);
+    const guestBasePrice = reservation.guestBasePrice || convertPrice((reservation.basePrice || 0) * nights, hostCur, guestCurrency);
     const taxDeduction = reservation.guestTaxes || (guestTotalPaid - guestBasePrice);
     const refundAmount = Math.max(guestBasePrice, 0);
 
