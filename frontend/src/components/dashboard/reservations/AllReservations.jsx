@@ -18,8 +18,8 @@ const AllReservations = ({ data = [] }) => {
   }
 
   return (
-    <div className="flex flex-col w-full min-w-[750px] overflow-x-auto">
-      <table className="min-w-full text-left text-xs font-normal border-collapse">
+    <div className="w-full max-w-full overflow-x-auto rounded-xl border border-gray-100 dark:border-[#2a2a2a] bg-white dark:bg-[#1a1a1a]">
+      <table className="min-w-[720px] w-full text-left text-xs font-normal border-collapse">
         <thead className="text-xs text-[#717171] dark:text-[#a0a0a0] font-semibold border-b border-[#dddddd] dark:border-[#333333]">
           <tr>
             <th className="px-4 py-3.5">ORDER ID</th>

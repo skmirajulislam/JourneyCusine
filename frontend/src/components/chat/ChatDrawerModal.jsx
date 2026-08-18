@@ -44,6 +44,13 @@ const ChatDrawerModal = () => {
   const [mobileShowThread, setMobileShowThread] = useState(false);
   const messagesEndRef = useRef(null);
 
+  // When active conversation is loaded/selected, show thread on mobile
+  useEffect(() => {
+    if (activeConversation) {
+      setMobileShowThread(true);
+    }
+  }, [activeConversation]);
+
   // Auto-scroll to bottom of messages
   useEffect(() => {
     if (isChatOpen) {
@@ -108,19 +115,19 @@ const ChatDrawerModal = () => {
   return (
     <div
       onClick={() => setIsChatOpen(false)}
-      className="fixed inset-0 z-[2500] flex items-end sm:items-center justify-end sm:justify-center p-0 sm:p-6 bg-black/50 backdrop-blur-xs"
+      className="fixed inset-0 z-[2500] flex items-center justify-center p-0 sm:p-4 md:p-6 bg-black/60 backdrop-blur-xs"
     >
       <motion.div
         onClick={(e) => e.stopPropagation()}
-        initial={{ opacity: 0, y: 40, scale: 0.98 }}
+        initial={{ opacity: 0, y: 30, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 40, scale: 0.98 }}
-        transition={{ duration: 0.25 }}
-        className="w-full sm:max-w-4xl h-[90vh] sm:h-[650px] bg-white dark:bg-[#181818] rounded-t-3xl sm:rounded-[32px] overflow-hidden shadow-2xl border border-neutral-200 dark:border-neutral-800 flex flex-col sm:flex-row relative"
+        exit={{ opacity: 0, y: 30, scale: 0.98 }}
+        transition={{ duration: 0.22 }}
+        className="w-full sm:max-w-4xl h-full sm:h-[650px] bg-white dark:bg-[#181818] rounded-none sm:rounded-[28px] md:rounded-[32px] overflow-hidden shadow-2xl border-0 sm:border border-neutral-200 dark:border-neutral-800 flex flex-col sm:flex-row relative"
       >
         {/* LEFT COLUMN: Conversations List */}
         <div
-          className={`w-full sm:w-[320px] border-r border-neutral-200 dark:border-neutral-800 flex flex-col h-full bg-neutral-50/50 dark:bg-[#141414] ${
+          className={`w-full sm:w-[320px] sm:shrink-0 border-r border-neutral-200 dark:border-neutral-800 flex flex-col h-full bg-neutral-50/50 dark:bg-[#141414] ${
             mobileShowThread && activeConversation ? "hidden sm:flex" : "flex"
           }`}
         >
@@ -240,20 +247,21 @@ const ChatDrawerModal = () => {
         {/* RIGHT COLUMN: Active Chat Thread */}
         <div
           className={`flex-1 flex flex-col h-full bg-white dark:bg-[#181818] ${
-            !mobileShowThread && !activeConversation ? "hidden sm:flex" : "flex"
+            mobileShowThread && activeConversation ? "flex" : "hidden sm:flex"
           }`}
         >
           {activeConversation ? (
             <>
               {/* Active Conversation Header */}
               <div className="p-3.5 sm:p-4 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between bg-white dark:bg-[#181818]">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 pr-2">
                   <button
                     type="button"
                     onClick={() => setMobileShowThread(false)}
-                    className="sm:hidden p-1.5 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-600 dark:text-neutral-400"
+                    className="sm:hidden p-1.5 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 shrink-0"
+                    title="Back to conversations"
                   >
-                    <FiChevronLeft size={20} />
+                    <FiChevronLeft size={22} />
                   </button>
 
                   <div className="w-10 h-10 rounded-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center font-bold text-xs uppercase shrink-0 overflow-hidden">

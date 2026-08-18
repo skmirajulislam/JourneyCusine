@@ -162,7 +162,7 @@ const Navbar = () => {
         }`}
     >
       <div
-        className={`xl:px-10 py-3.5 xl:mx-auto px-5 relative flex flex-row justify-between items-center ${
+        className={`w-full max-w-full px-3 sm:px-5 xl:px-10 py-2.5 sm:py-3.5 xl:mx-auto relative flex flex-row justify-between items-center ${
           inUserProfile ||
           inUserDashboard ||
           inHostHomesLandingPage ||
@@ -177,14 +177,14 @@ const Navbar = () => {
             <img
               src={motelLogo}
               alt="Logo"
-              className="w-9 sm:w-10 cursor-pointer"
+              className="w-8 h-8 sm:w-9 sm:h-9 cursor-pointer object-contain"
               onClick={() => {
                 localStorage.setItem("category", "House");
                 navigate("/");
               }}
             />
-            {inHostHomesLandingPage || isSmallDevice ? null : (
-              <p className="text-xl text-[#ff385c] font-bold">Journey Cuisine</p>
+            {!inHostHomesLandingPage && (
+              <p className="text-lg sm:text-xl text-[#ff385c] font-bold hidden md:block">Journey Cuisine</p>
             )}
           </span>
         </div>
@@ -306,7 +306,7 @@ const Navbar = () => {
             ) : (
               <>
                 {/* user bar */}
-                <div className="flex justify-end items-center gap-2.5 shrink-0 ml-auto lg:ml-0">
+                <div className="flex justify-end items-center gap-1.5 sm:gap-2.5 shrink-0 ml-auto lg:ml-0">
                   {user && !inUserDashboard && (
                     <Link
                       to="/host/homes"
@@ -321,7 +321,7 @@ const Navbar = () => {
                     <button
                       type="button"
                       onClick={openPassportModal}
-                      className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-900/60 hover:bg-amber-100 dark:hover:bg-amber-900/80 transition shadow-2xs text-xs font-bold text-amber-900 dark:text-amber-200 cursor-pointer"
+                      className="hidden xl:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-900/60 hover:bg-amber-100 dark:hover:bg-amber-900/80 transition shadow-2xs text-xs font-bold text-amber-900 dark:text-amber-200 cursor-pointer"
                       title="Foodie Passport & Rewards"
                     >
                       <span>🏆</span>
@@ -336,12 +336,12 @@ const Navbar = () => {
                       onClick={openNotificationDrawer}
                       variant="outline"
                       size="icon"
-                      className="rounded-full shrink-0 relative"
+                      className="rounded-full w-8 h-8 sm:w-9 sm:h-9 shrink-0 relative p-0 flex items-center justify-center"
                       title="Notifications & Alerts"
                     >
-                      <FiBell size={15} />
+                      <FiBell className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                       {notificationUnreadCount > 0 && (
-                        <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#ff385c] text-white text-[9px] font-extrabold flex items-center justify-center animate-pulse">
+                        <span className="absolute -top-1 -right-1 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-[#ff385c] text-white text-[8px] sm:text-[9px] font-extrabold flex items-center justify-center animate-pulse">
                           {notificationUnreadCount}
                         </span>
                       )}
@@ -355,12 +355,12 @@ const Navbar = () => {
                       onClick={() => setIsChatOpen(true)}
                       variant="outline"
                       size="icon"
-                      className="rounded-full shrink-0 relative"
+                      className="rounded-full w-8 h-8 sm:w-9 sm:h-9 shrink-0 relative p-0 flex items-center justify-center"
                       title="Host-Guest Messages"
                     >
-                      <FiMessageSquare size={15} />
+                      <FiMessageSquare className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                       {unreadTotal > 0 && (
-                        <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#ff385c] text-white text-[9px] font-extrabold flex items-center justify-center animate-pulse">
+                        <span className="absolute -top-1 -right-1 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-[#ff385c] text-white text-[8px] sm:text-[9px] font-extrabold flex items-center justify-center animate-pulse">
                           {unreadTotal}
                         </span>
                       )}
@@ -373,31 +373,31 @@ const Navbar = () => {
                     onClick={toggleTheme}
                     variant="outline"
                     size="icon"
-                    className="rounded-full shrink-0"
+                    className="rounded-full w-8 h-8 sm:w-9 sm:h-9 shrink-0 p-0 flex items-center justify-center"
                     title={theme === "light" ? "Switch to Dark mode" : "Switch to Light mode"}
                   >
-                    {theme === "light" ? <BsMoonStars size={16} /> : <BsSun size={16} className="text-yellow-400" />}
+                    {theme === "light" ? <BsMoonStars className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <BsSun className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-yellow-400" />}
                   </Button>
 
                   {/* User menu dropdown */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <button className="border-[1px] border-[#dddddd] dark:border-[#444444] bg-white dark:bg-[#222222] rounded-full py-1 px-2.5 flex flex-row gap-2.5 items-center hover:shadow-md transition-all cursor-pointer relative shrink-0 outline-none">
+                      <button className="border border-[#dddddd] dark:border-[#444444] bg-white dark:bg-[#222222] rounded-full py-1 px-1.5 sm:px-2.5 flex flex-row gap-1.5 sm:gap-2.5 items-center hover:shadow-md transition-all cursor-pointer relative shrink-0 outline-none">
                         <Menu className="w-3.5 h-3.5 text-[#222222] dark:text-white" />
                         {user ? (
                           user?.profileImg ? (
                             <img
                               src={user.profileImg}
                               alt={user?.name?.firstName || "User profile"}
-                              className="w-7 h-7 rounded-full object-cover border border-neutral-300 dark:border-neutral-700"
+                              className="w-6 h-6 sm:w-7 sm:h-7 rounded-full object-cover border border-neutral-300 dark:border-neutral-700"
                             />
                           ) : (
-                            <span className="bg-[#222222] dark:bg-[#444444] text-[#efefef] w-7 h-7 rounded-full text-xs font-bold flex items-center justify-center">
+                            <span className="bg-[#222222] dark:bg-[#444444] text-[#efefef] w-6 h-6 sm:w-7 sm:h-7 rounded-full text-[10px] sm:text-xs font-bold flex items-center justify-center">
                               {user.name?.firstName?.slice(0, 1) || "U"}
                             </span>
                           )
                         ) : (
-                          <User className="w-7 h-7 text-[#717171] dark:text-[#a0a0a0] p-0.5" />
+                          <User className="w-6 h-6 sm:w-7 sm:h-7 text-[#717171] dark:text-[#a0a0a0] p-0.5" />
                         )}
                       </button>
                     </DropdownMenuTrigger>

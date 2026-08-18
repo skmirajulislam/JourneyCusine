@@ -15,7 +15,7 @@ const Overview = () => {
   }, [authorReservations]);
 
   return (
-    <section className="max-w-[1240px] mx-auto px-4 sm:px-8 md:px-10 xl:px-16 py-8 md:py-12 space-y-8">
+    <section className="w-full max-w-[1240px] mx-auto px-3 sm:px-6 md:px-10 xl:px-16 py-5 sm:py-8 md:py-12 space-y-6 sm:space-y-8">
       {/* 4 Dynamic Metric KPI Cards */}
       <DashboardCards
         reservations={reservations}
@@ -23,7 +23,7 @@ const Overview = () => {
       />
 
       {/* 1. Monthly Earnings Bar Chart */}
-      <div className="bg-white dark:bg-[#1a1a1a] shadow-sm rounded-2xl border border-gray-100 dark:border-[#2a2a2a] p-6 sm:p-7 flex flex-col gap-5">
+      <div className="bg-white dark:bg-[#1a1a1a] shadow-sm rounded-2xl border border-gray-100 dark:border-[#2a2a2a] p-4 sm:p-7 flex flex-col gap-4 sm:gap-5">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-zinc-900 dark:text-white text-lg font-bold flex items-center gap-2">

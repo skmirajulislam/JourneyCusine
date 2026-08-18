@@ -108,7 +108,7 @@ export async function fetchPairRate(fromCurrency = "INR", toCurrency = "INR", fo
       }
     }
   } catch (err) {
-    console.warn(`Frankfurter pair rate ${from}->${to} fetch warning:`, err.message);
+    console.warn("Frankfurter pair rate fetch warning:", from, to, err?.message);
   }
 
   return pairRatesCache[pairKey] || 1.0;
@@ -184,7 +184,7 @@ export async function fetchLiveRatesForBase(baseCurrency = "INR", force = false)
       }
     }
   } catch (err) {
-    console.warn(`Frankfurter bulk rates for base ${base} fetch warning:`, err.message);
+    console.warn("Frankfurter bulk rates fetch warning:", base, err?.message);
   }
 
   return { [base]: 1.0 };

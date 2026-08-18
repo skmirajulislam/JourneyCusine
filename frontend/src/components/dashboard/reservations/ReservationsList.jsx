@@ -67,12 +67,12 @@ const ReservationsList = ({ active, setActivePage }) => {
   };
 
   return (
-    <section className="mt-6">
-      <h1 className="text-[#222222] dark:text-white text-3xl font-semibold">
+    <section className="mt-4 sm:mt-6 w-full max-w-full">
+      <h1 className="text-[#222222] dark:text-white text-2xl sm:text-3xl font-bold tracking-tight">
         Reservations
       </h1>
-      <div className="relative">
-        <div className="pt-8 flex flex-row gap-2 sm:gap-6 relative z-10 justify-between sm:justify-start overflow-x-auto pb-1">
+      <div className="relative w-full max-w-full mt-4 sm:mt-6">
+        <div className="flex flex-row gap-1 sm:gap-4 relative z-10 justify-start overflow-x-auto pb-2 scrollbar-none max-w-full">
           {reservationListItems.map((list) => {
             const count = counts[list.id];
             const hasPendingAction =
@@ -83,20 +83,20 @@ const ReservationsList = ({ active, setActivePage }) => {
                 key={list.id}
                 type="button"
                 onClick={() => handleActive(list.id)}
-                className={`flex items-center gap-2 pb-3 px-3 cursor-pointer text-sm sm:text-base font-medium whitespace-nowrap transition-all border-b-2 ${
+                className={`flex items-center gap-1.5 pb-2.5 px-2.5 sm:px-3.5 cursor-pointer text-xs sm:text-sm font-medium whitespace-nowrap transition-all border-b-2 shrink-0 ${
                   active === list.id
-                    ? "border-[#222222] dark:border-white text-[#222222] dark:text-white font-bold"
-                    : "border-transparent text-[#717171] dark:text-[#a0a0a0] hover:text-[#222222] dark:hover:text-white"
+                    ? "border-[#ff385c] text-[#ff385c] font-bold"
+                    : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                 }`}
               >
                 <span>{list.name}</span>
                 {count !== undefined && count > 0 && (
                   <span
-                    className={`text-xs px-2 py-0.5 rounded-full font-bold ${
+                    className={`text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full font-bold ${
                       hasPendingAction
                         ? "bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 animate-pulse"
                         : active === list.id
-                        ? "bg-[#222222] dark:bg-white text-white dark:text-[#222222]"
+                        ? "bg-[#ff385c] text-white"
                         : "bg-neutral-100 dark:bg-neutral-800 text-gray-600 dark:text-gray-400"
                     }`}
                   >
@@ -107,7 +107,7 @@ const ReservationsList = ({ active, setActivePage }) => {
             );
           })}
         </div>
-        <hr className="absolute bottom-0 w-full h-[1px] bg-[#dddddd] dark:bg-[#333333] z-0" />
+        <hr className="absolute bottom-0 w-full h-[1px] bg-gray-200 dark:bg-[#2d2d2d] z-0" />
       </div>
     </section>
   );

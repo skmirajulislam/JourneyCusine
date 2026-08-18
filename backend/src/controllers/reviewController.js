@@ -112,7 +112,7 @@ Respond ONLY with a valid raw JSON object:
         }
       }
     } catch (err) {
-      console.warn(`Gemini review moderation model ${model} error:`, err.message);
+      console.warn("Gemini review moderation model error:", model, err?.message);
     }
   }
 

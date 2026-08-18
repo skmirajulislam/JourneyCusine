@@ -7,8 +7,6 @@ import { useOutsideClick } from "../../hooks/useOutsideClick";
 
 const DashboardMenu = () => {
   const { user } = useAuth();
-  // const [showDashboardMenu, setShowDashboardMenu] = useState(false);
-  const isSmallDevice = window.innerWidth < 768;
   const userDashboardMenu = useRef();
   const { state: showDashboardMenu, setState: setShowDashboardMenu } =
     useOutsideClick(userDashboardMenu);
@@ -16,100 +14,80 @@ const DashboardMenu = () => {
   const activePage = JSON.parse(sessionStorage.getItem("activePage"));
 
   const handleItemClick = (id) => {
-    // checking if we're going into the create new list page. If yes then we don't have to set item
     if (id === 4) return;
-
-    JSON.stringify(sessionStorage.setItem("activePage", id));
-
-    // for reservations initial active sub menu is 1
+    sessionStorage.setItem("activePage", JSON.stringify(id));
     if (id === 2) {
-      JSON.stringify(sessionStorage.setItem("reservationsPage", 1));
+      sessionStorage.setItem("reservationsPage", JSON.stringify(1));
     }
   };
 
   return (
     <>
-      {isSmallDevice ? (
-        <div className="sm:relative">
-          {/* menu btn */}
-          <button
-            onClick={() => {
-              setShowDashboardMenu((preValue) => !preValue);
-            }}
-            className=" flex flex-row gap-1 font-medium border-[1px] border-[#dddddd] rounded-full py-2 px-3 cursor-pointer relative user__menu"
-          >
-            Menu
-            <span>
-              {showDashboardMenu ? (
-                <MdKeyboardArrowUp size={24} />
-              ) : (
-                <MdKeyboardArrowDown size={24} />
-              )}
-            </span>
-          </button>
-          {/* menu options */}
-          {showDashboardMenu && (
-            <div
-              ref={userDashboardMenu}
-              className="shadow-md absolute right-28 top-16 sm:-right-12 sm:top-12 bg-[#ffffff] dark:bg-[#2a2a2a] border-[1px] border-[#dddddd] dark:border-[#444444] rounded-lg flex flex-col py-2 w-[230px] transition-all user__menu"
-            >
-              {/* dashboard nav menu options */}
-              {navItem.map((item, i) => {
-                return (
-                  <div key={i} className=" px-4 py-3 hover:bg-[#f1f1f1] dark:hover:bg-[#333333]">
-                    <Link
-                      className={`text-sm font-medium ${
-                        activePage === item.id
-                          ? "font-medium text-[#ff3f62ff] hover:bg-white dark:hover:bg-transparent transition duration-200"
-                          : " opacity-80"
-                      }`}
-                      to={`${
-                        item.id === 4
-                          ? `${item.to}`
-                          : `/users/dashboard/${user?._id}${item.to}`
-                      }`}
-                      onClick={() => {
-                        handleItemClick(item.id);
-                        setShowDashboardMenu(false);
-                      }}
-                    >
-                      {item.name}
-                    </Link>
-                  </div>
-                );
-              })}
-            </div>
+      {/* Mobile & Tablet Responsive Dropdown Button */}
+      <div className="relative lg:hidden">
+        <button
+          type="button"
+          onClick={() => {
+            setShowDashboardMenu((preValue) => !preValue);
+          }}
+          className="flex flex-row items-center gap-1 font-semibold text-xs border border-[#dddddd] dark:border-[#444444] bg-white dark:bg-[#222222] rounded-full py-1.5 px-2.5 text-gray-800 dark:text-gray-200 cursor-pointer shadow-xs"
+        >
+          <span>Menu</span>
+          {showDashboardMenu ? (
+            <MdKeyboardArrowUp size={16} />
+          ) : (
+            <MdKeyboardArrowDown size={16} />
           )}
-        </div>
-      ) : (
-        <div className=" flex flex-row gap-4 md:gap-8 items-center justify-between">
-          {navItem.map((item, i) => (
-            <div key={i}>
-              {/* We are checking if the menu is "create a new list" or not. if it is then we are redirecting to create new list layout page */}
-              <Link
-                to={`${
-                  item.id === 4
-                    ? `${item.to}`
-                    : `/users/dashboard/${user?._id}${item.to}`
-                }`}
-              >
-                <p
-                  className={` cursor-pointer p-2 text-sm whitespace-nowrap rounded-full hover:bg-[#f0f0f0] dark:hover:bg-[#333333] transition duration-300 ${
+        </button>
+
+        {showDashboardMenu && (
+          <div
+            ref={userDashboardMenu}
+            className="shadow-xl absolute left-0 top-10 bg-white dark:bg-[#222222] border border-[#dddddd] dark:border-[#444444] rounded-2xl flex flex-col py-1.5 w-[200px] z-[100] animate-in fade-in zoom-in-95 duration-150"
+          >
+            {navItem.map((item, i) => (
+              <div key={i} className="px-3 py-2 hover:bg-[#f1f1f1] dark:hover:bg-[#333333]">
+                <Link
+                  className={`text-xs font-semibold block ${
                     activePage === item.id
-                      ? "font-medium text-[#ff3f62ff] hover:bg-white transition duration-200"
-                      : " opacity-80"
+                      ? "text-[#ff385c] font-bold"
+                      : "text-gray-700 dark:text-gray-300 opacity-90"
                   }`}
+                  to={item.id === 4 ? `${item.to}` : `/users/dashboard/${user?._id}${item.to}`}
                   onClick={() => {
                     handleItemClick(item.id);
+                    setShowDashboardMenu(false);
                   }}
                 >
                   {item.name}
-                </p>
-              </Link>
-            </div>
-          ))}
-        </div>
-      )}
+                </Link>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Desktop Horizontal Nav */}
+      <div className="hidden lg:flex flex-row gap-2 xl:gap-6 items-center justify-between">
+        {navItem.map((item, i) => (
+          <div key={i}>
+            <Link
+              to={item.id === 4 ? `${item.to}` : `/users/dashboard/${user?._id}${item.to}`}
+              onClick={() => handleItemClick(item.id)}
+            >
+              <p
+                className={`cursor-pointer px-3 py-1.5 text-xs lg:text-sm font-medium whitespace-nowrap rounded-full hover:bg-[#f0f0f0] dark:hover:bg-[#333333] transition duration-200 ${
+                  activePage === item.id
+                    ? "font-bold text-[#ff385c] bg-rose-50 dark:bg-rose-950/40"
+                    : "text-gray-600 dark:text-gray-300 opacity-90"
+                }`}
+              >
+                {item.name}
+              </p>
+            </Link>
+          </div>
+        ))}
+      </div>
     </>
   );
 };

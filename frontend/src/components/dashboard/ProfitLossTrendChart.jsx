@@ -137,7 +137,7 @@ const ProfitLossTrendChart = ({ reservations = [] }) => {
   };
 
   return (
-    <div className="bg-white dark:bg-[#1a1a1a] shadow-sm rounded-2xl border border-gray-100 dark:border-[#2a2a2a] p-6 sm:p-7 flex flex-col gap-6">
+    <div className="bg-white dark:bg-[#1a1a1a] shadow-sm rounded-2xl border border-gray-100 dark:border-[#2a2a2a] p-4 sm:p-7 flex flex-col gap-4 sm:gap-6">
       {/* Header with Title & Filter Buttons */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>

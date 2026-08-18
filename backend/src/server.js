@@ -265,7 +265,7 @@ async function main() {
     await connectDB();
     const port = process.env.PORT || 5001;
     server.listen(port, () => {
-      console.log(`Server is running with Socket.io on port ${port}`);
+      console.log("Server is running with Socket.io on port", port);
     });
     console.log("MongoDB connected");
   } catch (error) {

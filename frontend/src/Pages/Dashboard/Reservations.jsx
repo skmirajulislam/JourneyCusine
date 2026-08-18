@@ -22,7 +22,7 @@ const Reservations = () => {
   };
 
   return (
-    <section className="max-w-[1200px] mx-auto px-4 sm:px-8 md:px-10 xl:px-20 py-5 md:py-12 min-h-[70vh]">
+    <section className="w-full max-w-[1240px] mx-auto px-3 sm:px-6 md:px-10 xl:px-20 py-4 sm:py-6 md:py-12 min-h-[70vh] overflow-x-hidden">
       <div
         onClick={() => {
           navigate("/");

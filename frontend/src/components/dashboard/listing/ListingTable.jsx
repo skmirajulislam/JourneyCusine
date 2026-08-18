@@ -39,11 +39,9 @@ const ListingTable = () => {
 
   return (
     <>
-      <div className="flex flex-col overflow-x-auto rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#181818] shadow-sm">
-        <div className="inline-block min-w-full">
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-left text-sm">
-              <thead className="text-xs text-neutral-500 dark:text-neutral-400 font-bold uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-[#1e1e1e]">
+      <div className="w-full max-w-full overflow-x-auto rounded-2xl sm:rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#181818] shadow-sm">
+        <table className="min-w-[920px] w-full text-left text-sm border-collapse">
+          <thead className="text-xs text-neutral-500 dark:text-neutral-400 font-bold uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-[#1e1e1e]">
                 <tr>
                   <th scope="col" className="px-6 py-4">
                     LISTING
@@ -195,8 +193,6 @@ const ListingTable = () => {
                 })}
               </tbody>
             </table>
-          </div>
-        </div>
       </div>
 
       {/* Edit Listing Modal */}

@@ -118,7 +118,7 @@ exports.createRazorpayOrder = async (req, res) => {
     try {
       order = await razorpay.orders.create(options);
     } catch (orderErr) {
-      console.warn(`Initial Razorpay order creation for ${targetCurrency} failed:`, orderErr.error?.description || orderErr.message);
+      console.warn("Initial Razorpay order creation failed for currency:", targetCurrency, orderErr.error?.description || orderErr.message);
 
       // 1. If error is minimum amount violation, retry with minimum allowed threshold
       if (orderErr.error?.description?.includes("minimum amount")) {

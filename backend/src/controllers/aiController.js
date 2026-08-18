@@ -1671,10 +1671,10 @@ Output a valid JSON object ONLY:
               aiAnalyzed = true;
             }
           } else {
-            console.warn(`Gemini Vision model ${model} returned status ${response.status}`);
+            console.warn("Gemini Vision model returned status:", model, response.status);
           }
         } catch (mErr) {
-          console.warn(`Gemini Vision moderation with ${model} error:`, mErr.message);
+          console.warn("Gemini Vision moderation error with model:", model, mErr?.message);
         }
       }
     }
