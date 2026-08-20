@@ -64,30 +64,15 @@ const WelcomePopup = ({
   };
 
   const handleGoogleLogin = () => {
-    const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-    if (!googleClientId) {
-      toast.error("Google login requires VITE_GOOGLE_CLIENT_ID in your .env file!");
-      return;
-    }
-    toast.success("Connecting to Google authentication...");
+    toast.error("Currently this service is not available. Please use default email login and registration.");
   };
 
   const handleFacebookLogin = () => {
-    const facebookAppId = import.meta.env.VITE_FACEBOOK_APP_ID;
-    if (!facebookAppId) {
-      toast.error("Facebook login requires VITE_FACEBOOK_APP_ID in your .env file!");
-      return;
-    }
-    toast.success("Connecting to Facebook authentication...");
+    toast.error("Currently this service is not available. Please use default email login and registration.");
   };
 
   const handleInstagramLogin = () => {
-    const instagramClientId = import.meta.env.VITE_INSTAGRAM_CLIENT_ID;
-    if (!instagramClientId) {
-      toast.error("Instagram login requires VITE_INSTAGRAM_CLIENT_ID in your .env file!");
-      return;
-    }
-    toast.success("Connecting to Instagram authentication...");
+    toast.error("Currently this service is not available. Please use default email login and registration.");
   };
 
   return (
